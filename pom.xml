@@ -71,6 +71,12 @@
             <version>${version.okhttp}</version>
             <optional>true</optional>
         </dependency>
+        <dependency>
+            <groupId>com.launchdarkly</groupId>
+            <artifactId>okhttp-eventsource</artifactId>
+            <version>4.1.1</version>
+            <optional>true</optional>
+        </dependency>
 
         <dependency>
             <groupId>org.slf4j</groupId>

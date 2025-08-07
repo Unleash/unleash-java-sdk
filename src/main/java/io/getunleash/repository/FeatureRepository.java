@@ -13,4 +13,6 @@ public interface FeatureRepository {
     WasmResponse<VariantDef> getVariant(String toggleName, UnleashContext context);
 
     Stream<FeatureDefinition> listKnownToggles();
+
+    void shutdown();
 }

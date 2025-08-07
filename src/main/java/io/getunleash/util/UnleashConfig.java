@@ -53,6 +53,7 @@ public class UnleashConfig {
     private final Duration fetchTogglesReadTimeout;
 
     private final boolean disablePolling;
+    private final ExperimentalMode experimentalMode;
     private final long sendMetricsInterval;
 
     private final Duration sendMetricsConnectTimeout;
@@ -89,6 +90,7 @@ public class UnleashConfig {
             Duration fetchTogglesConnectTimeout,
             Duration fetchTogglesReadTimeout,
             boolean disablePolling,
+            ExperimentalMode experimentalMode,
             long sendMetricsInterval,
             Duration sendMetricsConnectTimeout,
             Duration sendMetricsReadTimeout,
@@ -152,6 +154,8 @@ public class UnleashConfig {
         this.fetchTogglesConnectTimeout = fetchTogglesConnectTimeout;
         this.fetchTogglesReadTimeout = fetchTogglesReadTimeout;
         this.disablePolling = disablePolling;
+        this.experimentalMode =
+                experimentalMode != null ? experimentalMode : ExperimentalMode.POLLING;
         this.sendMetricsInterval = sendMetricsInterval;
         this.sendMetricsConnectTimeout = sendMetricsConnectTimeout;
         this.sendMetricsReadTimeout = sendMetricsReadTimeout;
@@ -255,6 +259,10 @@ public class UnleashConfig {
 
     public boolean isDisablePolling() {
         return disablePolling;
+    }
+
+    public boolean isStreamingMode() {
+        return experimentalMode == ExperimentalMode.STREAMING;
     }
 
     public long getSendMetricsInterval() {
@@ -432,6 +440,7 @@ public class UnleashConfig {
         private Duration fetchTogglesReadTimeout = Duration.ofSeconds(10);
 
         private boolean disablePolling = false;
+        private @Nullable ExperimentalMode experimentalMode;
         private long sendMetricsInterval = 60;
 
         private Duration sendMetricsConnectTimeout = Duration.ofSeconds(10);
@@ -562,6 +571,11 @@ public class UnleashConfig {
         /** * Don't poll for feature toggle updates */
         public Builder disablePolling() {
             this.disablePolling = true;
+            return this;
+        }
+
+        public Builder streamingMode() {
+            this.experimentalMode = ExperimentalMode.STREAMING;
             return this;
         }
 
@@ -718,6 +732,7 @@ public class UnleashConfig {
                     fetchTogglesConnectTimeout,
                     fetchTogglesReadTimeout,
                     disablePolling,
+                    experimentalMode,
                     sendMetricsInterval,
                     sendMetricsConnectTimeout,
                     sendMetricsReadTimeout,

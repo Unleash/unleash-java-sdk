@@ -13,6 +13,7 @@ import io.getunleash.FeatureDefinition;
 import io.getunleash.Unleash;
 import io.getunleash.engine.UnleashEngine;
 import io.getunleash.event.ClientFeaturesResponse;
+import io.getunleash.streaming.StreamingFeatureFetcher;
 import io.getunleash.util.UnleashConfig;
 import io.getunleash.util.UnleashScheduledExecutor;
 import java.io.File;
@@ -34,6 +35,7 @@ public class FeatureRepositoryTest {
     FeatureBackupHandlerFile backupHandler;
     ToggleBootstrapProvider bootstrapHandler;
     HttpFeatureFetcher fetcher;
+    StreamingFeatureFetcher streamingFeatureFetcher;
     UnleashConfig defaultConfig;
 
     private String loadMockFeatures(String path) {
@@ -61,6 +63,7 @@ public class FeatureRepositoryTest {
         backupHandler = mock(FeatureBackupHandlerFile.class);
         bootstrapHandler = mock(ToggleBootstrapProvider.class);
         fetcher = mock(HttpFeatureFetcher.class);
+        streamingFeatureFetcher = mock(StreamingFeatureFetcher.class);
 
         defaultConfig = defaultConfigBuilder().build();
     }
@@ -112,7 +115,12 @@ public class FeatureRepositoryTest {
 
         FeatureRepository featureRepository =
                 new FeatureRepositoryImpl(
-                        config, backupHandler, new UnleashEngine(), fetcher, bootstrapHandler);
+                        config,
+                        backupHandler,
+                        new UnleashEngine(),
+                        fetcher,
+                        streamingFeatureFetcher,
+                        bootstrapHandler);
 
         verify(executor).setInterval(runnableArgumentCaptor.capture(), anyLong(), anyLong());
         verify(fetcher, times(0)).fetchFeatures();
@@ -141,7 +149,12 @@ public class FeatureRepositoryTest {
 
         FeatureRepository featureRepository =
                 new FeatureRepositoryImpl(
-                        config, backupHandler, new UnleashEngine(), fetcher, bootstrapHandler);
+                        config,
+                        backupHandler,
+                        new UnleashEngine(),
+                        fetcher,
+                        streamingFeatureFetcher,
+                        bootstrapHandler);
 
         verify(fetcher, times(1)).fetchFeatures();
     }
@@ -160,7 +173,12 @@ public class FeatureRepositoryTest {
 
         FeatureRepositoryImpl featureRepository =
                 new FeatureRepositoryImpl(
-                        config, backupHandler, new UnleashEngine(), fetcher, bootstrapHandler);
+                        config,
+                        backupHandler,
+                        new UnleashEngine(),
+                        fetcher,
+                        streamingFeatureFetcher,
+                        bootstrapHandler);
 
         verify(fetcher, times(0)).fetchFeatures();
     }
@@ -217,7 +235,12 @@ public class FeatureRepositoryTest {
 
         FeatureRepositoryImpl featureRepository =
                 new FeatureRepositoryImpl(
-                        config, backupHandler, new UnleashEngine(), fetcher, bootstrapHandler);
+                        config,
+                        backupHandler,
+                        new UnleashEngine(),
+                        fetcher,
+                        streamingFeatureFetcher,
+                        bootstrapHandler);
 
         verify(bootstrapHandler, times(0)).read();
     }
@@ -264,7 +287,12 @@ public class FeatureRepositoryTest {
 
         FeatureRepositoryImpl featureRepository =
                 new FeatureRepositoryImpl(
-                        config, backupHandler, new UnleashEngine(), fetcher, bootstrapHandler);
+                        config,
+                        backupHandler,
+                        new UnleashEngine(),
+                        fetcher,
+                        streamingFeatureFetcher,
+                        bootstrapHandler);
 
         runner.assertThatFetchesAndReceives(
                 ClientFeaturesResponse.Status.CHANGED, 200); // set it ready
@@ -301,7 +329,12 @@ public class FeatureRepositoryTest {
 
         FeatureRepositoryImpl featureRepository =
                 new FeatureRepositoryImpl(
-                        config, backupHandler, new UnleashEngine(), fetcher, bootstrapHandler);
+                        config,
+                        backupHandler,
+                        new UnleashEngine(),
+                        fetcher,
+                        streamingFeatureFetcher,
+                        bootstrapHandler);
 
         runner.assertThatFetchesAndReceives(ClientFeaturesResponse.Status.UNAVAILABLE, 429);
         // client is not ready don't count errors or skips
@@ -386,7 +419,12 @@ public class FeatureRepositoryTest {
 
         FeatureRepositoryImpl featureRepository =
                 new FeatureRepositoryImpl(
-                        config, backupHandler, new UnleashEngine(), fetcher, bootstrapHandler);
+                        config,
+                        backupHandler,
+                        new UnleashEngine(),
+                        fetcher,
+                        streamingFeatureFetcher,
+                        bootstrapHandler);
 
         runner.assertThatFetchesAndReceives(
                 ClientFeaturesResponse.Status.CHANGED, 200); // set it ready

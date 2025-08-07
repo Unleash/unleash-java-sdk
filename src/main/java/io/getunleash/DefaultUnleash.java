@@ -161,6 +161,7 @@ public class DefaultUnleash implements Unleash {
 
     @Override
     public void shutdown() {
+        featureRepository.shutdown();
         config.getScheduledExecutor().shutdown();
     }
 

@@ -7,6 +7,7 @@ import java.net.URL;
 
 public class UnleashURLs {
     private final URL fetchTogglesURL;
+    private final URL streamingURL;
     private final URL clientMetricsURL;
     private final URL clientRegisterURL;
 
@@ -14,6 +15,7 @@ public class UnleashURLs {
         try {
             String unleashAPIstr = unleashAPI.toString();
             fetchTogglesURL = URI.create(unleashAPIstr + "/client/features").normalize().toURL();
+            streamingURL = URI.create(unleashAPIstr + "/client/streaming").normalize().toURL();
             clientMetricsURL = URI.create(unleashAPIstr + "/client/metrics").normalize().toURL();
             clientRegisterURL = URI.create(unleashAPIstr + "/client/register").normalize().toURL();
 
@@ -24,6 +26,10 @@ public class UnleashURLs {
 
     public URL getFetchTogglesURL() {
         return fetchTogglesURL;
+    }
+
+    public URL getStreamingURL() {
+        return streamingURL;
     }
 
     public URL getClientMetricsURL() {
