@@ -119,7 +119,7 @@ public class FeatureRepositoryTest {
                         backupHandler,
                         new UnleashEngine(),
                         fetcher,
-                    streamingFetcher,
+                        streamingFetcher,
                         bootstrapHandler);
 
         verify(executor).setInterval(runnableArgumentCaptor.capture(), anyLong(), anyLong());
@@ -153,7 +153,7 @@ public class FeatureRepositoryTest {
                         backupHandler,
                         new UnleashEngine(),
                         fetcher,
-                    streamingFetcher,
+                        streamingFetcher,
                         bootstrapHandler);
 
         verify(fetcher, times(1)).fetchFeatures();
@@ -177,7 +177,7 @@ public class FeatureRepositoryTest {
                         backupHandler,
                         new UnleashEngine(),
                         fetcher,
-                    streamingFetcher,
+                        streamingFetcher,
                         bootstrapHandler);
 
         verify(fetcher, times(0)).fetchFeatures();
@@ -239,7 +239,7 @@ public class FeatureRepositoryTest {
                         backupHandler,
                         new UnleashEngine(),
                         fetcher,
-                    streamingFetcher,
+                        streamingFetcher,
                         bootstrapHandler);
 
         verify(bootstrapHandler, times(0)).read();
@@ -291,7 +291,7 @@ public class FeatureRepositoryTest {
                         backupHandler,
                         new UnleashEngine(),
                         fetcher,
-                    streamingFetcher,
+                        streamingFetcher,
                         bootstrapHandler);
 
         runner.assertThatFetchesAndReceives(
@@ -333,7 +333,7 @@ public class FeatureRepositoryTest {
                         backupHandler,
                         new UnleashEngine(),
                         fetcher,
-                    streamingFetcher,
+                        streamingFetcher,
                         bootstrapHandler);
 
         runner.assertThatFetchesAndReceives(ClientFeaturesResponse.Status.UNAVAILABLE, 429);
@@ -423,7 +423,7 @@ public class FeatureRepositoryTest {
                         backupHandler,
                         new UnleashEngine(),
                         fetcher,
-                    streamingFetcher,
+                        streamingFetcher,
                         bootstrapHandler);
 
         runner.assertThatFetchesAndReceives(
