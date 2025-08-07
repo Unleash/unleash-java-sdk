@@ -10,7 +10,6 @@ import io.getunleash.util.UnleashConfig;
 import java.net.URI;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import okhttp3.Headers;
 import okhttp3.OkHttpClient;
@@ -22,10 +21,9 @@ public class StreamingFeatureFetcherImpl implements StreamingFeatureFetcher {
 
     private final UnleashConfig config;
     private final Consumer<String> streamingUpdateHandler;
-    private final Object lock = new Object();
-    private final AtomicBoolean running = new AtomicBoolean(false);
+    private boolean running = false;
 
-    private volatile BackgroundEventSource eventSource;
+    private BackgroundEventSource eventSource;
 
     public StreamingFeatureFetcherImpl(
             UnleashConfig config, Consumer<String> streamingUpdateHandler) {
@@ -33,79 +31,72 @@ public class StreamingFeatureFetcherImpl implements StreamingFeatureFetcher {
         this.streamingUpdateHandler = streamingUpdateHandler;
     }
 
-    public void start() {
-        synchronized (lock) {
-            if (running.get()) {
-                LOGGER.debug("Streaming client is already running");
-                return;
-            }
+    public synchronized void start() {
+        if (running) {
+            LOGGER.debug("Streaming client is already running");
+            return;
+        }
 
-            try {
-                URI streamingUri = config.getUnleashURLs().getStreamingURL().toURI();
+        try {
+            URI streamingUri = config.getUnleashURLs().getStreamingURL().toURI();
 
-                Headers.Builder headersBuilder = new Headers.Builder();
-                config.getCustomHttpHeaders().forEach(headersBuilder::add);
-                config.getCustomHttpHeadersProvider()
-                        .getCustomHeaders()
-                        .forEach(headersBuilder::add);
+            Headers.Builder headersBuilder = new Headers.Builder();
+            config.getCustomHttpHeaders().forEach(headersBuilder::add);
+            config.getCustomHttpHeadersProvider().getCustomHeaders().forEach(headersBuilder::add);
 
-                headersBuilder.add(UnleashConfig.UNLEASH_APP_NAME_HEADER, config.getAppName());
-                headersBuilder.add(
-                        UnleashConfig.UNLEASH_INSTANCE_ID_HEADER, config.getInstanceId());
-                headersBuilder.add(
-                        UnleashConfig.UNLEASH_CONNECTION_ID_HEADER, config.getConnectionId());
-                headersBuilder.add(UnleashConfig.UNLEASH_SDK_HEADER, config.getSdkVersion());
-                headersBuilder.add("Unleash-Client-Spec", config.getClientSpecificationVersion());
+            headersBuilder.add(UnleashConfig.UNLEASH_APP_NAME_HEADER, config.getAppName());
+            headersBuilder.add(UnleashConfig.UNLEASH_INSTANCE_ID_HEADER, config.getInstanceId());
+            headersBuilder.add(
+                    UnleashConfig.UNLEASH_CONNECTION_ID_HEADER, config.getConnectionId());
+            headersBuilder.add(UnleashConfig.UNLEASH_SDK_HEADER, config.getSdkVersion());
+            headersBuilder.add("Unleash-Client-Spec", config.getClientSpecificationVersion());
 
-                OkHttpClient httpClient =
-                        new OkHttpClient.Builder()
-                                .readTimeout(Duration.ofSeconds(60)) // Heartbeat detection
-                                .connectTimeout(Duration.ofSeconds(10))
-                                .build();
+            OkHttpClient httpClient =
+                    new OkHttpClient.Builder()
+                            .readTimeout(Duration.ofSeconds(60)) // Heartbeat detection
+                            .connectTimeout(Duration.ofSeconds(10))
+                            .build();
 
-                ConnectStrategy connectStrategy =
-                        ConnectStrategy.http(streamingUri)
-                                .headers(headersBuilder.build())
-                                .httpClient(httpClient)
-                                .connectTimeout(10, TimeUnit.SECONDS)
-                                .readTimeout(60, TimeUnit.SECONDS);
+            ConnectStrategy connectStrategy =
+                    ConnectStrategy.http(streamingUri)
+                            .headers(headersBuilder.build())
+                            .httpClient(httpClient)
+                            .connectTimeout(10, TimeUnit.SECONDS)
+                            .readTimeout(60, TimeUnit.SECONDS);
 
-                EventSource.Builder eventSourceBuilder = new EventSource.Builder(connectStrategy);
+            EventSource.Builder eventSourceBuilder = new EventSource.Builder(connectStrategy);
 
-                BackgroundEventSource.Builder builder =
-                        new BackgroundEventSource.Builder(
-                                new UnleashEventHandler(), eventSourceBuilder);
+            BackgroundEventSource.Builder builder =
+                    new BackgroundEventSource.Builder(
+                            new UnleashEventHandler(), eventSourceBuilder);
 
-                eventSource = builder.build();
-                eventSource.start();
-                running.set(true);
-            } catch (Exception e) {
-                LOGGER.error("Failed to start streaming client", e);
-                running.set(false);
-            }
+            eventSource = builder.build();
+            eventSource.start();
+            running = true;
+        } catch (Exception e) {
+            LOGGER.error("Failed to start streaming client", e);
+            running = false;
         }
     }
 
-    public void stop() {
-        synchronized (lock) {
-            if (!running.get()) {
-                return;
-            }
+    public synchronized void stop() {
+        if (!running) {
+            return;
+        }
 
-            try {
-                if (eventSource != null) {
-                    eventSource.close();
-                    eventSource = null;
-                }
-                running.set(false);
-            } catch (Exception e) {
-                LOGGER.error("Error stopping streaming client", e);
+        try {
+            if (eventSource != null) {
+                eventSource.close();
+                eventSource = null;
             }
+            running = false;
+        } catch (Exception e) {
+            LOGGER.error("Error stopping streaming client", e);
         }
     }
 
-    public boolean isRunning() {
-        return running.get();
+    public synchronized boolean isRunning() {
+        return running;
     }
 
     private class UnleashEventHandler implements BackgroundEventHandler {
@@ -130,10 +121,8 @@ public class StreamingFeatureFetcherImpl implements StreamingFeatureFetcher {
 
                 switch (event) {
                     case "unleash-connected":
-                        handleConnectedEvent(messageEvent.getData());
-                        break;
                     case "unleash-updated":
-                        handleUpdatedEvent(messageEvent.getData());
+                        streamingUpdateHandler.accept(messageEvent.getData());
                         break;
                     default:
                         LOGGER.debug("Ignoring unknown event type: {}", event);
@@ -150,14 +139,6 @@ public class StreamingFeatureFetcherImpl implements StreamingFeatureFetcher {
         @Override
         public void onError(Throwable t) {
             LOGGER.warn("Streaming connection error", t);
-        }
-
-        private void handleConnectedEvent(String data) {
-            streamingUpdateHandler.accept(data);
-        }
-
-        private void handleUpdatedEvent(String data) {
-            streamingUpdateHandler.accept(data);
         }
     }
 }

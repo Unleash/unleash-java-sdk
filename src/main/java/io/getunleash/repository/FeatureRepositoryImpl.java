@@ -249,7 +249,7 @@ public class FeatureRepositoryImpl implements FeatureRepository {
     public void handleStreamingUpdate(String data) {
         try {
             engine.takeState(data);
-            featureBackupHandler.write(data);
+            // TODO: write backup when engine exposes current stage
 
             ClientFeaturesResponse response = ClientFeaturesResponse.updated(data);
             eventDispatcher.dispatch(response);
