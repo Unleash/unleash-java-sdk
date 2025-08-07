@@ -9,7 +9,6 @@ import io.getunleash.streaming.StreamingFeatureFetcher;
 import io.getunleash.util.UnleashConfig;
 import java.net.URI;
 import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import okhttp3.Headers;
 import okhttp3.OkHttpClient;
@@ -21,14 +20,18 @@ public class StreamingFeatureFetcherImpl implements StreamingFeatureFetcher {
 
     private final UnleashConfig config;
     private final Consumer<String> streamingUpdateHandler;
+    private final Consumer<Throwable> streamingErrorHandler;
     private boolean running = false;
 
     private BackgroundEventSource eventSource;
 
     public StreamingFeatureFetcherImpl(
-            UnleashConfig config, Consumer<String> streamingUpdateHandler) {
+            UnleashConfig config,
+            Consumer<String> streamingUpdateHandler,
+            Consumer<Throwable> streamingErrorHandler) {
         this.config = config;
         this.streamingUpdateHandler = streamingUpdateHandler;
+        this.streamingErrorHandler = streamingErrorHandler;
     }
 
     public synchronized void start() {
@@ -60,9 +63,7 @@ public class StreamingFeatureFetcherImpl implements StreamingFeatureFetcher {
             ConnectStrategy connectStrategy =
                     ConnectStrategy.http(streamingUri)
                             .headers(headersBuilder.build())
-                            .httpClient(httpClient)
-                            .connectTimeout(10, TimeUnit.SECONDS)
-                            .readTimeout(60, TimeUnit.SECONDS);
+                            .httpClient(httpClient);
 
             EventSource.Builder eventSourceBuilder = new EventSource.Builder(connectStrategy);
 
@@ -103,12 +104,15 @@ public class StreamingFeatureFetcherImpl implements StreamingFeatureFetcher {
 
         @Override
         public void onOpen() throws Exception {
-            LOGGER.debug("Streaming connection opened");
+            LOGGER.info("Streaming connection established to Unleash server");
         }
 
         @Override
         public void onClosed() throws Exception {
-            LOGGER.debug("Streaming connection closed");
+            LOGGER.info("Streaming connection to Unleash server closed");
+            synchronized (StreamingFeatureFetcherImpl.this) {
+                running = false;
+            }
         }
 
         @Override
@@ -138,7 +142,7 @@ public class StreamingFeatureFetcherImpl implements StreamingFeatureFetcher {
 
         @Override
         public void onError(Throwable t) {
-            LOGGER.warn("Streaming connection error", t);
+            streamingErrorHandler.accept(t);
         }
     }
 }

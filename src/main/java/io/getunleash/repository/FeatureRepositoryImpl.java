@@ -34,9 +34,12 @@ public class FeatureRepositoryImpl implements FeatureRepository {
     private boolean ready;
 
     private StreamingFeatureFetcher createStreamingFeatureFetcher(
-            UnleashConfig config, Consumer<String> streamingUpdateHandler) {
+            UnleashConfig config,
+            Consumer<String> streamingUpdateHandler,
+            Consumer<Throwable> streamingErrorHandler) {
         if (config.isStreamingMode()) {
-            return new StreamingFeatureFetcherImpl(config, streamingUpdateHandler);
+            return new StreamingFeatureFetcherImpl(
+                    config, streamingUpdateHandler, streamingErrorHandler);
         } else {
             return new NoOpStreamingFeatureFetcher();
         }
@@ -74,7 +77,8 @@ public class FeatureRepositoryImpl implements FeatureRepository {
     }
 
     private StreamingFeatureFetcher initializeStreamingFeatureFetcher() {
-        return createStreamingFeatureFetcher(unleashConfig, this::handleStreamingUpdate);
+        return createStreamingFeatureFetcher(
+                unleashConfig, this::handleStreamingUpdate, this::handleStreamingError);
     }
 
     public FeatureRepositoryImpl(
@@ -246,7 +250,7 @@ public class FeatureRepositoryImpl implements FeatureRepository {
         return this.engine.listKnownToggles().stream().map(FeatureDefinition::new);
     }
 
-    public void handleStreamingUpdate(String data) {
+    public synchronized void handleStreamingUpdate(String data) {
         try {
             engine.takeState(data);
             // TODO: write backup when engine exposes current stage
@@ -264,6 +268,12 @@ public class FeatureRepositoryImpl implements FeatureRepository {
                     new UnleashException("Failed to process streaming update", e);
             eventDispatcher.dispatch(unleashException);
         }
+    }
+
+    public void handleStreamingError(Throwable error) {
+        UnleashException unleashException =
+                new UnleashException("Streaming connection error", error);
+        eventDispatcher.dispatch(unleashException);
     }
 
     @Override
