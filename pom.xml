@@ -19,7 +19,7 @@
 
     <name>io.getunleash:unleash-client-java</name>
     <description>A client library for Unleash</description>
-    <url>https://github.com/Unleash/unleash-client-java</url>
+    <url>https://github.com/Unleash/unleash-java-sdk</url>
     <inceptionYear>2014</inceptionYear>
 
     <licenses>
@@ -49,9 +49,9 @@
     </developers>
 
     <scm>
-        <url>https://github.com/Unleash/unleash-client-java</url>
-        <connection>scm:git:https://github.com/Unleash/unleash-client-java.git</connection>
-        <developerConnection>scm:git:https://github.com/Unleash/unleash-client-java.git</developerConnection>
+        <url>https://github.com/Unleash/unleash-java-sdk</url>
+        <connection>scm:git:https://github.com/Unleash/unleash-java-sdk.git</connection>
+        <developerConnection>scm:git:https://github.com/Unleash/unleash-java-sdk.git</developerConnection>
     </scm>
 
     <dependencies>
