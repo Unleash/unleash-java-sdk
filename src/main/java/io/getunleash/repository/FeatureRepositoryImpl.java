@@ -10,8 +10,8 @@ import io.getunleash.engine.YggdrasilInvalidInputException;
 import io.getunleash.event.ClientFeaturesResponse;
 import io.getunleash.event.EventDispatcher;
 import io.getunleash.event.UnleashReady;
-import io.getunleash.streaming.NoOpStreamingFeatureFetcher;
 import io.getunleash.streaming.StreamingFeatureFetcher;
+import io.getunleash.streaming.StreamingFeatureFetcherFactory;
 import io.getunleash.util.Throttler;
 import io.getunleash.util.UnleashConfig;
 import io.getunleash.util.UnleashScheduledExecutor;
@@ -33,18 +33,6 @@ public class FeatureRepositoryImpl implements FeatureRepository {
     private final Throttler throttler;
     private boolean ready;
 
-    private StreamingFeatureFetcher createStreamingFeatureFetcher(
-            UnleashConfig config,
-            Consumer<String> streamingUpdateHandler,
-            Consumer<Throwable> streamingErrorHandler) {
-        if (config.isStreamingMode()) {
-            return new StreamingFeatureFetcherImpl(
-                    config, streamingUpdateHandler, streamingErrorHandler);
-        } else {
-            return new NoOpStreamingFeatureFetcher();
-        }
-    }
-
     public FeatureRepositoryImpl(UnleashConfig unleashConfig, UnleashEngine engine) {
         this(unleashConfig, new FeatureBackupHandlerFile(unleashConfig), engine);
     }
@@ -65,20 +53,11 @@ public class FeatureRepositoryImpl implements FeatureRepository {
         this.featureFetcher = unleashConfig.getUnleashFeatureFetcherFactory().apply(unleashConfig);
         this.bootstrapper = unleashConfig.getToggleBootstrapProvider();
         this.eventDispatcher = eventDispatcher;
-        this.throttler =
-                new Throttler(
-                        (int) unleashConfig.getFetchTogglesInterval(),
-                        300,
-                        unleashConfig.getUnleashURLs().getFetchTogglesURL());
-
-        this.streamingFeatureFetcher = initializeStreamingFeatureFetcher();
-
+        this.throttler = initializeThrottler(unleashConfig);
+        this.streamingFeatureFetcher =
+                StreamingFeatureFetcherFactory.createStreamingFeatureFetcher(
+                        unleashConfig, this::handleStreamingUpdate, this::handleStreamingError);
         this.initCollections(unleashConfig.getScheduledExecutor());
-    }
-
-    private StreamingFeatureFetcher initializeStreamingFeatureFetcher() {
-        return createStreamingFeatureFetcher(
-                unleashConfig, this::handleStreamingUpdate, this::handleStreamingError);
     }
 
     public FeatureRepositoryImpl(
@@ -128,12 +107,15 @@ public class FeatureRepositoryImpl implements FeatureRepository {
         this.streamingFeatureFetcher = streamingFeatureFetcher;
         this.bootstrapper = bootstrapHandler;
         this.eventDispatcher = eventDispatcher;
-        this.throttler =
-                new Throttler(
-                        (int) unleashConfig.getFetchTogglesInterval(),
-                        300,
-                        unleashConfig.getUnleashURLs().getFetchTogglesURL());
+        this.throttler = initializeThrottler(unleashConfig);
         this.initCollections(unleashConfig.getScheduledExecutor());
+    }
+
+    private Throttler initializeThrottler(UnleashConfig config) {
+        return new Throttler(
+                (int) config.getFetchTogglesInterval(),
+                300,
+                config.getUnleashURLs().getFetchTogglesURL());
     }
 
     @SuppressWarnings("FutureReturnValueIgnored")
