@@ -8,6 +8,7 @@ import com.launchdarkly.eventsource.background.BackgroundEventSource;
 import io.getunleash.util.UnleashConfig;
 import java.net.URI;
 import java.time.Duration;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import okhttp3.Headers;
 import okhttp3.OkHttpClient;
@@ -20,9 +21,9 @@ public class StreamingFeatureFetcherImpl implements StreamingFeatureFetcher {
     private final UnleashConfig config;
     private final Consumer<String> streamingUpdateHandler;
     private final Consumer<Throwable> streamingErrorHandler;
-    private boolean running = false;
+    private final AtomicBoolean running = new AtomicBoolean(false);
 
-    private BackgroundEventSource eventSource;
+    private volatile BackgroundEventSource eventSource;
 
     public StreamingFeatureFetcherImpl(
             UnleashConfig config,
@@ -33,8 +34,8 @@ public class StreamingFeatureFetcherImpl implements StreamingFeatureFetcher {
         this.streamingErrorHandler = streamingErrorHandler;
     }
 
-    public synchronized void start() {
-        if (running) {
+    public void start() {
+        if (running.get()) {
             LOGGER.debug("Streaming client is already running");
             return;
         }
@@ -70,33 +71,35 @@ public class StreamingFeatureFetcherImpl implements StreamingFeatureFetcher {
                     new BackgroundEventSource.Builder(
                             new UnleashEventHandler(), eventSourceBuilder);
 
-            eventSource = builder.build();
-            eventSource.start();
-            running = true;
+            BackgroundEventSource newEventSource = builder.build();
+            newEventSource.start();
+            eventSource = newEventSource;
+            running.set(true);
         } catch (Exception e) {
             LOGGER.error("Failed to start streaming client", e);
-            running = false;
+            running.set(false);
         }
     }
 
-    public synchronized void stop() {
-        if (!running) {
+    public void stop() {
+        if (!running.get()) {
             return;
         }
 
         try {
-            if (eventSource != null) {
-                eventSource.close();
+            BackgroundEventSource currentEventSource = eventSource;
+            if (currentEventSource != null) {
+                currentEventSource.close();
                 eventSource = null;
             }
-            running = false;
+            running.set(false);
         } catch (Exception e) {
             LOGGER.error("Error stopping streaming client", e);
         }
     }
 
-    public synchronized boolean isRunning() {
-        return running;
+    public boolean isRunning() {
+        return running.get();
     }
 
     private class UnleashEventHandler implements BackgroundEventHandler {
@@ -109,9 +112,7 @@ public class StreamingFeatureFetcherImpl implements StreamingFeatureFetcher {
         @Override
         public void onClosed() throws Exception {
             LOGGER.info("Streaming connection to Unleash server closed");
-            synchronized (StreamingFeatureFetcherImpl.this) {
-                running = false;
-            }
+            running.set(false);
         }
 
         @Override
