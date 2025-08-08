@@ -23,7 +23,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN}}
   finish:
-    needs: build
+    needs: release
     if: ${{ always() }}
     runs-on: ubuntu-latest
     steps:
