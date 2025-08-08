@@ -63,6 +63,11 @@ public class EngineProxyImpl implements EngineProxy {
         return this.featureRepository.listKnownToggles();
     }
 
+    @Override
+    public void shutdown() {
+        this.featureRepository.shutdown();
+    }
+
     private static Map<String, Strategy> buildStrategyMap(@Nullable Strategy[] strategies) {
         Map<String, Strategy> map = new HashMap<>();
 
