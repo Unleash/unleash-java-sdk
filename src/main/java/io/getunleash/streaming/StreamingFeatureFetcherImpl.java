@@ -35,46 +35,48 @@ public class StreamingFeatureFetcherImpl implements StreamingFeatureFetcher {
     }
 
     public void start() {
-        if (running.get()) {
-            LOGGER.debug("Streaming client is already running");
-            return;
-        }
-
         try {
-            URI streamingUri = config.getUnleashURLs().getStreamingURL().toURI();
+            if (!running.getAndSet(true)) {
+                // start streaming
+                URI streamingUri = config.getUnleashURLs().getStreamingURL().toURI();
 
-            Headers.Builder headersBuilder = new Headers.Builder();
-            config.getCustomHttpHeaders().forEach(headersBuilder::add);
-            config.getCustomHttpHeadersProvider().getCustomHeaders().forEach(headersBuilder::add);
+                Headers.Builder headersBuilder = new Headers.Builder();
+                config.getCustomHttpHeaders().forEach(headersBuilder::add);
+                config.getCustomHttpHeadersProvider()
+                        .getCustomHeaders()
+                        .forEach(headersBuilder::add);
 
-            headersBuilder.add(UnleashConfig.UNLEASH_APP_NAME_HEADER, config.getAppName());
-            headersBuilder.add(UnleashConfig.UNLEASH_INSTANCE_ID_HEADER, config.getInstanceId());
-            headersBuilder.add(
-                    UnleashConfig.UNLEASH_CONNECTION_ID_HEADER, config.getConnectionId());
-            headersBuilder.add(UnleashConfig.UNLEASH_SDK_HEADER, config.getSdkVersion());
-            headersBuilder.add("Unleash-Client-Spec", config.getClientSpecificationVersion());
+                headersBuilder.add(UnleashConfig.UNLEASH_APP_NAME_HEADER, config.getAppName());
+                headersBuilder.add(
+                        UnleashConfig.UNLEASH_INSTANCE_ID_HEADER, config.getInstanceId());
+                headersBuilder.add(
+                        UnleashConfig.UNLEASH_CONNECTION_ID_HEADER, config.getConnectionId());
+                headersBuilder.add(UnleashConfig.UNLEASH_SDK_HEADER, config.getSdkVersion());
+                headersBuilder.add("Unleash-Client-Spec", config.getClientSpecificationVersion());
 
-            OkHttpClient httpClient =
-                    new OkHttpClient.Builder()
-                            .readTimeout(Duration.ofSeconds(60)) // Heartbeat detection
-                            .connectTimeout(Duration.ofSeconds(10))
-                            .build();
+                OkHttpClient httpClient =
+                        new OkHttpClient.Builder()
+                                .readTimeout(Duration.ofSeconds(60)) // Heartbeat detection
+                                .connectTimeout(Duration.ofSeconds(10))
+                                .build();
 
-            ConnectStrategy connectStrategy =
-                    ConnectStrategy.http(streamingUri)
-                            .headers(headersBuilder.build())
-                            .httpClient(httpClient);
+                ConnectStrategy connectStrategy =
+                        ConnectStrategy.http(streamingUri)
+                                .headers(headersBuilder.build())
+                                .httpClient(httpClient);
 
-            EventSource.Builder eventSourceBuilder = new EventSource.Builder(connectStrategy);
+                EventSource.Builder eventSourceBuilder = new EventSource.Builder(connectStrategy);
 
-            BackgroundEventSource.Builder builder =
-                    new BackgroundEventSource.Builder(
-                            new UnleashEventHandler(), eventSourceBuilder);
+                BackgroundEventSource.Builder builder =
+                        new BackgroundEventSource.Builder(
+                                new UnleashEventHandler(), eventSourceBuilder);
 
-            BackgroundEventSource newEventSource = builder.build();
-            newEventSource.start();
-            eventSource = newEventSource;
-            running.set(true);
+                BackgroundEventSource newEventSource = builder.build();
+                newEventSource.start();
+                eventSource = newEventSource;
+            } else {
+                LOGGER.debug("Streaming client is already running");
+            }
         } catch (Exception e) {
             LOGGER.error("Failed to start streaming client", e);
             running.set(false);
@@ -94,7 +96,7 @@ public class StreamingFeatureFetcherImpl implements StreamingFeatureFetcher {
             }
             running.set(false);
         } catch (Exception e) {
-            LOGGER.error("Error stopping streaming client", e);
+            LOGGER.warn("Error stopping streaming client", e);
         }
     }
 
