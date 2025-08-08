@@ -47,7 +47,7 @@ public class StreamingFeatureFetchingTest {
                         .appName("streaming-event-test")
                         .instanceId(instanceId)
                         .unleashAPI(uri)
-                        .streamingMode()
+                        .experimentalStreamingMode()
                         .subscriber(testSubscriber)
                         .scheduledExecutor(executor)
                         .disableMetrics()

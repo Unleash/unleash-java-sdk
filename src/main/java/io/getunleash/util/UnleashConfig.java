@@ -574,7 +574,7 @@ public class UnleashConfig {
             return this;
         }
 
-        public Builder streamingMode() {
+        public Builder experimentalStreamingMode() {
             this.experimentalMode = ExperimentalMode.STREAMING;
             return this;
         }
