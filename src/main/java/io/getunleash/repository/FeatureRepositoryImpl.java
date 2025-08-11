@@ -10,8 +10,9 @@ import io.getunleash.engine.YggdrasilInvalidInputException;
 import io.getunleash.event.ClientFeaturesResponse;
 import io.getunleash.event.EventDispatcher;
 import io.getunleash.event.UnleashReady;
+import io.getunleash.streaming.NoOpStreamingFeatureFetcher;
 import io.getunleash.streaming.StreamingFeatureFetcher;
-import io.getunleash.streaming.StreamingFeatureFetcherFactory;
+import io.getunleash.streaming.StreamingFeatureFetcherImpl;
 import io.getunleash.util.Throttler;
 import io.getunleash.util.UnleashConfig;
 import io.getunleash.util.UnleashScheduledExecutor;
@@ -55,8 +56,12 @@ public class FeatureRepositoryImpl implements FeatureRepository {
         this.eventDispatcher = eventDispatcher;
         this.throttler = initializeThrottler(unleashConfig);
         this.streamingFeatureFetcher =
-                StreamingFeatureFetcherFactory.createStreamingFeatureFetcher(
-                        unleashConfig, this::handleStreamingUpdate, this::handleStreamingError);
+                unleashConfig.isStreamingMode()
+                        ? new StreamingFeatureFetcherImpl(
+                                unleashConfig,
+                                this::handleStreamingUpdate,
+                                this::handleStreamingError)
+                        : new NoOpStreamingFeatureFetcher();
         this.initCollections(unleashConfig.getScheduledExecutor());
     }
 
