@@ -237,7 +237,7 @@ public class FeatureRepositoryImpl implements FeatureRepository {
         return this.engine.listKnownToggles().stream().map(FeatureDefinition::new);
     }
 
-    public synchronized void handleStreamingUpdate(String data) {
+    private synchronized void handleStreamingUpdate(String data) {
         try {
             engine.takeState(data);
             // TODO: write backup when engine exposes current state
@@ -257,7 +257,7 @@ public class FeatureRepositoryImpl implements FeatureRepository {
         }
     }
 
-    public void handleStreamingError(Throwable error) {
+    private void handleStreamingError(Throwable error) {
         UnleashException unleashException =
                 new UnleashException("Streaming connection error", error);
         eventDispatcher.dispatch(unleashException);
