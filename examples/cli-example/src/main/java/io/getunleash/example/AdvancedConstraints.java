@@ -5,9 +5,10 @@ import io.getunleash.Unleash;
 import io.getunleash.UnleashContext;
 import io.getunleash.util.UnleashConfig;
 import java.util.Random;
+import java.util.stream.IntStream;
 
 public class AdvancedConstraints {
-    public static String toString(UnleashContext context) {
+    public static String contextToString(UnleashContext context) {
         String appName = context.getAppName().orElse("N/A");
         String environment = context.getEnvironment().orElse("N/A");
         String userId = context.getUserId().orElse("N/A");
@@ -22,7 +23,15 @@ public class AdvancedConstraints {
             '}';
     }
 
+    private static String limitTo(String str, int maxLength) {
+        if (str == null || str.length() <= maxLength) {
+            return str;
+        }
+        return str.substring(0, maxLength) + "...";
+    }
+
     public static void main(String[] args) throws InterruptedException {
+        String feature = "advanced.constraints-java";
         String prodToken = "java-sdk:production.fda773f8736e033f33159dbadb7327ab562bad51c4e87daa3095849c";
         String devToken = "*:development.25a06b75248528f8ca93ce179dcdd141aedfb632231e0d21fd8ff349";
         String env = "production"; // Change to "production" for production environment
@@ -40,30 +49,67 @@ public class AdvancedConstraints {
 
         Unleash unleash = new DefaultUnleash(config);
 
-        String[] companyIdOptions = {"abc123", "xyz789", "def456"};
-        for (int i = 1; i <= 10; i++) {
-            UnleashContext context = UnleashContext.builder()
-                .addProperty("providerName", "es-barcelona")
-                .addProperty("company_id", companyIdOptions[new Random().nextInt(companyIdOptions.length)])
-                .userId("user-" + i)
-                .sessionId("session-" + new Random().nextInt(1000, 9999))
-                .environment(env)
-                .build();
 
-            boolean resultContext = unleash.isEnabled("advanced.constraints-java", context);
+        // Define scenarios to test
+        String[] providerNameOptions = {
+            "es-barcelona",    // matching prefix
+            "es-",             // prefix only
+            "es",              // shorter than prefix
+            "",                // empty string
+            null,              // null providerName
+            "ES-barcelona",    // mixed case
+            "en-barcelona",    // non‑matching prefix
+            "es-🔧🔧🔧",       // emojis
+            "es-" + "a".repeat(5000) // long string
+        };
 
-            System.out.println("Iteration " + i);
-            System.out.println("Context: " + toString(context));
-            System.out.println("  Enabled? " + resultContext);
-            System.out.println("----------------------------");
+        String[] companyIdOptions = {
+            "abc123",
+            "xyz789",
+            "def456",
+            "",                // empty company_id
+            null,               // null company_id
+            "abc123-🔧🔧🔧",       // emojis
+            "abc123-" + "x".repeat(5000) // long string
+        };
+        int iteration = 1;
+        for (String providerName : providerNameOptions) {
+            for (String companyId : companyIdOptions) {
+                // Build the context; only set providerName or company_id if not null
+                UnleashContext.Builder ctxBuilder = UnleashContext.builder()
+                    .userId("user-" + iteration)
+                    .sessionId("session-" + iteration)
+                    .environment(env);
 
-            unleash.more().evaluateAllToggles(context).forEach(toggle -> {
-                System.out.println("Feature: " + toggle.getName());
-                System.out.println("  Enabled? " + toggle.isEnabled());
-                System.out.println("  Variant: " + toggle.getVariant());
-            });
+                ctxBuilder.addProperty("providerName", providerName);
+                ctxBuilder.addProperty("company_id", companyId);
+
+                UnleashContext context = ctxBuilder.build();
+                boolean enabled = unleash.isEnabled(feature, context);
+
+                System.out.println("Iteration " + iteration++);
+                System.out.println("Context: " + contextToString(context));
+                System.out.println("    providerName: " + providerName +
+                    ", company_id: " + companyId +
+                    " => Enabled? " + enabled);
+                System.out.println("----------------------------");
+            }
         }
 
+        IntStream.range(0, 100000).parallel().forEach(i -> {
+            UnleashContext ctx = UnleashContext.builder()
+                .addProperty("providerName", providerNameOptions[i % providerNameOptions.length])
+                .userId("user-" + i)
+                .addProperty("company_id", companyIdOptions[i % companyIdOptions.length]) // Vary company_id for each user
+                .environment(env)
+                .build();
+            boolean enabled = unleash.isEnabled(feature, ctx);
+            System.out.println("Parallel Iteration " + i +
+                " => providerName: " + limitTo(providerNameOptions[i % providerNameOptions.length], 20) +
+                ", company_id: " + limitTo(companyIdOptions[i % companyIdOptions.length], 20) +
+                ", userId: user-" + i +
+                " => Enabled? " + enabled);
+        });
     }
 
     public static String getOrElse(String key, String defaultValue) {
