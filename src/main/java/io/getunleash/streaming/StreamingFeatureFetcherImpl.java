@@ -114,7 +114,10 @@ public class StreamingFeatureFetcherImpl implements StreamingFeatureFetcher {
                 }
 
             } catch (Exception e) {
-                LOGGER.error("Error processing streaming event, feature flags will likely not evaluate correctly until application restart or stream re-connect: {}", event, e);
+                LOGGER.error(
+                        "Error processing streaming event, feature flags will likely not evaluate correctly until application restart or stream re-connect: {}",
+                        event,
+                        e);
             }
         }
 
