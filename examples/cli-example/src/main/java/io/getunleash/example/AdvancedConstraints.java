@@ -56,6 +56,12 @@ public class AdvancedConstraints {
             System.out.println("Context: " + toString(context));
             System.out.println("  Enabled? " + resultContext);
             System.out.println("----------------------------");
+
+            unleash.more().evaluateAllToggles(context).forEach(toggle -> {
+                System.out.println("Feature: " + toggle.getName());
+                System.out.println("  Enabled? " + toggle.isEnabled());
+                System.out.println("  Variant: " + toggle.getVariant());
+            });
         }
 
     }
