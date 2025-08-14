@@ -3,8 +3,9 @@ package io.getunleash.example;
 import io.getunleash.DefaultUnleash;
 import io.getunleash.Unleash;
 import io.getunleash.UnleashContext;
+import io.getunleash.event.*;
 import io.getunleash.util.UnleashConfig;
-import java.util.Random;
+
 import java.util.stream.IntStream;
 
 public class AdvancedConstraints {
@@ -13,7 +14,7 @@ public class AdvancedConstraints {
         String environment = context.getEnvironment().orElse("N/A");
         String userId = context.getUserId().orElse("N/A");
         String sessionId = context.getSessionId().orElse("N/A");
-        String properties = context.getProperties().isEmpty() ? "N/A" : context.getProperties().toString();
+        String properties = context.getProperties().isEmpty() ? "N/A" : limitTo(context.getProperties().toString(), 50);
         return "UnleashContext{" +
             "appName=" + appName +
             ", environment=" + environment +
@@ -34,20 +35,47 @@ public class AdvancedConstraints {
         String feature = "advanced.constraints-java";
         String prodToken = "java-sdk:production.fda773f8736e033f33159dbadb7327ab562bad51c4e87daa3095849c";
         String devToken = "*:development.25a06b75248528f8ca93ce179dcdd141aedfb632231e0d21fd8ff349";
-        String env = "production"; // Change to "production" for production environment
+        String env = "dev"; // Change to "production" for production environment
         String token = env.equals("production") ? prodToken : devToken;
         UnleashConfig config = UnleashConfig.builder()
-                .appName("client-example.advanced.java")
-                .customHttpHeader(
-                        "Authorization",
-                        getOrElse("UNLEASH_API_TOKEN",
-                                token))
-                .unleashAPI(getOrElse("UNLEASH_API_URL", "https://app.unleash-hosted.com/demo/api"))
-                .instanceId("java-example")
-                .synchronousFetchOnInitialisation(true)
-                .sendMetricsInterval(30).build();
+            .appName("client-example.advanced.java")
+            .customHttpHeader(
+                "Authorization",
+                getOrElse("UNLEASH_API_TOKEN",
+                    token))
+            .unleashAPI(getOrElse("UNLEASH_API_URL", "http://localhost:8080"))
+            .fetchTogglesInterval(5)
+            .instanceId("java-example")
+            //.synchronousFetchOnInitialisation(true)
+            .subscriber(new UnleashSubscriber() {
+                @Override
+                public void onReady(UnleashReady ready) {
+                    System.out.println("Unleash is ready");
+                }
+                @Override
+                public void togglesFetched(ClientFeaturesResponse toggleResponse) {
+                    System.out.println("Fetch toggles with status: " + toggleResponse.getStatus());
+                }
 
-        Unleash unleash = new DefaultUnleash(config);
+                @Override
+                public void featuresBackedUp(FeatureSet toggleCollection) {
+                    System.out.println("Backup stored.");
+                }
+
+                @Override
+                public void featuresBackupRestored(FeatureSet featureCollection) {
+                    System.out.println("Backup restored.");
+                }
+
+                @Override
+                public void impression(ImpressionEvent impressionEvent) {
+                    System.out.println("Impression: " + impressionEvent.getFeatureName() + " enabled: " + impressionEvent.isEnabled());
+
+                }
+            })
+            .sendMetricsInterval(30).build();
+
+        Unleash unleash = null;
 
 
         // Define scenarios to test
@@ -73,37 +101,39 @@ public class AdvancedConstraints {
             "abc123-" + "x".repeat(5000) // long string
         };
         int iteration = 1;
-        for (String providerName : providerNameOptions) {
-            for (String companyId : companyIdOptions) {
-                // Build the context; only set providerName or company_id if not null
-                UnleashContext.Builder ctxBuilder = UnleashContext.builder()
-                    .userId("user-" + iteration)
-                    .sessionId("session-" + iteration)
-                    .environment(env);
+        UnleashContext.Builder ctxBuilder = UnleashContext.builder().userId("user-" + iteration)
+            .sessionId("session-" + iteration)
+            .environment(env);
 
-                ctxBuilder.addProperty("providerName", providerName);
+        for (String providerName : providerNameOptions) {
+            ctxBuilder.addProperty("providerName", providerName);
+            for (String companyId : companyIdOptions) {
                 ctxBuilder.addProperty("company_id", companyId);
 
                 UnleashContext context = ctxBuilder.build();
+                if (unleash == null) {
+                      unleash = new DefaultUnleash(config);
+                }
                 boolean enabled = unleash.isEnabled(feature, context);
 
                 System.out.println("Iteration " + iteration++);
                 System.out.println("Context: " + contextToString(context));
-                System.out.println("    providerName: " + providerName +
-                    ", company_id: " + companyId +
+                System.out.println("    providerName: " + limitTo(providerName, 15) +
+                    ", company_id: " + limitTo(companyId, 15) +
                     " => Enabled? " + enabled);
                 System.out.println("----------------------------");
             }
         }
-
+        UnleashContext.Builder builder = UnleashContext.builder().environment(env);
+        Unleash unleashFinal = unleash;
         IntStream.range(0, 100000).parallel().forEach(i -> {
-            UnleashContext ctx = UnleashContext.builder()
-                .addProperty("providerName", providerNameOptions[i % providerNameOptions.length])
+
+            UnleashContext ctx = builder.addProperty("providerName", providerNameOptions[i % providerNameOptions.length])
                 .userId("user-" + i)
                 .addProperty("company_id", companyIdOptions[i % companyIdOptions.length]) // Vary company_id for each user
-                .environment(env)
                 .build();
-            boolean enabled = unleash.isEnabled(feature, ctx);
+
+            boolean enabled = unleashFinal.isEnabled(feature, ctx);
             System.out.println("Parallel Iteration " + i +
                 " => providerName: " + limitTo(providerNameOptions[i % providerNameOptions.length], 20) +
                 ", company_id: " + limitTo(companyIdOptions[i % companyIdOptions.length], 20) +
