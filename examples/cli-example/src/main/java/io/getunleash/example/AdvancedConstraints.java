@@ -3,143 +3,33 @@ package io.getunleash.example;
 import io.getunleash.DefaultUnleash;
 import io.getunleash.Unleash;
 import io.getunleash.UnleashContext;
-import io.getunleash.event.*;
 import io.getunleash.util.UnleashConfig;
 
-import java.util.stream.IntStream;
-
 public class AdvancedConstraints {
-    public static String contextToString(UnleashContext context) {
-        String appName = context.getAppName().orElse("N/A");
-        String environment = context.getEnvironment().orElse("N/A");
-        String userId = context.getUserId().orElse("N/A");
-        String sessionId = context.getSessionId().orElse("N/A");
-        String properties = context.getProperties().isEmpty() ? "N/A" : limitTo(context.getProperties().toString(), 50);
-        return "UnleashContext{" +
-            "appName=" + appName +
-            ", environment=" + environment +
-            ", userId=" + userId +
-            ", sessionId=" + sessionId +
-            ", properties=" + properties +
-            '}';
-    }
-
-    private static String limitTo(String str, int maxLength) {
-        if (str == null || str.length() <= maxLength) {
-            return str;
-        }
-        return str.substring(0, maxLength) + "...";
-    }
 
     public static void main(String[] args) throws InterruptedException {
-        String feature = "advanced.constraints-java";
-        String prodToken = "java-sdk:production.fda773f8736e033f33159dbadb7327ab562bad51c4e87daa3095849c";
-        String devToken = "*:development.25a06b75248528f8ca93ce179dcdd141aedfb632231e0d21fd8ff349";
-        String env = "dev"; // Change to "production" for production environment
-        String token = env.equals("production") ? prodToken : devToken;
         UnleashConfig config = UnleashConfig.builder()
-            .appName("client-example.advanced.java")
-            .customHttpHeader(
-                "Authorization",
-                getOrElse("UNLEASH_API_TOKEN",
-                    token))
-            .unleashAPI(getOrElse("UNLEASH_API_URL", "http://localhost:8080"))
-            .fetchTogglesInterval(5)
-            .instanceId("java-example")
-            //.synchronousFetchOnInitialisation(true)
-            .subscriber(new UnleashSubscriber() {
-                @Override
-                public void onReady(UnleashReady ready) {
-                    System.out.println("Unleash is ready");
-                }
-                @Override
-                public void togglesFetched(ClientFeaturesResponse toggleResponse) {
-                    System.out.println("Fetch toggles with status: " + toggleResponse.getStatus());
-                }
+                .appName("client-example.advanced.java")
+                .customHttpHeader(
+                        "Authorization",
+                        getOrElse("UNLEASH_API_TOKEN",
+                                "*:development.25a06b75248528f8ca93ce179dcdd141aedfb632231e0d21fd8ff349"))
+                .unleashAPI(getOrElse("UNLEASH_API_URL", "https://app.unleash-hosted.com/demo/api"))
+                .instanceId("java-example")
+                .synchronousFetchOnInitialisation(true)
+                .sendMetricsInterval(30).build();
 
-                @Override
-                public void featuresBackedUp(FeatureSet toggleCollection) {
-                    System.out.println("Backup stored.");
-                }
-
-                @Override
-                public void featuresBackupRestored(FeatureSet featureCollection) {
-                    System.out.println("Backup restored.");
-                }
-
-                @Override
-                public void impression(ImpressionEvent impressionEvent) {
-                    System.out.println("Impression: " + impressionEvent.getFeatureName() + " enabled: " + impressionEvent.isEnabled());
-
-                }
-            })
-            .sendMetricsInterval(30).build();
-
-        Unleash unleash = null;
-
-
-        // Define scenarios to test
-        String[] providerNameOptions = {
-            "es-barcelona",    // matching prefix
-            "es-",             // prefix only
-            "es",              // shorter than prefix
-            "",                // empty string
-            null,              // null providerName
-            "ES-barcelona",    // mixed case
-            "en-barcelona",    // non‑matching prefix
-            "es-🔧🔧🔧",       // emojis
-            "es-" + "a".repeat(5000) // long string
-        };
-
-        String[] companyIdOptions = {
-            "abc123",
-            "xyz789",
-            "def456",
-            "",                // empty company_id
-            null,               // null company_id
-            "abc123-🔧🔧🔧",       // emojis
-            "abc123-" + "x".repeat(5000) // long string
-        };
-        int iteration = 1;
-        UnleashContext.Builder ctxBuilder = UnleashContext.builder().userId("user-" + iteration)
-            .sessionId("session-" + iteration)
-            .environment(env);
-
-        for (String providerName : providerNameOptions) {
-            ctxBuilder.addProperty("providerName", providerName);
-            for (String companyId : companyIdOptions) {
-                ctxBuilder.addProperty("company_id", companyId);
-
-                UnleashContext context = ctxBuilder.build();
-                if (unleash == null) {
-                      unleash = new DefaultUnleash(config);
-                }
-                boolean enabled = unleash.isEnabled(feature, context);
-
-                System.out.println("Iteration " + iteration++);
-                System.out.println("Context: " + contextToString(context));
-                System.out.println("    providerName: " + limitTo(providerName, 15) +
-                    ", company_id: " + limitTo(companyId, 15) +
-                    " => Enabled? " + enabled);
-                System.out.println("----------------------------");
-            }
+        Unleash unleash = new DefaultUnleash(config);
+        UnleashContext context = UnleashContext.builder()
+            .addProperty("semver", "1.5.2")
+            .build();
+        UnleashContext smallerSemver = UnleashContext.builder()
+            .addProperty("semver", "1.1.0")
+            .build();
+        while (true) {
+                    unleash.isEnabled("advanced.constraints", context); // expect this to be true
+                    unleash.isEnabled("advanced.constraints", smallerSemver); // expect this to be false
         }
-        UnleashContext.Builder builder = UnleashContext.builder().environment(env);
-        Unleash unleashFinal = unleash;
-        IntStream.range(0, 100000).parallel().forEach(i -> {
-
-            UnleashContext ctx = builder.addProperty("providerName", providerNameOptions[i % providerNameOptions.length])
-                .userId("user-" + i)
-                .addProperty("company_id", companyIdOptions[i % companyIdOptions.length]) // Vary company_id for each user
-                .build();
-
-            boolean enabled = unleashFinal.isEnabled(feature, ctx);
-            System.out.println("Parallel Iteration " + i +
-                " => providerName: " + limitTo(providerNameOptions[i % providerNameOptions.length], 20) +
-                ", company_id: " + limitTo(companyIdOptions[i % companyIdOptions.length], 20) +
-                ", userId: user-" + i +
-                " => Enabled? " + enabled);
-        });
     }
 
     public static String getOrElse(String key, String defaultValue) {
