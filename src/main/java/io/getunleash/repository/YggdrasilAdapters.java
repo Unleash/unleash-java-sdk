@@ -75,7 +75,7 @@ public final class YggdrasilAdapters {
     }
 
     public static Variant adapt(Optional<VariantDef> variant, Variant defaultValue) {
-        if (!variant.isPresent()) {
+        if (variant.isEmpty()) {
             return defaultValue;
         }
         VariantDef unwrapped = variant.get();
@@ -86,7 +86,7 @@ public final class YggdrasilAdapters {
                 unwrapped.isFeatureEnabled());
     }
 
-    public static @Nullable io.getunleash.variant.Payload adapt(@Nullable Payload payload) {
+    public static io.getunleash.variant.Payload adapt(@Nullable Payload payload) {
         return Optional.ofNullable(payload)
                 .map(p -> new io.getunleash.variant.Payload(p.getType(), p.getValue()))
                 .orElse(new io.getunleash.variant.Payload("string", null));

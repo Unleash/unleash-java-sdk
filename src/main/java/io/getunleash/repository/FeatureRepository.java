@@ -2,15 +2,18 @@ package io.getunleash.repository;
 
 import io.getunleash.FeatureDefinition;
 import io.getunleash.UnleashContext;
-import io.getunleash.engine.VariantDef;
-import io.getunleash.engine.WasmResponse;
+import io.getunleash.engine.WasmIsEnabledResponse;
+import io.getunleash.engine.WasmVariantResponse;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 
 public interface FeatureRepository {
 
-    WasmResponse<Boolean> isEnabled(String toggleName, UnleashContext context);
+    @Nullable
+    WasmIsEnabledResponse isEnabled(String toggleName, UnleashContext context);
 
-    WasmResponse<VariantDef> getVariant(String toggleName, UnleashContext context);
+    @Nullable
+    WasmVariantResponse getVariant(String toggleName, UnleashContext context);
 
     Stream<FeatureDefinition> listKnownToggles();
 

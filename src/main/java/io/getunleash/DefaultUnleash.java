@@ -3,18 +3,19 @@ package io.getunleash;
 import static io.getunleash.variant.Variant.DISABLED_VARIANT;
 
 import io.getunleash.engine.VariantDef;
-import io.getunleash.engine.WasmResponse;
+import io.getunleash.engine.WasmIsEnabledResponse;
+import io.getunleash.engine.WasmVariantResponse;
 import io.getunleash.event.EventDispatcher;
 import io.getunleash.event.IsEnabledImpressionEvent;
 import io.getunleash.event.ToggleEvaluated;
 import io.getunleash.event.VariantImpressionEvent;
-import io.getunleash.metric.UnleashMetricService;
 import io.getunleash.repository.FeatureRepository;
 import io.getunleash.repository.YggdrasilAdapters;
-import io.getunleash.strategy.*;
+import io.getunleash.strategy.Strategy;
 import io.getunleash.util.UnleashConfig;
 import io.getunleash.variant.Variant;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.BiPredicate;
@@ -25,16 +26,16 @@ import org.slf4j.LoggerFactory;
 public class DefaultUnleash implements Unleash {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultUnleash.class);
 
-    private static ConcurrentHashMap<String, LongAdder> initCounts = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, LongAdder> initCounts =
+            new ConcurrentHashMap<>();
 
-    private final UnleashMetricService metricService;
     private final FeatureRepository featureRepository;
     private final UnleashContextProvider contextProvider;
     private final EventDispatcher eventDispatcher;
     private final UnleashConfig config;
 
     private static EngineProxy defaultToggleRepository(
-            UnleashConfig unleashConfig, Strategy... strategies) {
+        UnleashConfig unleashConfig, Strategy... strategies) {
         return new EngineProxyImpl(unleashConfig, strategies);
     }
 
@@ -69,7 +70,6 @@ public class DefaultUnleash implements Unleash {
 
         this.config = unleashConfig;
         this.featureRepository = engineProxy;
-        this.metricService = engineProxy;
         this.contextProvider = contextProvider;
         this.eventDispatcher = eventDispatcher;
         initCounts.compute(
@@ -113,15 +113,13 @@ public class DefaultUnleash implements Unleash {
 
         UnleashContext enhancedContext = context.applyStaticFields(config);
 
-        WasmResponse<Boolean> response =
-                this.featureRepository.isEnabled(toggleName, enhancedContext);
-        Boolean enabled = response.value;
-        if (enabled == null) {
-            enabled = fallbackAction.test(toggleName, enhancedContext);
-        }
-
+        Optional<WasmIsEnabledResponse> response =
+                Optional.ofNullable(this.featureRepository.isEnabled(toggleName, enhancedContext));
+        boolean enabled =
+                response.map(r -> r.value)
+                        .orElseGet(() -> fallbackAction.test(toggleName, enhancedContext));
         eventDispatcher.dispatch(new ToggleEvaluated(toggleName, enabled));
-        if (response.impressionData) {
+        if (response.map(r -> r.impressionData).orElse(false)) {
             eventDispatcher.dispatch(new IsEnabledImpressionEvent(toggleName, enabled, context));
         }
         return enabled;
@@ -145,13 +143,13 @@ public class DefaultUnleash implements Unleash {
     @Override
     public Variant getVariant(String toggleName, UnleashContext context, Variant defaultValue) {
         UnleashContext enhancedContext = context.applyStaticFields(config);
-        WasmResponse<VariantDef> response =
-                this.featureRepository.getVariant(toggleName, enhancedContext);
-        Optional<VariantDef> variantDef = Optional.ofNullable(response.value);
+        Optional<WasmVariantResponse> response =
+                Optional.ofNullable(this.featureRepository.getVariant(toggleName, enhancedContext));
+        Optional<VariantDef> variantDef = response.map(r -> r.value);
 
         Variant variant = YggdrasilAdapters.adapt(variantDef, defaultValue);
         eventDispatcher.dispatch(new ToggleEvaluated(toggleName, variant.isFeatureEnabled()));
-        if (response.impressionData) {
+        if (response.map(r -> r.impressionData).orElse(false)) {
             eventDispatcher.dispatch(
                     new VariantImpressionEvent(
                             toggleName, variant.isFeatureEnabled(), context, variant.getName()));
@@ -201,9 +199,10 @@ public class DefaultUnleash implements Unleash {
                     .map(
                             toggleName -> {
                                 UnleashContext enhancedContext = context.applyStaticFields(config);
-                                WasmResponse<VariantDef> response =
+                                WasmVariantResponse response =
                                         featureRepository.getVariant(toggleName, enhancedContext);
-                                Optional<VariantDef> variantDef = Optional.of(response.value);
+                                Optional<VariantDef> variantDef =
+                                        Optional.ofNullable(response).map(r -> r.value);
                                 Variant variant =
                                         YggdrasilAdapters.adapt(variantDef, DISABLED_VARIANT);
                                 return new EvaluatedToggle(
