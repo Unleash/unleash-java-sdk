@@ -4,8 +4,8 @@ import io.getunleash.FeatureDefinition;
 import io.getunleash.UnleashContext;
 import io.getunleash.UnleashException;
 import io.getunleash.engine.UnleashEngine;
-import io.getunleash.engine.VariantDef;
-import io.getunleash.engine.WasmResponse;
+import io.getunleash.engine.WasmIsEnabledResponse;
+import io.getunleash.engine.WasmVariantResponse;
 import io.getunleash.engine.YggdrasilInvalidInputException;
 import io.getunleash.event.ClientFeaturesResponse;
 import io.getunleash.event.EventDispatcher;
@@ -19,6 +19,7 @@ import io.getunleash.util.UnleashScheduledExecutor;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +27,7 @@ public class FeatureRepositoryImpl implements FeatureRepository {
     private static final Logger LOGGER = LoggerFactory.getLogger(FeatureRepositoryImpl.class);
     private final UnleashConfig unleashConfig;
     private final BackupHandler featureBackupHandler;
-    private final ToggleBootstrapProvider bootstrapper;
+    @Nullable private final ToggleBootstrapProvider bootstrapper;
     private final FeatureFetcher featureFetcher;
     private final StreamingFeatureFetcher streamingFeatureFetcher;
     private final EventDispatcher eventDispatcher;
@@ -213,7 +214,8 @@ public class FeatureRepositoryImpl implements FeatureRepository {
     }
 
     @Override
-    public WasmResponse<Boolean> isEnabled(String toggleName, UnleashContext context) {
+    @Nullable
+    public WasmIsEnabledResponse isEnabled(String toggleName, UnleashContext context) {
         try {
             return this.engine.isEnabled(toggleName, YggdrasilAdapters.adapt(context));
         } catch (YggdrasilInvalidInputException e) {
@@ -223,7 +225,8 @@ public class FeatureRepositoryImpl implements FeatureRepository {
     }
 
     @Override
-    public WasmResponse<VariantDef> getVariant(String toggleName, UnleashContext context) {
+    @Nullable
+    public WasmVariantResponse getVariant(String toggleName, UnleashContext context) {
         try {
             return this.engine.getVariant(toggleName, YggdrasilAdapters.adapt(context));
         } catch (YggdrasilInvalidInputException e) {
