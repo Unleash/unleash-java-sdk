@@ -127,13 +127,13 @@ public class FeatureRepositoryImpl implements FeatureRepository {
     @SuppressWarnings("FutureReturnValueIgnored")
     private void initCollections(UnleashScheduledExecutor executor) {
         Optional<String> features = this.featureBackupHandler.read();
-        if (!features.isPresent() && this.bootstrapper != null) {
+        if (features.isEmpty() && this.bootstrapper != null) {
             features = this.bootstrapper.read();
         }
         if (features.isPresent()) {
             try {
                 this.engine.takeState(features.get());
-            } catch (YggdrasilInvalidInputException e) {
+            } catch (YggdrasilInvalidInputException | RuntimeException e) {
                 LOGGER.error("Error when initializing feature toggles", e);
                 eventDispatcher.dispatch(new UnleashException("Failed to read backup file:", e));
             }
@@ -196,7 +196,7 @@ public class FeatureRepositoryImpl implements FeatureRepository {
                     }
                 } catch (UnleashException e) {
                     handler.accept(e);
-                } catch (YggdrasilInvalidInputException e) {
+                } catch (YggdrasilInvalidInputException| RuntimeException e) {
                     handler.accept(new UnleashException("Error when fetching features", e));
                 }
             } else {
@@ -218,7 +218,7 @@ public class FeatureRepositoryImpl implements FeatureRepository {
     public WasmIsEnabledResponse isEnabled(String toggleName, UnleashContext context) {
         try {
             return this.engine.isEnabled(toggleName, YggdrasilAdapters.adapt(context));
-        } catch (YggdrasilInvalidInputException e) {
+        } catch (YggdrasilInvalidInputException | RuntimeException e) {
             LOGGER.error("Error when checking feature toggle {}", toggleName, e);
             return null;
         }
@@ -229,7 +229,7 @@ public class FeatureRepositoryImpl implements FeatureRepository {
     public WasmVariantResponse getVariant(String toggleName, UnleashContext context) {
         try {
             return this.engine.getVariant(toggleName, YggdrasilAdapters.adapt(context));
-        } catch (YggdrasilInvalidInputException e) {
+        } catch (YggdrasilInvalidInputException | RuntimeException e) {
             LOGGER.error("Error when checking feature toggle {}", toggleName, e);
             return null;
         }
