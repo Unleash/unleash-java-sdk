@@ -237,10 +237,12 @@ public class FeatureRepositoryImpl implements FeatureRepository {
         return this.engine.listKnownToggles().stream().map(FeatureDefinition::new);
     }
 
-    private synchronized void handleStreamingUpdate(String data) {
+    synchronized void handleStreamingUpdate(String data) {
         try {
             engine.takeState(data);
-            // TODO: write backup when engine exposes current state
+
+            String currentState = engine.getState();
+            featureBackupHandler.write(currentState);
 
             ClientFeaturesResponse response = ClientFeaturesResponse.updated(data);
             eventDispatcher.dispatch(response);
