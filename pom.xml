@@ -58,7 +58,7 @@
         <dependency>
             <groupId>io.getunleash</groupId>
             <artifactId>yggdrasil-engine</artifactId>
-            <version>0.3.2</version>
+            <version>0.4.2</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
