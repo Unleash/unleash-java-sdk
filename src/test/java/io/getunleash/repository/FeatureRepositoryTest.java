@@ -504,6 +504,8 @@ public class FeatureRepositoryTest {
         assertThat(savedBackupContent).contains("\"features\"");
         assertThat(savedBackupContent).contains("\"segments\"");
 
+        assertThat(savedBackupContent).contains("\"testFeature\"");
+
         assertThat(savedBackupContent).contains("\"version\":2"); // Engine state has version field
         assertThat(savedBackupContent).contains("\"query\":"); // Engine state has query field
 
