@@ -14,32 +14,16 @@ public class StreamingExample {
     private static class StreamingEventSubscriber implements UnleashSubscriber {
         @Override
         public void togglesFetched(ClientFeaturesResponse toggleResponse) {
-            System.out.println("[STREAMING EVENT] Features updated from streaming connection");
-            System.out.println("  Response status: " + toggleResponse.getStatus());
-
-            if (toggleResponse.getClientFeatures().isPresent()) {
-                System.out.println(
-                        "  Raw streaming data: " + toggleResponse.getClientFeatures().get());
-            } else {
-                System.out.println("  Raw streaming data: None");
-            }
-
+            System.out.println("[STREAMING EVENT] Features updated");
             if (unleash != null) {
                 boolean isEnabled = unleash.isEnabled("streaming_flag");
-                System.out.println(
-                        "  Current 'streaming_flag' status: "
-                                + (isEnabled ? "ENABLED" : "DISABLED"));
+                System.out.println("  streaming_flag: " + (isEnabled ? "ENABLED" : "DISABLED"));
             }
-            System.out.println("---");
         }
 
         @Override
         public void onError(UnleashException unleashException) {
-            System.err.println("[STREAMING ERROR] Error in streaming connection:");
-            System.err.println("  Message: " + unleashException.getMessage());
-            if (unleashException.getCause() != null) {
-                System.err.println("  Cause: " + unleashException.getCause().getMessage());
-            }
+            System.err.println("[STREAMING ERROR] " + unleashException.getMessage());
         }
     }
 
@@ -61,10 +45,7 @@ public class StreamingExample {
 
         unleash = new DefaultUnleash(config);
 
-        System.out.println("Unleash streaming client started");
-        System.out.println("Streaming mode: " + config.isStreamingMode());
-        System.out.println("Subscriber registered for streaming events and errors");
-        System.out.println("Waiting for streaming events... (Press Ctrl+C to exit)");
+        System.out.println("Streaming client started. Waiting for events... (Press Ctrl+C to exit)");
 
         try {
             Thread.currentThread().join();
