@@ -15,6 +15,7 @@ public class UnleashScheduledExecutorImpl implements UnleashScheduledExecutor {
     private final ExecutorService executorService;
 
     public UnleashScheduledExecutorImpl() {
+        LOG.info("Creating Scheduled executor");
         ThreadFactory threadFactory =
                 runnable -> {
                     Thread thread = Executors.defaultThreadFactory().newThread(runnable);
@@ -31,20 +32,19 @@ public class UnleashScheduledExecutorImpl implements UnleashScheduledExecutor {
 
     public static synchronized UnleashScheduledExecutorImpl getInstance() {
         if (INSTANCE == null) {
+            LOG.info("INSTANCE was null, rebuilding Scheduled Executor");
             INSTANCE = new UnleashScheduledExecutorImpl();
         }
         return INSTANCE;
     }
 
     @Override
-    public @Nullable ScheduledFuture setInterval(
-            Runnable command, long initialDelaySec, long periodSec) {
+    public void setInterval(Runnable command, long initialDelaySec, long periodSec) {
         try {
-            return scheduledThreadPoolExecutor.scheduleAtFixedRate(
+            scheduledThreadPoolExecutor.scheduleAtFixedRate(
                     command, initialDelaySec, periodSec, TimeUnit.SECONDS);
         } catch (RejectedExecutionException ex) {
             LOG.error("Unleash background task crashed", ex);
-            return null;
         }
     }
 
@@ -56,5 +56,14 @@ public class UnleashScheduledExecutorImpl implements UnleashScheduledExecutor {
     @Override
     public void shutdown() {
         this.scheduledThreadPoolExecutor.shutdown();
+        INSTANCE = null;
+        LOG.info("Shutdown - Scheduled Executor");
+    }
+
+    @Override
+    public void shutdownNow() {
+        this.scheduledThreadPoolExecutor.shutdownNow();
+        INSTANCE = null;
+        LOG.info("Shutdown Now - Scheduled Executor");
     }
 }
