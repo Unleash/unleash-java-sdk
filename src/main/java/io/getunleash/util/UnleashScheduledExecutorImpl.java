@@ -54,15 +54,17 @@ public class UnleashScheduledExecutorImpl implements UnleashScheduledExecutor {
     }
 
     @Override
-    public void shutdown() {
+    public synchronized void shutdown() {
         this.scheduledThreadPoolExecutor.shutdown();
+        this.executorService.shutdown();
         INSTANCE = null;
         LOG.info("Shutdown - Scheduled Executor");
     }
 
     @Override
-    public void shutdownNow() {
+    public synchronized void shutdownNow() {
         this.scheduledThreadPoolExecutor.shutdownNow();
+        this.executorService.shutdownNow();
         INSTANCE = null;
         LOG.info("Shutdown Now - Scheduled Executor");
     }
