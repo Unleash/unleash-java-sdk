@@ -468,6 +468,50 @@ public class FeatureRepositoryTest {
         assertThat(featureRepository.getFailures()).isEqualTo(0);
     }
 
+    @Test
+    public void should_write_backup_file_when_streaming_update_received() throws Exception {
+        UnleashConfig streamingConfig =
+                UnleashConfig.builder()
+                        .appName("streaming-test")
+                        .unleashAPI("http://localhost:4242/api/")
+                        .scheduledExecutor(mock(UnleashScheduledExecutor.class))
+                        .disableMetrics()
+                        .disablePolling()
+                        .experimentalStreamingMode()
+                        .build();
+
+        when(backupHandler.read()).thenReturn(Optional.empty());
+
+        FeatureRepositoryImpl repository =
+                new FeatureRepositoryImpl(
+                        streamingConfig,
+                        backupHandler,
+                        new UnleashEngine(),
+                        fetcher,
+                        streamingFetcher,
+                        bootstrapHandler);
+
+        String streamingData =
+                "{\"events\":[{\"type\":\"hydration\",\"eventId\":1,\"features\":[{\"name\":\"testFeature\",\"enabled\":true,\"strategies\":[],\"variants\":[]}],\"segments\":[]}]}";
+
+        repository.handleStreamingUpdate(streamingData);
+
+        ArgumentCaptor<String> backupContentCaptor = ArgumentCaptor.forClass(String.class);
+        verify(backupHandler, times(1)).write(backupContentCaptor.capture());
+
+        String savedBackupContent = backupContentCaptor.getValue();
+
+        assertThat(savedBackupContent).contains("\"features\"");
+        assertThat(savedBackupContent).contains("\"segments\"");
+
+        assertThat(savedBackupContent).contains("\"testFeature\"");
+
+        assertThat(savedBackupContent).contains("\"version\":2");
+        assertThat(savedBackupContent).contains("\"query\":");
+
+        assertThat(savedBackupContent).doesNotContain("\"events\""); // store state not events
+    }
+
     private class TestRunner {
 
         private final UnleashScheduledExecutor executor;
