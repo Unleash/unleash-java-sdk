@@ -21,6 +21,7 @@ jobs:
       - name: Build, test, coverage
         run: ./mvnw clean test jacoco:report
       - name: Coveralls parallel
+        if: matrix.os != 'macos'
         uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -28,7 +29,6 @@ jobs:
           flag-name: run-jvm-${{ join(matrix.*, '-') }}
           parallel: true
           base-path: src/main/java
-          fail-on-error: ${{ matrix.os != 'macos' }}
   finish:
     needs: build
     if: ${{ always() }}
