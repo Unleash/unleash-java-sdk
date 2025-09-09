@@ -28,6 +28,7 @@ jobs:
           flag-name: run-jvm-${{ join(matrix.*, '-') }}
           parallel: true
           base-path: src/main/java
+          fail-on-error: ${{ matrix.os != 'macos' }}
   finish:
     needs: build
     if: ${{ always() }}
