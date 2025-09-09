@@ -2,6 +2,7 @@ package io.getunleash;
 
 import io.getunleash.engine.UnleashEngine;
 import io.getunleash.engine.VariantDef;
+import io.getunleash.engine.WasmResponse;
 import io.getunleash.lang.Nullable;
 import io.getunleash.metric.UnleashMetricService;
 import io.getunleash.metric.UnleashMetricServiceImpl;
@@ -43,12 +44,12 @@ public class EngineProxyImpl implements EngineProxy {
     }
 
     @Override
-    public Boolean isEnabled(String toggleName, UnleashContext context) {
+    public WasmResponse<Boolean> isEnabled(String toggleName, UnleashContext context) {
         return this.featureRepository.isEnabled(toggleName, context);
     }
 
     @Override
-    public Optional<VariantDef> getVariant(String toggleName, UnleashContext context) {
+    public WasmResponse<VariantDef> getVariant(String toggleName, UnleashContext context) {
         return this.featureRepository.getVariant(toggleName, context);
     }
 
@@ -58,23 +59,13 @@ public class EngineProxyImpl implements EngineProxy {
     }
 
     @Override
-    public void countToggle(String name, boolean enabled) {
-        this.metricService.countToggle(name, enabled);
-    }
-
-    @Override
-    public void countVariant(String name, String variantName) {
-        this.metricService.countVariant(name, variantName);
-    }
-
-    @Override
     public Stream<FeatureDefinition> listKnownToggles() {
         return this.featureRepository.listKnownToggles();
     }
 
     @Override
-    public boolean shouldEmitImpressionEvent(String toggleName) {
-        return this.featureRepository.shouldEmitImpressionEvent(toggleName);
+    public void shutdown() {
+        this.featureRepository.shutdown();
     }
 
     private static Map<String, Strategy> buildStrategyMap(@Nullable Strategy[] strategies) {

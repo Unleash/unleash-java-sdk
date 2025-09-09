@@ -133,6 +133,30 @@ class DefaultUnleashTest {
     }
 
     @Test
+    public void not_setting_current_time_falls_back_to_correct_now_instant() {
+
+        ToggleBootstrapProvider bootstrapper =
+                new ToggleBootstrapProvider() {
+
+                    @Override
+                    public Optional<String> read() {
+                        return Optional.of(loadMockFeatures("unleash-repo-v2-advanced.json"));
+                    }
+                };
+
+        UnleashConfig unleashConfigWithFallback =
+                UnleashConfig.builder()
+                        .unleashAPI("http://fakeAPI")
+                        .appName("fakeApp")
+                        .toggleBootstrapProvider(bootstrapper)
+                        .build();
+        sut = new DefaultUnleash(unleashConfigWithFallback);
+
+        boolean enabled = sut.isEnabled("Test.currentTime");
+        assertThat(enabled).isTrue();
+    }
+
+    @Test
     public void multiple_instantiations_of_the_same_config_gives_errors() {
         ListAppender<ILoggingEvent> appender = new ListAppender();
         appender.start();

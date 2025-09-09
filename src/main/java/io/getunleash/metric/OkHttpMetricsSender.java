@@ -1,5 +1,7 @@
 package io.getunleash.metric;
 
+import static io.getunleash.util.UnleashConfig.UNLEASH_INTERVAL;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import io.getunleash.UnleashException;
@@ -18,8 +20,6 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-
-import static io.getunleash.util.UnleashConfig.UNLEASH_INTERVAL;
 
 public class OkHttpMetricsSender implements MetricSender {
     private final UnleashConfig config;
@@ -90,9 +90,12 @@ public class OkHttpMetricsSender implements MetricSender {
 
     private int post(HttpUrl url, Object o) {
         RequestBody body = RequestBody.create(gson.toJson(o), JSON);
-        Request request = new Request.Builder().url(url).post(body)
-            .addHeader(UNLEASH_INTERVAL, config.getSendMetricsIntervalMillis())
-            .build();
+        Request request =
+                new Request.Builder()
+                        .url(url)
+                        .post(body)
+                        .addHeader(UNLEASH_INTERVAL, config.getSendMetricsIntervalMillis())
+                        .build();
         try (Response response = this.client.newCall(request).execute()) {
             return response.code();
         } catch (IOException ioEx) {

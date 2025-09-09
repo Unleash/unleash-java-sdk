@@ -10,7 +10,6 @@ import io.getunleash.DefaultUnleash;
 import io.getunleash.SynchronousTestExecutor;
 import io.getunleash.Unleash;
 import io.getunleash.UnleashException;
-import io.getunleash.metric.ClientMetrics;
 import io.getunleash.metric.ClientRegistration;
 import io.getunleash.util.UnleashConfig;
 import java.util.ArrayList;
@@ -78,7 +77,6 @@ public class SubscriberTest {
         assertThat(testSubscriber.events)
                 .filteredOn(e -> e instanceof ClientRegistration)
                 .hasSize(1);
-        assertThat(testSubscriber.events).filteredOn(e -> e instanceof ClientMetrics).hasSize(1);
     }
 
     private class TestSubscriber implements UnleashSubscriber {

@@ -15,6 +15,7 @@ public class FeatureDefinitionAdapter extends TypeAdapter<FeatureDefinition> {
         out.name("name").value(value.getName());
         out.name("project").value(value.getProject());
         out.name("type").value(value.getType().orElse(null));
+        out.name("enabled").value(value.environmentEnabled());
         out.endObject();
     }
 
@@ -23,6 +24,7 @@ public class FeatureDefinitionAdapter extends TypeAdapter<FeatureDefinition> {
         String name = null;
         String project = null;
         Optional<String> type = Optional.empty();
+        boolean enabled = false;
 
         in.beginObject();
         while (in.hasNext()) {
@@ -36,6 +38,9 @@ public class FeatureDefinitionAdapter extends TypeAdapter<FeatureDefinition> {
                 case "type":
                     type = Optional.of(in.nextString());
                     break;
+                case "enabled":
+                    enabled = in.nextBoolean();
+                    break;
                 default:
                     in.skipValue();
             }
@@ -46,6 +51,6 @@ public class FeatureDefinitionAdapter extends TypeAdapter<FeatureDefinition> {
             throw new IOException("Missing required field 'name'");
         }
 
-        return new FeatureDefinition(name, type, project);
+        return new FeatureDefinition(name, type, project, enabled);
     }
 }

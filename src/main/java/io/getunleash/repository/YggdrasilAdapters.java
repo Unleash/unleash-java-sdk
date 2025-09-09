@@ -69,8 +69,8 @@ public final class YggdrasilAdapters {
         mapped.setRemoteAddress(context.getRemoteAddress().orElse(null));
         mapped.setProperties(context.getProperties());
         mapped.setCurrentTime(
-                DateTimeFormatter.ISO_DATE_TIME.format(
-                        context.getCurrentTime().orElse(ZonedDateTime.now())));
+                DateTimeFormatter.ISO_INSTANT.format(
+                        context.getCurrentTime().orElse(ZonedDateTime.now()).toInstant()));
         return mapped;
     }
 

@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import io.getunleash.engine.VariantDef;
+import io.getunleash.engine.WasmResponse;
 import io.getunleash.repository.ToggleBootstrapProvider;
 import io.getunleash.strategy.Strategy;
 import io.getunleash.util.UnleashConfig;
@@ -41,7 +43,8 @@ public class UnleashTest {
     @Test
     public void unknown_feature_should_use_default_setting() {
         EngineProxy engineProxy = mock(EngineProxy.class);
-        when(engineProxy.isEnabled(eq("test"), any(UnleashContext.class))).thenReturn(null);
+        when(engineProxy.isEnabled(eq("test"), any(UnleashContext.class)))
+                .thenReturn(new WasmResponse<Boolean>(false, null));
         Unleash unleash = new DefaultUnleash(baseConfig, engineProxy);
 
         boolean featureEnabled = unleash.isEnabled("test", true);
@@ -52,7 +55,8 @@ public class UnleashTest {
     @Test
     public void fallback_function_should_be_invoked_and_return_true() {
         EngineProxy engineProxy = mock(EngineProxy.class);
-        when(engineProxy.isEnabled(eq("test"), any(UnleashContext.class))).thenReturn(null);
+        when(engineProxy.isEnabled(eq("test"), any(UnleashContext.class)))
+                .thenReturn(new WasmResponse<Boolean>(false, null));
         Unleash unleash = new DefaultUnleash(baseConfig, engineProxy);
 
         BiPredicate<String, UnleashContext> fallbackAction = mock(BiPredicate.class);
@@ -65,7 +69,8 @@ public class UnleashTest {
     @Test
     public void fallback_function_should_be_invoked_also_with_context() {
         EngineProxy engineProxy = mock(EngineProxy.class);
-        when(engineProxy.isEnabled(eq("test"), any(UnleashContext.class))).thenReturn(null);
+        when(engineProxy.isEnabled(eq("test"), any(UnleashContext.class)))
+                .thenReturn(new WasmResponse<Boolean>(false, null));
         Unleash unleash = new DefaultUnleash(baseConfig, engineProxy);
 
         BiPredicate<String, UnleashContext> fallbackAction = mock(BiPredicate.class);
@@ -80,7 +85,8 @@ public class UnleashTest {
     @Test
     void fallback_function_should_be_invoked_and_return_false() {
         EngineProxy engineProxy = mock(EngineProxy.class);
-        when(engineProxy.isEnabled(eq("test"), any(UnleashContext.class))).thenReturn(null);
+        when(engineProxy.isEnabled(eq("test"), any(UnleashContext.class)))
+                .thenReturn(new WasmResponse<Boolean>(false, null));
         Unleash unleash = new DefaultUnleash(baseConfig, engineProxy);
 
         BiPredicate<String, UnleashContext> fallbackAction = mock(BiPredicate.class);
@@ -93,7 +99,8 @@ public class UnleashTest {
     @Test
     void fallback_function_should_not_be_called_when_toggle_is_defined() {
         EngineProxy engineProxy = mock(EngineProxy.class);
-        when(engineProxy.isEnabled(eq("test"), any(UnleashContext.class))).thenReturn(true);
+        when(engineProxy.isEnabled(eq("test"), any(UnleashContext.class)))
+                .thenReturn(new WasmResponse<Boolean>(true, true));
         Unleash unleash = new DefaultUnleash(baseConfig, engineProxy);
 
         BiPredicate<String, UnleashContext> fallbackAction = mock(BiPredicate.class);
@@ -142,7 +149,7 @@ public class UnleashTest {
         when(engineProxy.isEnabled(
                         eq("test"),
                         argThat(UnleashContext -> "111".equals(context.getUserId().orElse(null)))))
-                .thenReturn(Boolean.TRUE);
+                .thenReturn(new WasmResponse<Boolean>(true, true));
 
         UnleashConfig config =
                 createConfigBuilder().unleashContextProvider(contextProvider).build();
@@ -160,7 +167,7 @@ public class UnleashTest {
         when(engineProxy.isEnabled(
                         eq("test"),
                         argThat(UnleashContext -> "13".equals(context.getUserId().orElse(null)))))
-                .thenReturn(Boolean.TRUE);
+                .thenReturn(new WasmResponse<Boolean>(true, true));
 
         Unleash unleash = new DefaultUnleash(baseConfig, engineProxy);
 
@@ -172,7 +179,8 @@ public class UnleashTest {
         UnleashContext context = UnleashContext.builder().userId("13").build();
 
         EngineProxy engineProxy = mock(EngineProxy.class);
-        when(engineProxy.isEnabled(any(String.class), any(UnleashContext.class))).thenReturn(null);
+        when(engineProxy.isEnabled(any(String.class), any(UnleashContext.class)))
+                .thenReturn(new WasmResponse<Boolean>(false, null));
 
         Unleash unleash = new DefaultUnleash(baseConfig, engineProxy);
 
@@ -186,28 +194,12 @@ public class UnleashTest {
         Variant variant = new Variant("Chuck", "Norris", true);
         EngineProxy engineProxy = mock(EngineProxy.class);
         when(engineProxy.getVariant(any(String.class), any(UnleashContext.class)))
-                .thenReturn(Optional.empty());
+                .thenReturn(new WasmResponse<VariantDef>(true, null));
 
         Unleash unleash = new DefaultUnleash(baseConfig, engineProxy);
         Variant result = unleash.getVariant("test", context, variant);
 
         assertThat(result).isNotNull();
         assertThat(result.getName()).isEqualTo("Chuck");
-    }
-
-    @Test
-    public void getting_variant_when_disabled_should_increment_no_counter() {
-
-        UnleashContext context = UnleashContext.builder().userId("1").build();
-
-        Variant variant = new Variant("Chuck", "Norris", true);
-        EngineProxy engineProxy = mock(EngineProxy.class);
-        when(engineProxy.getVariant(any(String.class), any(UnleashContext.class)))
-                .thenReturn(Optional.empty());
-
-        Unleash unleash = new DefaultUnleash(baseConfig, engineProxy);
-        Variant result = unleash.getVariant("test", context, variant);
-
-        verify(engineProxy, times(1)).countToggle("test", false);
     }
 }

@@ -6,13 +6,9 @@ jobs:
     runs-on: ${{ matrix.os }}-latest
     strategy:
       matrix:
-        version: [8, 11, 17]
+        version: [11, 17]
         os: ["ubuntu", "windows", "macos"]
-        exclude:
-        - version: 8
-          os: macos
-        - version: 8
-          os: windows
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -25,6 +21,7 @@ jobs:
       - name: Build, test, coverage
         run: ./mvnw clean test jacoco:report
       - name: Coveralls parallel
+        if: matrix.os != 'macos'
         uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}

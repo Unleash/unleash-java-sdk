@@ -11,6 +11,158 @@ import org.junit.jupiter.api.Test;
 public class FakeUnleashTest {
 
     @Test
+    void conditionally_enabling_a_feature_should_replace_always_enabled() throws Exception {
+        FakeUnleash fakeUnleash = new FakeUnleash();
+        fakeUnleash.enable("t1");
+        fakeUnleash.conditionallyEnable(
+                context -> "expected_test_value".equals(context.getProperties().get("test")), "t1");
+
+        assertThat(
+                        fakeUnleash.isEnabled(
+                                "t1",
+                                UnleashContext.builder()
+                                        .addProperty("test", "expected_test_value")
+                                        .build()))
+                .isTrue();
+        assertThat(
+                        fakeUnleash.isEnabled(
+                                "t1",
+                                UnleashContext.builder()
+                                        .addProperty("test", "unexpected_test_value")
+                                        .build()))
+                .isFalse();
+    }
+
+    @Test
+    void unconditionally_enabling_a_feature_should_replace_conditionally_enabled()
+            throws Exception {
+        FakeUnleash fakeUnleash = new FakeUnleash();
+        fakeUnleash.conditionallyEnable(
+                context -> "expected_test_value".equals(context.getProperties().get("test")), "t1");
+        fakeUnleash.enable("t1");
+
+        assertThat(
+                        fakeUnleash.isEnabled(
+                                "t1",
+                                UnleashContext.builder()
+                                        .addProperty("test", "expected_test_value")
+                                        .build()))
+                .isTrue();
+        assertThat(
+                        fakeUnleash.isEnabled(
+                                "t1",
+                                UnleashContext.builder()
+                                        .addProperty("test", "unexpected_test_value")
+                                        .build()))
+                .isTrue();
+    }
+
+    @Test
+    void should_conditionally_enable_feature_only_for_matching_context() throws Exception {
+        FakeUnleash fakeUnleash = new FakeUnleash();
+        fakeUnleash.conditionallyEnable(
+                context -> "expected_test_value".equals(context.getProperties().get("test")),
+                "t1",
+                "t2");
+
+        assertThat(
+                        fakeUnleash.isEnabled(
+                                "t1",
+                                UnleashContext.builder()
+                                        .addProperty("test", "expected_test_value")
+                                        .addProperty("other", "other")
+                                        .build()))
+                .isTrue();
+        assertThat(
+                        fakeUnleash.isEnabled(
+                                "t2",
+                                UnleashContext.builder()
+                                        .addProperty("test", "unexpected_test_value")
+                                        .addProperty("other", "other")
+                                        .build()))
+                .isFalse();
+        assertThat(fakeUnleash.isEnabled("t1")).isFalse();
+        assertThat(fakeUnleash.isEnabled("unknown")).isFalse();
+    }
+
+    @Test
+    void should_evaluate_multiple_conditional_contexts() throws Exception {
+        FakeUnleash fakeUnleash = new FakeUnleash();
+        fakeUnleash.conditionallyEnable(
+                context -> "v1".equals(context.getProperties().get("test")), "t1", "t2");
+        fakeUnleash.conditionallyEnable(
+                context -> "v2".equals(context.getProperties().get("test")), "t1", "t2");
+
+        assertThat(
+                        fakeUnleash.isEnabled(
+                                "t1", UnleashContext.builder().addProperty("test", "v1").build()))
+                .isTrue();
+        assertThat(
+                        fakeUnleash.isEnabled(
+                                "t1", UnleashContext.builder().addProperty("test", "v2").build()))
+                .isTrue();
+        assertThat(
+                        fakeUnleash.isEnabled(
+                                "t1", UnleashContext.builder().addProperty("test", "v3").build()))
+                .isFalse();
+        assertThat(fakeUnleash.isEnabled("t1")).isFalse();
+        assertThat(fakeUnleash.isEnabled("unknown")).isFalse();
+
+        // disabling the whole feature toggle erases any conditional enablement
+        fakeUnleash.disable("t1");
+        assertThat(
+                        fakeUnleash.isEnabled(
+                                "t1", UnleashContext.builder().addProperty("test", "v1").build()))
+                .isFalse();
+        assertThat(
+                        fakeUnleash.isEnabled(
+                                "t1", UnleashContext.builder().addProperty("test", "v2").build()))
+                .isFalse();
+    }
+
+    @Test
+    void should_return_variant_only_if_conditionally_enabled() {
+        FakeUnleash fakeUnleash = new FakeUnleash();
+        fakeUnleash.conditionallyEnable(
+                context -> "v1".equals(context.getProperties().get("test")), "t1");
+        Variant variant = new Variant("a", "some payload", true);
+        fakeUnleash.setVariant("t1", variant);
+
+        assertThat(
+                        fakeUnleash.getVariant(
+                                "t1", UnleashContext.builder().addProperty("test", "v1").build()))
+                .isEqualTo(variant);
+        assertThat(
+                        fakeUnleash.getVariant(
+                                "t1", UnleashContext.builder().addProperty("test", "v2").build()))
+                .isEqualTo(Variant.DISABLED_VARIANT);
+    }
+
+    @Test
+    void should_reset_conditional_features_when_resetting_entire_feature() {
+        FakeUnleash fakeUnleash = new FakeUnleash();
+        fakeUnleash.conditionallyEnable(ctx -> true, "t1");
+
+        assertThat(fakeUnleash.isEnabled("t1", UnleashContext.builder().build())).isTrue();
+
+        fakeUnleash.reset("t1");
+
+        assertThat(fakeUnleash.isEnabled("t1", UnleashContext.builder().build())).isFalse();
+    }
+
+    @Test
+    void should_use_fallback_if_no_matchers_defined() {
+        FakeUnleash fakeUnleash = new FakeUnleash();
+
+        assertThat(
+                        fakeUnleash.isEnabled(
+                                "unknown-toggle",
+                                UnleashContext.builder().addProperty("test", "v1").build(),
+                                (name, context) -> true))
+                .isTrue();
+    }
+
+    @Test
     public void should_enable_all_toggles() throws Exception {
         FakeUnleash fakeUnleash = new FakeUnleash();
         fakeUnleash.enableAll();

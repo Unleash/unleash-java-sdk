@@ -44,7 +44,9 @@
                 {
                     "contextName": "single",
                     "operator": "STR_CONTAINS",
-                    "values": ["true"],
+                    "values": [
+                        "true"
+                    ],
                     "inverted": false,
                     "caseInsensitive": true
                 }
@@ -58,7 +60,9 @@
                 {
                     "contextName": "catOrDog",
                     "operator": "STR_CONTAINS",
-                    "values": ["cat"],
+                    "values": [
+                        "cat"
+                    ],
                     "inverted": false,
                     "caseInsensitive": true
                 }
@@ -74,7 +78,10 @@
                 {
                     "name": "default",
                     "segments": [
-                        0,1,2,3
+                        0,
+                        1,
+                        2,
+                        3
                     ]
                 }
             ],
@@ -86,6 +93,24 @@
                 {
                     "name": "variant2",
                     "weight": 50
+                }
+            ],
+            "createdAt": "2019-01-24T10:41:45.236Z"
+        },
+        {
+            "name": "Test.currentTime",
+            "description": null,
+            "enabled": true,
+            "strategies": [
+                {
+                    "name": "default",
+                    "constraints": [
+                        {
+                            "contextName": "currentTime",
+                            "operator": "DATE_AFTER",
+                            "value": "2022-01-29T13:00:00.000Z"
+                        }
+                    ]
                 }
             ],
             "createdAt": "2019-01-24T10:41:45.236Z"

@@ -12,14 +12,14 @@ public class ClientMetrics implements UnleashEvent {
     private final String appName;
     private final String instanceId;
     private final String connectionId;
-    private final MetricsBucket bucket;
+    @Nullable private final MetricsBucket bucket;
     private final String environment;
     private final String specVersion;
     @Nullable private final String platformName;
     @Nullable private final String platformVersion;
     @Nullable private final String yggdrasilVersion;
 
-    ClientMetrics(UnleashConfig config, MetricsBucket bucket) {
+    ClientMetrics(UnleashConfig config, @Nullable MetricsBucket bucket) {
         this.environment = config.getEnvironment();
         this.appName = config.getAppName();
         this.instanceId = config.getInstanceId();
@@ -43,6 +43,7 @@ public class ClientMetrics implements UnleashEvent {
         return connectionId;
     }
 
+    @Nullable
     public MetricsBucket getBucket() {
         return bucket;
     }

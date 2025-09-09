@@ -37,14 +37,12 @@ public class UnleashScheduledExecutorImpl implements UnleashScheduledExecutor {
     }
 
     @Override
-    public @Nullable ScheduledFuture setInterval(
-            Runnable command, long initialDelaySec, long periodSec) {
+    public void setInterval(Runnable command, long initialDelaySec, long periodSec) {
         try {
-            return scheduledThreadPoolExecutor.scheduleAtFixedRate(
+            scheduledThreadPoolExecutor.scheduleAtFixedRate(
                     command, initialDelaySec, periodSec, TimeUnit.SECONDS);
         } catch (RejectedExecutionException ex) {
             LOG.error("Unleash background task crashed", ex);
-            return null;
         }
     }
 
@@ -54,7 +52,16 @@ public class UnleashScheduledExecutorImpl implements UnleashScheduledExecutor {
     }
 
     @Override
-    public void shutdown() {
+    public synchronized void shutdown() {
         this.scheduledThreadPoolExecutor.shutdown();
+        this.executorService.shutdown();
+        INSTANCE = null;
+    }
+
+    @Override
+    public synchronized void shutdownNow() {
+        this.scheduledThreadPoolExecutor.shutdownNow();
+        this.executorService.shutdownNow();
+        INSTANCE = null;
     }
 }

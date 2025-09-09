@@ -1,5 +1,7 @@
 package io.getunleash.metric;
 
+import static io.getunleash.util.UnleashConfig.UNLEASH_INTERVAL;
+
 import com.google.gson.*;
 import io.getunleash.UnleashException;
 import io.getunleash.event.EventDispatcher;
@@ -15,7 +17,6 @@ import java.net.URL;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicLong;
-import static io.getunleash.util.UnleashConfig.UNLEASH_INTERVAL;
 
 public class DefaultHttpMetricsSender implements MetricSender {
 
@@ -55,7 +56,7 @@ public class DefaultHttpMetricsSender implements MetricSender {
     }
 
     public int sendMetrics(ClientMetrics metrics) {
-        if (!unleashConfig.isDisableMetrics()) {
+        if (!unleashConfig.isDisableMetrics() && metrics.getBucket() != null) {
             try {
                 int statusCode = post(clientMetricsURL, metrics);
                 eventDispatcher.dispatch(metrics);
@@ -83,7 +84,8 @@ public class DefaultHttpMetricsSender implements MetricSender {
             connection.setRequestMethod("POST");
             connection.setRequestProperty("Accept", "application/json");
             connection.setRequestProperty("Content-Type", "application/json");
-            connection.setRequestProperty(UNLEASH_INTERVAL, this.unleashConfig.getSendMetricsIntervalMillis());
+            connection.setRequestProperty(
+                    UNLEASH_INTERVAL, this.unleashConfig.getSendMetricsIntervalMillis());
             UnleashConfig.setRequestProperties(connection, this.unleashConfig);
             connection.setUseCaches(false);
             connection.setDoInput(true);

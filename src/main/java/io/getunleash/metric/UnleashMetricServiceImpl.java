@@ -2,7 +2,6 @@ package io.getunleash.metric;
 
 import io.getunleash.engine.MetricsBucket;
 import io.getunleash.engine.UnleashEngine;
-import io.getunleash.engine.YggdrasilError;
 import io.getunleash.util.Throttler;
 import io.getunleash.util.UnleashConfig;
 import io.getunleash.util.UnleashScheduledExecutor;
@@ -61,22 +60,17 @@ public class UnleashMetricServiceImpl implements UnleashMetricService {
     private Runnable sendMetrics() {
         return () -> {
             if (throttler.performAction()) {
-                try {
-                    MetricsBucket bucket = this.engine.getMetrics();
+                MetricsBucket bucket = this.engine.getMetrics();
 
-                    ClientMetrics metrics = new ClientMetrics(unleashConfig, bucket);
-                    int statusCode = metricSender.sendMetrics(metrics);
-                    if (statusCode >= 200 && statusCode < 400) {
-                        throttler.decrementFailureCountAndResetSkips();
-                    }
-                    if (statusCode >= 400) {
-                        throttler.handleHttpErrorCodes(statusCode);
-                    }
-                } catch (YggdrasilError e) {
-                    LOGGER.error(
-                            "Failed to retrieve metrics from the engine, this is a serious error, please report it",
-                            e);
+                ClientMetrics metrics = new ClientMetrics(unleashConfig, bucket);
+                int statusCode = metricSender.sendMetrics(metrics);
+                if (statusCode >= 200 && statusCode < 400) {
+                    throttler.decrementFailureCountAndResetSkips();
                 }
+                if (statusCode >= 400) {
+                    throttler.handleHttpErrorCodes(statusCode);
+                }
+
             } else {
                 throttler.skipped();
             }
@@ -89,23 +83,5 @@ public class UnleashMetricServiceImpl implements UnleashMetricService {
 
     protected int getFailures() {
         return this.throttler.getFailures();
-    }
-
-    @Override
-    public void countToggle(String name, boolean enabled) {
-        try {
-            this.engine.countToggle(name, enabled);
-        } catch (YggdrasilError e) {
-            LOGGER.error("Failed to count toggle", e);
-        }
-    }
-
-    @Override
-    public void countVariant(String name, String variantName) {
-        try {
-            this.engine.countVariant(name, variantName);
-        } catch (YggdrasilError e) {
-            LOGGER.error("Failed to count variant", e);
-        }
     }
 }

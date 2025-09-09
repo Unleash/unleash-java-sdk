@@ -1,5 +1,7 @@
 package io.getunleash.repository;
 
+import static io.getunleash.util.UnleashConfig.UNLEASH_INTERVAL;
+
 import com.google.gson.JsonSyntaxException;
 import io.getunleash.UnleashException;
 import io.getunleash.event.ClientFeaturesResponse;
@@ -15,8 +17,6 @@ import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-
-import static io.getunleash.util.UnleashConfig.UNLEASH_INTERVAL;
 
 public class OkHttpFeatureFetcher implements FeatureFetcher {
     private final HttpUrl toggleUrl;
@@ -68,9 +68,12 @@ public class OkHttpFeatureFetcher implements FeatureFetcher {
 
     @Override
     public ClientFeaturesResponse fetchFeatures() throws UnleashException {
-        Request request = new Request.Builder().url(toggleUrl).get()
-            .addHeader(UNLEASH_INTERVAL, interval)
-            .build();
+        Request request =
+                new Request.Builder()
+                        .url(toggleUrl)
+                        .get()
+                        .addHeader(UNLEASH_INTERVAL, interval)
+                        .build();
         int code = 200;
         try (Response response = client.newCall(request).execute()) {
             if (response.isSuccessful()) {

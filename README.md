@@ -1,6 +1,6 @@
 # Unleash Client SDK for Java
 
-[![Build Status](https://github.com/Unleash/unleash-client-java/workflows/Build/badge.svg)](https://github.com/Unleash/unleash-client-java/actions)
+[![Build Status](https://github.com/Unleash/unleash-java-sdk/workflows/Build/badge.svg)](https://github.com/Unleash/unleash-java-sdk/actions)
 [![Coverage Status](https://coveralls.io/repos/github/Unleash/unleash-client-java/badge.svg?branch=main)](https://coveralls.io/github/Unleash/unleash-client-java?branch=main)
 [![Maven Central](https://img.shields.io/maven-central/v/io.getunleash/unleash-client-java)](https://mvnrepository.com/artifact/io.getunleash/unleash-client-java)
 
@@ -11,6 +11,16 @@ You can use this client with [Unleash Enterprise](https://www.getunleash.io/pric
 >  **Migrating to v10**
 >
 > If you're using `MoreOperations`, custom or fallback strategies, subscribers or bootstrapping, please see the full [migration guide](v10_MIGRATION_GUIDE.md) for details. If you use GraalVM or Quarkus, please hold off on upgrading to v10, support is planned but not implemented.
+
+## Java Version Compatibility
+
+As of version 11, this library requires Java 11 or newer.
+
+- Java 8+ is supported on versions 10.2.x and below
+
+- Java 11+ is required starting from version 11 of the SDK
+
+If you're using Java 8, please pin your dependency to 10.2.2 or earlier.
 
 ## Getting started
 
@@ -208,7 +218,7 @@ UnleashConfig unleashConfig = UnleashConfig.builder()
 
 > Introduced in 3.2.2
 
-Sometimes you want to know when Unleash updates internally. This can be achieved by registering a subscriber. An example on how to configure a custom subscriber is shown below. Have a look at [UnleashSubscriber.java](https://github.com/Unleash/unleash-client-java/blob/main/src/main/java/io/getunleash/event/UnleashSubscriber.java) to get a complete overview of all methods you can override.
+Sometimes you want to know when Unleash updates internally. This can be achieved by registering a subscriber. An example on how to configure a custom subscriber is shown below. Have a look at [UnleashSubscriber.java](https://github.com/Unleash/unleash-java-sdk/blob/main/src/main/java/io/getunleash/event/UnleashSubscriber.java) to get a complete overview of all methods you can override.
 
 
 ```java
@@ -368,7 +378,7 @@ fakeUnleash.setVariant("t1", new Variant("a", (String) null, true, true));
 assertThat(fakeUnleash.getVariant("t1").getName(), is("a"));
 ```
 
-See more in [FakeUnleashTest.java](https://github.com/Unleash/unleash-client-java/blob/main/src/test/java/io/getunleash/FakeUnleashTest.java)
+See more in [FakeUnleashTest.java](https://github.com/Unleash/unleash-java-sdk/blob/main/src/test/java/io/getunleash/FakeUnleashTest.java)
 
 ## Development
 

@@ -45,3 +45,4 @@ target
 .DS_Store
 **/bin/
 .vim/
+*.versionsBackup

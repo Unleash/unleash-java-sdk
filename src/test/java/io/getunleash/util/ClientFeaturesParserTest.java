@@ -66,4 +66,34 @@ public class ClientFeaturesParserTest {
             assertThat(e.getMessage()).contains("Missing required field 'name'");
         }
     }
+
+    @Test
+    public void test_enabled_property_returned_if_set() {
+        String basicFeatures =
+                "{\"features\":[{\"name\":\"featureX\",\"project\":\"default\",\"enabled\":true,\"strategies\":[{\"name\":\"default\"}]}]}";
+        List<FeatureDefinition> parsed = ClientFeaturesParser.parse(basicFeatures);
+
+        assertEquals(1, parsed.size());
+
+        FeatureDefinition feature = parsed.get(0);
+
+        assertEquals(feature.getName(), "featureX");
+        assertEquals(feature.getProject(), "default");
+        assertEquals(feature.environmentEnabled(), true);
+    }
+
+    @Test
+    public void test_enabled_property_defaults_to_false() {
+        String basicFeatures =
+                "{\"features\":[{\"name\":\"featureX\",\"project\":\"default\",\"strategies\":[{\"name\":\"default\"}]}]}";
+        List<FeatureDefinition> parsed = ClientFeaturesParser.parse(basicFeatures);
+
+        assertEquals(1, parsed.size());
+
+        FeatureDefinition feature = parsed.get(0);
+
+        assertEquals(feature.getName(), "featureX");
+        assertEquals(feature.getProject(), "default");
+        assertEquals(feature.environmentEnabled(), false);
+    }
 }

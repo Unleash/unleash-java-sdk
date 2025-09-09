@@ -13,6 +13,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - name: Generate token
         id: generate-token
@@ -55,13 +56,12 @@ jobs:
           JRELEASER_MAVENCENTRAL_TOKEN: ${{ secrets.JRELEASER_MAVENCENTRAL_TOKEN }}
       - name: Set next version
         run: |
-          mvn --no-transfer-progress --batch-mode versions:set -DnewVersion=${{ github.event.inputs.nextVersion }}
+          mvn --no-transfer-progress --batch-mode versions:set -DnewVersion=${{ github.event.inputs.nextVersion }}-SNAPSHOT
       - name: Commit & Push changes
         uses: actions-js/push@master
         with:
           github_token: ${{ steps.generate-token.outputs.token }}
           message: Setting SNAPSHOT version ${{ github.event.inputs.nextVersion }}-SNAPSHOT
-          tags: true
       - name: JReleaser release output
         if: always()
         uses: actions/upload-artifact@v4

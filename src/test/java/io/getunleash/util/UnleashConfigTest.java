@@ -113,7 +113,7 @@ public class UnleashConfigTest {
         UnleashConfig config =
                 UnleashConfig.builder().appName("my-app").unleashAPI("http://unleash.org").build();
 
-        assertThat(config.getSdkVersion()).isEqualTo("unleash-client-java:development");
+        assertThat(config.getSdkVersion()).isEqualTo("unleash-java-sdk:development");
     }
 
     @Test
@@ -159,7 +159,7 @@ public class UnleashConfigTest {
         assertThat(connection.getRequestProperty(UNLEASH_CONNECTION_ID_HEADER))
                 .isEqualTo(unleashConfig.getConnectionId());
         assertThat(connection.getRequestProperty(UNLEASH_SDK_HEADER))
-                .isEqualTo("unleash-client-java:development");
+                .isEqualTo("unleash-java-sdk:development");
         assertThat(connection.getRequestProperty("User-Agent")).isEqualTo(appName);
     }
 
@@ -382,5 +382,13 @@ public class UnleashConfigTest {
                         .unleashAPI("http://localhost:4242")
                         .build();
         assertDoesNotThrow(config::getClientIdentifier);
+    }
+
+    @Test
+    public void should_require_unleash_uri() {
+        Executable ex =
+                () -> UnleashConfig.builder().apiKey("someapikey").appName("my-app").build();
+
+        assertThrows(IllegalStateException.class, ex);
     }
 }

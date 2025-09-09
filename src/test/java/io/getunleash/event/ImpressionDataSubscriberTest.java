@@ -10,8 +10,8 @@ import io.getunleash.SynchronousTestExecutor;
 import io.getunleash.Unleash;
 import io.getunleash.UnleashContext;
 import io.getunleash.engine.VariantDef;
+import io.getunleash.engine.WasmResponse;
 import io.getunleash.util.UnleashConfig;
-import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -38,8 +38,8 @@ public class ImpressionDataSubscriberTest {
     public void noEventsIfImpressionDataIsNotEnabled() {
         String featureWithoutImpressionDataEnabled = "feature.with.no.impressionData";
         EngineProxy repo = Mockito.mock(EngineProxy.class);
-        when(repo.isEnabled(any(String.class), any(UnleashContext.class))).thenReturn(true);
-        when(repo.shouldEmitImpressionEvent(featureWithoutImpressionDataEnabled)).thenReturn(false);
+        when(repo.isEnabled(any(String.class), any(UnleashContext.class)))
+                .thenReturn(new WasmResponse<Boolean>(false, true));
         Unleash unleash = new DefaultUnleash(unleashConfig, repo);
 
         unleash.isEnabled(featureWithoutImpressionDataEnabled);
@@ -51,8 +51,8 @@ public class ImpressionDataSubscriberTest {
     public void isEnabledEventWhenImpressionDataIsEnabled() {
         String featureWithImpressionData = "feature.with.impressionData";
         EngineProxy repo = Mockito.mock(EngineProxy.class);
-        when(repo.isEnabled(any(String.class), any(UnleashContext.class))).thenReturn(true);
-        when(repo.shouldEmitImpressionEvent(featureWithImpressionData)).thenReturn(true);
+        when(repo.isEnabled(any(String.class), any(UnleashContext.class)))
+                .thenReturn(new WasmResponse<Boolean>(true, true));
         Unleash unleash = new DefaultUnleash(unleashConfig, repo);
 
         unleash.isEnabled(featureWithImpressionData);
@@ -65,9 +65,8 @@ public class ImpressionDataSubscriberTest {
         VariantDef mockVariant = Mockito.mock(VariantDef.class);
         String featureWithImpressionData = "feature.with.impressionData";
         EngineProxy repo = Mockito.mock(EngineProxy.class);
-        when(repo.shouldEmitImpressionEvent(featureWithImpressionData)).thenReturn(true);
         when(repo.getVariant(any(String.class), any(UnleashContext.class)))
-                .thenReturn(Optional.of(mockVariant));
+                .thenReturn(new WasmResponse<VariantDef>(true, mockVariant));
         Unleash unleash = new DefaultUnleash(unleashConfig, repo);
 
         unleash.getVariant(featureWithImpressionData);
