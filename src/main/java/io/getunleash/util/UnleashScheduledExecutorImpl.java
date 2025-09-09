@@ -15,7 +15,6 @@ public class UnleashScheduledExecutorImpl implements UnleashScheduledExecutor {
     private final ExecutorService executorService;
 
     public UnleashScheduledExecutorImpl() {
-        LOG.info("Creating Scheduled executor");
         ThreadFactory threadFactory =
                 runnable -> {
                     Thread thread = Executors.defaultThreadFactory().newThread(runnable);
@@ -32,7 +31,6 @@ public class UnleashScheduledExecutorImpl implements UnleashScheduledExecutor {
 
     public static synchronized UnleashScheduledExecutorImpl getInstance() {
         if (INSTANCE == null) {
-            LOG.info("INSTANCE was null, rebuilding Scheduled Executor");
             INSTANCE = new UnleashScheduledExecutorImpl();
         }
         return INSTANCE;
@@ -58,7 +56,6 @@ public class UnleashScheduledExecutorImpl implements UnleashScheduledExecutor {
         this.scheduledThreadPoolExecutor.shutdown();
         this.executorService.shutdown();
         INSTANCE = null;
-        LOG.info("Shutdown - Scheduled Executor");
     }
 
     @Override
@@ -66,6 +63,5 @@ public class UnleashScheduledExecutorImpl implements UnleashScheduledExecutor {
         this.scheduledThreadPoolExecutor.shutdownNow();
         this.executorService.shutdownNow();
         INSTANCE = null;
-        LOG.info("Shutdown Now - Scheduled Executor");
     }
 }
