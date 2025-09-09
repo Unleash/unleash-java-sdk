@@ -506,10 +506,10 @@ public class FeatureRepositoryTest {
 
         assertThat(savedBackupContent).contains("\"testFeature\"");
 
-        assertThat(savedBackupContent).contains("\"version\":2"); // Engine state has version field
-        assertThat(savedBackupContent).contains("\"query\":"); // Engine state has query field
+        assertThat(savedBackupContent).contains("\"version\":2");
+        assertThat(savedBackupContent).contains("\"query\":");
 
-        assertThat(savedBackupContent).doesNotContain("\"events\""); // No events array wrapper
+        assertThat(savedBackupContent).doesNotContain("\"events\""); // store state not events
     }
 
     private class TestRunner {
