@@ -29,6 +29,8 @@ public class AdvancedConstraints {
         while (true) {
                     unleash.isEnabled("advanced.constraints", context); // expect this to be true
                     unleash.isEnabled("advanced.constraints", smallerSemver); // expect this to be false
+                    System.out.println("hydration-test was enabled: " + unleash.isEnabled("hydration-test", context));
+                    Thread.sleep(500);
         }
     }
 

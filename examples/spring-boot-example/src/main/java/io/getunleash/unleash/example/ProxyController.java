@@ -2,6 +2,8 @@ package io.getunleash.unleash.example;
 
 import io.getunleash.Unleash;
 import jakarta.websocket.server.PathParam;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -12,8 +14,8 @@ import java.util.stream.Stream;
 
 @RestController
 public class ProxyController {
+    private static final Logger LOG = LoggerFactory.getLogger(ProxyController.class);
     private Unleash unleash;
-
     @Autowired
     public ProxyController(Unleash unleash) {
         this.unleash = unleash;
@@ -22,6 +24,7 @@ public class ProxyController {
 
     @GetMapping("/")
     public Map<String, Boolean> getEnabledToggles() {
+        LOG.info("Getting enabled toggles.");
         return toggles()
             .filter(Map.Entry::getValue)
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
@@ -34,6 +37,8 @@ public class ProxyController {
 
     @GetMapping("/toggle/{toggleName}")
     public Boolean getToggle(@PathParam("toggleName") String name) {
+
+        LOG.info("Fetching toggles");
         return unleash.isEnabled(name);
     }
 

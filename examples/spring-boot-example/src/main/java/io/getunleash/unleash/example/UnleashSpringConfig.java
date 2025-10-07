@@ -14,7 +14,7 @@ public class UnleashSpringConfig {
     public UnleashConfig unleashConfig(@Value("${unleash.url}") String url, @Value("${unleash.apikey}") String apiKey,
             @Value("${unleash.appname}") String appName) {
         UnleashConfig config = UnleashConfig.builder().unleashAPI(url).apiKey(apiKey).appName(appName)
-                .synchronousFetchOnInitialisation(true)
+                .synchronousFetchOnInitialisation(false)
                 .fetchTogglesInterval(15).build();
         return config;
     }
