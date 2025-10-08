@@ -4,6 +4,9 @@ import io.getunleash.DefaultUnleash;
 import io.getunleash.Unleash;
 import io.getunleash.UnleashContext;
 import io.getunleash.util.UnleashConfig;
+import io.getunleash.event.UnleashReady;
+import io.getunleash.event.ClientFeaturesResponse;
+import io.getunleash.event.UnleashSubscriber;
 
 public class AdvancedConstraints {
 
@@ -17,6 +20,14 @@ public class AdvancedConstraints {
                 .unleashAPI(getOrElse("UNLEASH_API_URL", "https://app.unleash-hosted.com/demo/api"))
                 .instanceId("java-example")
                 .synchronousFetchOnInitialisation(true)
+                .subscriber(new UnleashSubscriber() {
+                        public void onReady(UnleashReady ready) {
+                            System.out.println("Unleash is ready");
+                        }
+                        public void togglesFetched(ClientFeaturesResponse toggleResponse) {
+                            System.out.println("Fetch toggles with status: " + toggleResponse.getStatus());
+                        }
+                    })
                 .sendMetricsInterval(30).build();
 
         Unleash unleash = new DefaultUnleash(config);

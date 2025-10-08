@@ -12,6 +12,6 @@ repositories {
 }
 
 dependencies {
-    implementation("io.getunleash:unleash-client-java:8.2.0")
-    implementation("com.squareup.okhttp3:okhttp:4.9.3")
+    implementation("io.getunleash:unleash-client-java:11.1.0")
+    implementation("com.squareup.okhttp3:okhttp:5.2.0")
 }
