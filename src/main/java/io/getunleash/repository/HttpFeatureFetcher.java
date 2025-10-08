@@ -59,7 +59,6 @@ public class HttpFeatureFetcher implements FeatureFetcher {
             etag = Optional.ofNullable(request.getHeaderField("ETag"));
             String contentEncoding = request.getHeaderField("Content-Encoding");
             if ("gzip".equalsIgnoreCase(contentEncoding)) {
-                /// Handle gzipped content
                 try (GZIPInputStream stream = new GZIPInputStream(request.getInputStream())) {
                     try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
                         byte[] buffer = new byte[1024];
@@ -72,7 +71,6 @@ public class HttpFeatureFetcher implements FeatureFetcher {
                     }
                 }
             } else {
-                /// Handle non-gzipped content
                 try (BufferedReader reader =
                         new BufferedReader(
                                 new InputStreamReader(
