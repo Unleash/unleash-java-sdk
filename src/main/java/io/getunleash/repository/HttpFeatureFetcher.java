@@ -58,7 +58,7 @@ public class HttpFeatureFetcher implements FeatureFetcher {
         if (responseCode < 300) {
             etag = Optional.ofNullable(request.getHeaderField("ETag"));
             String contentEncoding = request.getHeaderField("Content-Encoding");
-            if (contentEncoding.equalsIgnoreCase("gzip")) {
+            if ("gzip".equalsIgnoreCase(contentEncoding)) {
                 /// Handle gzipped content
                 try (GZIPInputStream stream = new GZIPInputStream(request.getInputStream())) {
                     try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
