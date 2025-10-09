@@ -56,7 +56,7 @@ jobs:
           JRELEASER_MAVENCENTRAL_TOKEN: ${{ secrets.JRELEASER_MAVENCENTRAL_TOKEN }}
       - name: Set next version
         run: |
-          mvn --no-transfer-progress --batch-mode versions:set -DnewVersion=${{ github.event.inputs.nextVersion }}
+          mvn --no-transfer-progress --batch-mode versions:set -DnewVersion=${{ github.event.inputs.nextVersion }}-SNAPSHOT
       - name: Commit & Push changes
         uses: actions-js/push@master
         with:
