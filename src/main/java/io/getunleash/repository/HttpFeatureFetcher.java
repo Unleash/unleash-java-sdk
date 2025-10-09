@@ -5,15 +5,13 @@ import static io.getunleash.util.UnleashConfig.UNLEASH_INTERVAL;
 import io.getunleash.UnleashException;
 import io.getunleash.event.ClientFeaturesResponse;
 import io.getunleash.util.UnleashConfig;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,15 +57,30 @@ public class HttpFeatureFetcher implements FeatureFetcher {
 
         if (responseCode < 300) {
             etag = Optional.ofNullable(request.getHeaderField("ETag"));
+            String contentEncoding = request.getHeaderField("Content-Encoding");
+            if ("gzip".equalsIgnoreCase(contentEncoding)) {
+                try (GZIPInputStream stream = new GZIPInputStream(request.getInputStream())) {
+                    try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+                        byte[] buffer = new byte[1024];
+                        int len;
+                        while ((len = stream.read(buffer)) != -1) {
+                            outputStream.write(buffer, 0, len);
+                        }
+                        String clientFeatures = outputStream.toString(StandardCharsets.UTF_8);
+                        return ClientFeaturesResponse.updated(clientFeatures);
+                    }
+                }
+            } else {
+                try (BufferedReader reader =
+                        new BufferedReader(
+                                new InputStreamReader(
+                                        (InputStream) request.getContent(),
+                                        StandardCharsets.UTF_8))) {
 
-            try (BufferedReader reader =
-                    new BufferedReader(
-                            new InputStreamReader(
-                                    (InputStream) request.getContent(), StandardCharsets.UTF_8))) {
+                    String clientFeatures = reader.lines().collect(Collectors.joining("\n"));
 
-                String clientFeatures = reader.lines().collect(Collectors.joining("\n"));
-
-                return ClientFeaturesResponse.updated(clientFeatures);
+                    return ClientFeaturesResponse.updated(clientFeatures);
+                }
             }
         } else if (followRedirect
                 && (responseCode == HttpURLConnection.HTTP_MOVED_TEMP
@@ -114,6 +127,7 @@ public class HttpFeatureFetcher implements FeatureFetcher {
         connection.setReadTimeout((int) this.config.getFetchTogglesReadTimeout().toMillis());
         connection.setRequestProperty("Accept", "application/json");
         connection.setRequestProperty("Content-Type", "application/json");
+        connection.setRequestProperty("Accept-Encoding", "gzip,deflate");
         UnleashConfig.setRequestProperties(connection, this.config);
 
         etag.ifPresent(val -> connection.setRequestProperty("If-None-Match", val));
