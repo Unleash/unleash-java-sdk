@@ -22,13 +22,3 @@ jobs:
           body: ${{ steps.github_release.outputs.changelog }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN}}
-  finish:
-    needs: release
-    if: ${{ always() }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Coveralls Finished
-        uses: coverallsapp/github-action@v2
-        with:
-          parallel-finished: true
-          carryforward: run-jvm-8,run-jvm-11,run-jvm-17
