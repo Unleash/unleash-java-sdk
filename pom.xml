@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>io.getunleash</groupId>
     <artifactId>unleash-client-java</artifactId>
-    <version>10.2.2</version>
+    <version>10.2.3</version>
 
     <properties>
         <version.slf4j>2.0.13</version.slf4j>
