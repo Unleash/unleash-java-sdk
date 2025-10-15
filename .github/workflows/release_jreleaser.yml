@@ -62,6 +62,7 @@ jobs:
         with:
           github_token: ${{ steps.generate-token.outputs.token }}
           message: Setting SNAPSHOT version ${{ github.event.inputs.nextVersion }}-SNAPSHOT
+          branch: ${{ github.ref_name }}
       - name: JReleaser release output
         if: always()
         uses: actions/upload-artifact@v4
