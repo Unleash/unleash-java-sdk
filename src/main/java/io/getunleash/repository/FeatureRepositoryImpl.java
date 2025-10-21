@@ -3,9 +3,9 @@ package io.getunleash.repository;
 import io.getunleash.FeatureDefinition;
 import io.getunleash.UnleashContext;
 import io.getunleash.UnleashException;
+import io.getunleash.engine.FlatResponse;
 import io.getunleash.engine.UnleashEngine;
 import io.getunleash.engine.VariantDef;
-import io.getunleash.engine.WasmResponse;
 import io.getunleash.engine.YggdrasilInvalidInputException;
 import io.getunleash.event.ClientFeaturesResponse;
 import io.getunleash.event.EventDispatcher;
@@ -213,7 +213,7 @@ public class FeatureRepositoryImpl implements FeatureRepository {
     }
 
     @Override
-    public WasmResponse<Boolean> isEnabled(String toggleName, UnleashContext context) {
+    public FlatResponse<Boolean> isEnabled(String toggleName, UnleashContext context) {
         try {
             return this.engine.isEnabled(toggleName, YggdrasilAdapters.adapt(context));
         } catch (YggdrasilInvalidInputException e) {
@@ -223,7 +223,7 @@ public class FeatureRepositoryImpl implements FeatureRepository {
     }
 
     @Override
-    public WasmResponse<VariantDef> getVariant(String toggleName, UnleashContext context) {
+    public FlatResponse<VariantDef> getVariant(String toggleName, UnleashContext context) {
         try {
             return this.engine.getVariant(toggleName, YggdrasilAdapters.adapt(context));
         } catch (YggdrasilInvalidInputException e) {

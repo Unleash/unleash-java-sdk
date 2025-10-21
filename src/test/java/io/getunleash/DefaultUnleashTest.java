@@ -19,12 +19,10 @@ import io.getunleash.event.UnleashReady;
 import io.getunleash.event.UnleashSubscriber;
 import io.getunleash.repository.*;
 import io.getunleash.strategy.Strategy;
+import io.getunleash.util.ResourceReader;
 import io.getunleash.util.UnleashConfig;
-import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,12 +38,7 @@ class DefaultUnleashTest {
     private EventDispatcher eventDispatcher;
 
     private String loadMockFeatures(String path) {
-        try {
-            File file = new File(getClass().getClassLoader().getResource(path).toURI());
-            return new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8);
-        } catch (Exception ex) {
-            throw new RuntimeException("Failed to load testdata", ex);
-        }
+        return ResourceReader.readResourceAsString(path);
     }
 
     @RegisterExtension

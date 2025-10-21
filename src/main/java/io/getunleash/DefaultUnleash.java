@@ -2,8 +2,8 @@ package io.getunleash;
 
 import static io.getunleash.variant.Variant.DISABLED_VARIANT;
 
+import io.getunleash.engine.FlatResponse;
 import io.getunleash.engine.VariantDef;
-import io.getunleash.engine.WasmResponse;
 import io.getunleash.event.EventDispatcher;
 import io.getunleash.event.IsEnabledImpressionEvent;
 import io.getunleash.event.ToggleEvaluated;
@@ -113,7 +113,7 @@ public class DefaultUnleash implements Unleash {
 
         UnleashContext enhancedContext = context.applyStaticFields(config);
 
-        WasmResponse<Boolean> response =
+        FlatResponse<Boolean> response =
                 this.featureRepository.isEnabled(toggleName, enhancedContext);
         Boolean enabled = response.value;
         if (enabled == null) {
@@ -145,7 +145,7 @@ public class DefaultUnleash implements Unleash {
     @Override
     public Variant getVariant(String toggleName, UnleashContext context, Variant defaultValue) {
         UnleashContext enhancedContext = context.applyStaticFields(config);
-        WasmResponse<VariantDef> response =
+        FlatResponse<VariantDef> response =
                 this.featureRepository.getVariant(toggleName, enhancedContext);
         Optional<VariantDef> variantDef = Optional.ofNullable(response.value);
 
@@ -201,7 +201,7 @@ public class DefaultUnleash implements Unleash {
                     .map(
                             toggleName -> {
                                 UnleashContext enhancedContext = context.applyStaticFields(config);
-                                WasmResponse<VariantDef> response =
+                                FlatResponse<VariantDef> response =
                                         featureRepository.getVariant(toggleName, enhancedContext);
                                 Optional<VariantDef> variantDef = Optional.of(response.value);
                                 Variant variant =

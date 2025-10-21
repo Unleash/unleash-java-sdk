@@ -1,8 +1,8 @@
 package io.getunleash;
 
+import io.getunleash.engine.FlatResponse;
 import io.getunleash.engine.UnleashEngine;
 import io.getunleash.engine.VariantDef;
-import io.getunleash.engine.WasmResponse;
 import io.getunleash.lang.Nullable;
 import io.getunleash.metric.UnleashMetricService;
 import io.getunleash.metric.UnleashMetricServiceImpl;
@@ -44,12 +44,12 @@ public class EngineProxyImpl implements EngineProxy {
     }
 
     @Override
-    public WasmResponse<Boolean> isEnabled(String toggleName, UnleashContext context) {
+    public FlatResponse<Boolean> isEnabled(String toggleName, UnleashContext context) {
         return this.featureRepository.isEnabled(toggleName, context);
     }
 
     @Override
-    public WasmResponse<VariantDef> getVariant(String toggleName, UnleashContext context) {
+    public FlatResponse<VariantDef> getVariant(String toggleName, UnleashContext context) {
         return this.featureRepository.getVariant(toggleName, context);
     }
 
