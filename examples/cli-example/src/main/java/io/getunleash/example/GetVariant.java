@@ -5,16 +5,10 @@ import io.getunleash.Unleash;
 import io.getunleash.UnleashContext;
 import io.getunleash.util.UnleashConfig;
 
-import java.lang.management.ManagementFactory;
-import java.lang.management.MemoryMXBean;
-import java.lang.management.MemoryUsage;
+import static io.getunleash.example.AdvancedConstraints.getOrElse;
 
-public class AdvancedConstraints {
-
+public class GetVariant {
     public static void main(String[] args) throws InterruptedException {
-        MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
-        MemoryUsage atStart = memoryMXBean.getHeapMemoryUsage();
-        System.out.println("Heap Memory Usage: " + atStart.getUsed());
         UnleashConfig config = UnleashConfig.builder()
             .appName("client-example.advanced.java")
             .customHttpHeader(
@@ -25,9 +19,7 @@ public class AdvancedConstraints {
             .instanceId("java-example")
             .synchronousFetchOnInitialisation(true)
             .sendMetricsInterval(30).build();
-        System.out.println("Config usage = " + memoryMXBean.getHeapMemoryUsage().getUsed());
         Unleash unleash = new DefaultUnleash(config);
-        System.out.println("Newing default usage: " + memoryMXBean.getHeapMemoryUsage().getUsed());
         UnleashContext context = UnleashContext.builder()
             .addProperty("semver", "1.5.2")
             .build();
@@ -35,17 +27,9 @@ public class AdvancedConstraints {
             .addProperty("semver", "1.1.0")
             .build();
         while (true) {
-            unleash.isEnabled("advanced.constraints", context); // expect this to be true
-            unleash.isEnabled("advanced.constraints", smallerSemver); // expect this to be false
+            unleash.getVariant("advanced.constraints"); // expect this to be true
+            unleash.getVariant("advanced.constraints", smallerSemver); // expect this to be false
             Thread.sleep(1);
         }
-    }
-
-    public static String getOrElse(String key, String defaultValue) {
-        String value = System.getenv(key);
-        if (value == null) {
-            return defaultValue;
-        }
-        return value;
     }
 }

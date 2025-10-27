@@ -1,7 +1,6 @@
 package io.getunleash;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -17,13 +16,17 @@ import io.getunleash.event.ClientFeaturesResponse;
 import io.getunleash.event.EventDispatcher;
 import io.getunleash.event.UnleashReady;
 import io.getunleash.event.UnleashSubscriber;
-import io.getunleash.repository.*;
+import io.getunleash.repository.FeatureFetcher;
+import io.getunleash.repository.ToggleBootstrapProvider;
 import io.getunleash.strategy.Strategy;
 import io.getunleash.util.ResourceReader;
 import io.getunleash.util.UnleashConfig;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -101,13 +104,9 @@ class DefaultUnleashTest {
         when(fallback.isEnabled(any(), any(UnleashContext.class))).thenReturn(true);
 
         ToggleBootstrapProvider bootstrapper =
-                new ToggleBootstrapProvider() {
-                    @Override
-                    public Optional<String> read() {
-                        return Optional.of(
+                () ->
+                        Optional.of(
                                 "{\"version\":1,\"features\":[{\"name\":\"toggle1\",\"enabled\":true,\"strategies\":[{\"name\":\"nonexistent\"}]}]}");
-                    }
-                };
 
         UnleashConfig unleashConfigWithFallback =
                 UnleashConfig.builder()

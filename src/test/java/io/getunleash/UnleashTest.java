@@ -118,13 +118,9 @@ public class UnleashTest {
         when(customStrategy.isEnabled(any(), any(UnleashContext.class))).thenReturn(true);
 
         ToggleBootstrapProvider bootstrapper =
-                new ToggleBootstrapProvider() {
-                    @Override
-                    public Optional<String> read() {
-                        return Optional.of(
+                () ->
+                        Optional.of(
                                 "{\"version\":1,\"features\":[{\"name\":\"test\",\"enabled\":true,\"strategies\":[{\"name\":\"custom strategy\"}]}]}");
-                    }
-                };
 
         UnleashConfig config =
                 new UnleashConfig.Builder()
