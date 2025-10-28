@@ -113,15 +113,13 @@ public class DefaultUnleash implements Unleash {
 
         UnleashContext enhancedContext = context.applyStaticFields(config);
 
-        FlatResponse<Boolean> response =
-                this.featureRepository.isEnabled(toggleName, enhancedContext);
-        Boolean enabled = response.value;
-        if (enabled == null) {
-            enabled = fallbackAction.test(toggleName, enhancedContext);
-        }
-
+        Optional<FlatResponse<Boolean>> response =
+                Optional.ofNullable(this.featureRepository.isEnabled(toggleName, enhancedContext));
+        boolean enabled =
+                response.map(r -> r.value)
+                        .orElseGet(() -> fallbackAction.test(toggleName, enhancedContext));
         eventDispatcher.dispatch(new ToggleEvaluated(toggleName, enabled));
-        if (response.impressionData) {
+        if (response.map(r -> r.impressionData).orElse(false)) {
             eventDispatcher.dispatch(new IsEnabledImpressionEvent(toggleName, enabled, context));
         }
         return enabled;

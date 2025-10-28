@@ -128,19 +128,14 @@ class DefaultUnleashTest {
     public void not_setting_current_time_falls_back_to_correct_now_instant() {
 
         ToggleBootstrapProvider bootstrapper =
-                new ToggleBootstrapProvider() {
-
-                    @Override
-                    public Optional<String> read() {
-                        return Optional.of(loadMockFeatures("unleash-repo-v2-advanced.json"));
-                    }
-                };
+                () -> Optional.of(loadMockFeatures("unleash-repo-v2-advanced.json"));
 
         UnleashConfig unleashConfigWithFallback =
                 UnleashConfig.builder()
                         .unleashAPI("http://fakeAPI")
                         .appName("fakeApp")
                         .toggleBootstrapProvider(bootstrapper)
+                        .synchronousFetchOnInitialisation(false)
                         .build();
         sut = new DefaultUnleash(unleashConfigWithFallback);
 

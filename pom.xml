@@ -10,9 +10,9 @@
         <version.junit5>5.10.3</version.junit5>
         <version.okhttp>4.12.0</version.okhttp>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <version.unleash.specification>5.1.9</version.unleash.specification>
+        <version.unleash.specification>5.2.2</version.unleash.specification>
         <arguments />
-        <version.jackson>2.17.2</version.jackson>
+        <version.jackson>2.20.1</version.jackson>
         <version.logback>1.5.20</version.logback>
         <version.gson>2.13.2</version.gson>
     </properties>
