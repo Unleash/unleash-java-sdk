@@ -6,15 +6,18 @@
     <version>11.2.0-SNAPSHOT</version>
 
     <properties>
-        <version.slf4j>2.0.13</version.slf4j>
-        <version.junit5>5.10.3</version.junit5>
-        <version.okhttp>4.12.0</version.okhttp>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <version.unleash.specification>5.2.2</version.unleash.specification>
         <arguments />
-        <version.jackson>2.20.1</version.jackson>
-        <version.logback>1.5.20</version.logback>
+        <version.assertj>3.27.6</version.assertj>
         <version.gson>2.13.2</version.gson>
+        <version.jackson>2.20.1</version.jackson>
+        <version.junit5>5.14.0</version.junit5>
+        <version.logback>1.5.20</version.logback>
+        <version.mockito>5.20.0</version.mockito>
+        <version.okhttp>4.12.0</version.okhttp>
+        <version.slf4j>2.0.17</version.slf4j>
+        <version.wiremock>3.9.2</version.wiremock>
     </properties>
 
     <name>io.getunleash:unleash-client-java</name>
@@ -58,7 +61,7 @@
         <dependency>
             <groupId>io.getunleash</groupId>
             <artifactId>yggdrasil-engine</artifactId>
-            <version>0.4.3-SNAPSHOT</version>
+            <version>0.4.3</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
@@ -115,20 +118,20 @@
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
-            <version>3.27.6</version>
+            <version>${version.assertj}</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>5.20.0</version>
+            <version>${version.mockito}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.wiremock</groupId>
             <artifactId>wiremock</artifactId>
-            <version>3.9.2</version>
+            <version>${version.wiremock}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
