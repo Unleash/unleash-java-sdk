@@ -23,7 +23,6 @@ public class ProxyController {
 
     @GetMapping("/")
     public Map<String, Boolean> getEnabledToggles() {
-        System.out.println("Fetching enabled he toggles");
         return toggles()
             .filter(Map.Entry::getValue)
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
@@ -36,7 +35,6 @@ public class ProxyController {
 
     @GetMapping("/toggle/{toggleName}")
     public Boolean getToggle(@PathVariable("toggleName") String name) {
-        System.out.println("Hahaa" + name);
         return unleash.isEnabled(name);
     }
 

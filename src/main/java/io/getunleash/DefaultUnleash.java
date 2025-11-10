@@ -116,7 +116,7 @@ public class DefaultUnleash implements Unleash {
         Optional<FlatResponse<Boolean>> response =
                 Optional.ofNullable(this.featureRepository.isEnabled(toggleName, enhancedContext));
         boolean enabled =
-                response.map(r -> r.value)
+                response.flatMap(r -> Optional.ofNullable(r.value))
                         .orElseGet(() -> fallbackAction.test(toggleName, enhancedContext));
         eventDispatcher.dispatch(new ToggleEvaluated(toggleName, enabled));
         if (response.map(r -> r.impressionData).orElse(false)) {
