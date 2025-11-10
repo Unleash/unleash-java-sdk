@@ -143,13 +143,13 @@ public class DefaultUnleash implements Unleash {
     @Override
     public Variant getVariant(String toggleName, UnleashContext context, Variant defaultValue) {
         UnleashContext enhancedContext = context.applyStaticFields(config);
-        FlatResponse<VariantDef> response =
-                this.featureRepository.getVariant(toggleName, enhancedContext);
-        Optional<VariantDef> variantDef = Optional.ofNullable(response.value);
+        Optional<FlatResponse<VariantDef>> response =
+                Optional.ofNullable(this.featureRepository.getVariant(toggleName, enhancedContext));
+        Optional<VariantDef> variantDef = response.map(r -> r.value);
 
         Variant variant = YggdrasilAdapters.adapt(variantDef, defaultValue);
         eventDispatcher.dispatch(new ToggleEvaluated(toggleName, variant.isFeatureEnabled()));
-        if (response.impressionData) {
+        if (response.map(r -> r.impressionData).orElse(false)) {
             eventDispatcher.dispatch(
                     new VariantImpressionEvent(
                             toggleName, variant.isFeatureEnabled(), context, variant.getName()));

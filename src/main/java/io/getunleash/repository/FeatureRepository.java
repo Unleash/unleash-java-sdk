@@ -12,6 +12,7 @@ public interface FeatureRepository {
     @Nullable
     FlatResponse<Boolean> isEnabled(String toggleName, UnleashContext context);
 
+    @Nullable
     FlatResponse<VariantDef> getVariant(String toggleName, UnleashContext context);
 
     Stream<FeatureDefinition> listKnownToggles();
