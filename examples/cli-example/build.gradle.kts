@@ -14,13 +14,26 @@ repositories {
 }
 
 java {
-    targetCompatibility = JavaVersion.VERSION_21
-    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_25
+    sourceCompatibility = JavaVersion.VERSION_25
 }
 
 jib {
     container {
         mainClass = "io.getunleash.example.AdvancedConstraints"
+    }
+    from {
+        image = "gcr.io/distroless/java25-debian13:latest"
+        platforms {
+            platform {
+                architecture = "amd64"
+                os = "linux"
+            }
+            platform {
+                architecture = "arm64"
+                os = "linux"
+            }
+        }
     }
 }
 
