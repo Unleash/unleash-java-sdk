@@ -1,4 +1,8 @@
 unleash:
-    url: https://app.unleash-hosted.com/demo/api
-    apiKey: demo-app:production.614a75cf68bef8703aa1bd8304938a81ec871f86ea40c975468eabd6
+    url: http://localhost:4242/api
+    apiKey: "*:development.da33883b2b2be02c5648ac624a1f50922cbc5893c2e6de5b9f57298d"
     appname: "Java-Spring-Boot-example"
+spring:
+  devtools:
+    restart:
+      enabled: true

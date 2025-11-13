@@ -1,7 +1,6 @@
 package io.getunleash;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -17,15 +16,17 @@ import io.getunleash.event.ClientFeaturesResponse;
 import io.getunleash.event.EventDispatcher;
 import io.getunleash.event.UnleashReady;
 import io.getunleash.event.UnleashSubscriber;
-import io.getunleash.repository.*;
+import io.getunleash.repository.FeatureFetcher;
+import io.getunleash.repository.ToggleBootstrapProvider;
 import io.getunleash.strategy.Strategy;
+import io.getunleash.util.ResourceReader;
 import io.getunleash.util.UnleashConfig;
-import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -40,12 +41,7 @@ class DefaultUnleashTest {
     private EventDispatcher eventDispatcher;
 
     private String loadMockFeatures(String path) {
-        try {
-            File file = new File(getClass().getClassLoader().getResource(path).toURI());
-            return new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8);
-        } catch (Exception ex) {
-            throw new RuntimeException("Failed to load testdata", ex);
-        }
+        return ResourceReader.readResourceAsString(path);
     }
 
     @RegisterExtension
@@ -108,13 +104,9 @@ class DefaultUnleashTest {
         when(fallback.isEnabled(any(), any(UnleashContext.class))).thenReturn(true);
 
         ToggleBootstrapProvider bootstrapper =
-                new ToggleBootstrapProvider() {
-                    @Override
-                    public Optional<String> read() {
-                        return Optional.of(
+                () ->
+                        Optional.of(
                                 "{\"version\":1,\"features\":[{\"name\":\"toggle1\",\"enabled\":true,\"strategies\":[{\"name\":\"nonexistent\"}]}]}");
-                    }
-                };
 
         UnleashConfig unleashConfigWithFallback =
                 UnleashConfig.builder()
@@ -136,19 +128,14 @@ class DefaultUnleashTest {
     public void not_setting_current_time_falls_back_to_correct_now_instant() {
 
         ToggleBootstrapProvider bootstrapper =
-                new ToggleBootstrapProvider() {
-
-                    @Override
-                    public Optional<String> read() {
-                        return Optional.of(loadMockFeatures("unleash-repo-v2-advanced.json"));
-                    }
-                };
+                () -> Optional.of(loadMockFeatures("unleash-repo-v2-advanced.json"));
 
         UnleashConfig unleashConfigWithFallback =
                 UnleashConfig.builder()
                         .unleashAPI("http://fakeAPI")
                         .appName("fakeApp")
                         .toggleBootstrapProvider(bootstrapper)
+                        .synchronousFetchOnInitialisation(false)
                         .build();
         sut = new DefaultUnleash(unleashConfigWithFallback);
 

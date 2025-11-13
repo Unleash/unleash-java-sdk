@@ -56,6 +56,7 @@ public class UnleashClientBenchmark {
         bh.consume(myState.unleash.isEnabled("Test.impressionDataPresent", myState.context));
     }
 
+
     @Benchmark
     public void getDefaultVariant(MyState myState, Blackhole bh) {
         bh.consume(myState.unleash.getVariant("Test.impressionDataPresent"));

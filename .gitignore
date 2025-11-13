@@ -46,3 +46,4 @@ target
 **/bin/
 .vim/
 *.versionsBackup
+mise.toml
