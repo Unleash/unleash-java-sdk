@@ -40,5 +40,9 @@ jib {
 dependencies {
     implementation("io.getunleash:unleash-client-java:11.2.0-SNAPSHOT")
     implementation("org.slf4j:slf4j-api:2.0.17")
-    implementation("ch.qos.logback:logback-classic:1.5.20")
+    runtimeOnly("org.apache.logging.log4j:log4j-core:2.25.2")
+    runtimeOnly("org.apache.logging.log4j:log4j-api:2.25.2")
+    runtimeOnly("org.apache.logging.log4j:log4j-slf4j2-impl:2.25.2")
+    runtimeOnly("org.apache.logging.log4j:log4j-layout-template-json:2.25.2")
+    runtimeOnly("com.fasterxml.jackson.core:jackson-databind:2.20.1")
 }
