@@ -59,6 +59,7 @@ public class UnleashTest {
                 .thenReturn(new FlatResponse<Boolean>(false, null));
         Unleash unleash = new DefaultUnleash(baseConfig, engineProxy);
 
+        @SuppressWarnings("unchecked")
         BiPredicate<String, UnleashContext> fallbackAction = mock(BiPredicate.class);
         when(fallbackAction.test(eq("test"), any(UnleashContext.class))).thenReturn(true);
 
@@ -73,6 +74,7 @@ public class UnleashTest {
                 .thenReturn(new FlatResponse<Boolean>(false, null));
         Unleash unleash = new DefaultUnleash(baseConfig, engineProxy);
 
+        @SuppressWarnings("unchecked")
         BiPredicate<String, UnleashContext> fallbackAction = mock(BiPredicate.class);
         when(fallbackAction.test(eq("test"), any(UnleashContext.class))).thenReturn(true);
 
@@ -89,6 +91,7 @@ public class UnleashTest {
                 .thenReturn(new FlatResponse<Boolean>(false, null));
         Unleash unleash = new DefaultUnleash(baseConfig, engineProxy);
 
+        @SuppressWarnings("unchecked")
         BiPredicate<String, UnleashContext> fallbackAction = mock(BiPredicate.class);
         when(fallbackAction.test(eq("test"), any(UnleashContext.class))).thenReturn(false);
 
@@ -103,6 +106,7 @@ public class UnleashTest {
                 .thenReturn(new FlatResponse<Boolean>(true, true));
         Unleash unleash = new DefaultUnleash(baseConfig, engineProxy);
 
+        @SuppressWarnings("unchecked")
         BiPredicate<String, UnleashContext> fallbackAction = mock(BiPredicate.class);
         when(fallbackAction.test(eq("test"), any(UnleashContext.class))).thenReturn(false);
 

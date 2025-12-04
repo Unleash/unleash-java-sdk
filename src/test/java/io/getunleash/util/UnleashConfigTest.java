@@ -189,7 +189,7 @@ public class UnleashConfigTest {
             throws IOException {
         String unleashAPI = "http://unleash.org";
         Map<String, String> result =
-                new HashMap() {
+                new HashMap<String, String>() {
                     {
                         put("PROVIDER-HEADER", "Provider Value");
                     }

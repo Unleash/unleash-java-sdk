@@ -245,7 +245,7 @@ public class OkHttpFeatureFetcherTest {
         URI uri = new URI("http://localhost:" + serverMock.getPort() + "/api/");
         UnleashConfig config = UnleashConfig.builder().appName("test").unleashAPI(uri).build();
         OkHttpFeatureFetcher okHttpToggleFetcher = new OkHttpFeatureFetcher(config);
-        ClientFeaturesResponse response = okHttpToggleFetcher.fetchFeatures();
+        okHttpToggleFetcher.fetchFeatures();
 
         verify(getRequestedFor(urlMatching("/api/client/features")).withoutHeader("If-None-Match"));
     }
@@ -265,7 +265,7 @@ public class OkHttpFeatureFetcherTest {
         UnleashConfig config =
                 UnleashConfig.builder().appName("test").unleashAPI(uri).projectName("name").build();
         OkHttpFeatureFetcher okHttpFeatureFetcher = new OkHttpFeatureFetcher(config);
-        ClientFeaturesResponse response = okHttpFeatureFetcher.fetchFeatures();
+        okHttpFeatureFetcher.fetchFeatures();
         verify(getRequestedFor(urlMatching("/api/client/features\\?project=name")));
     }
 

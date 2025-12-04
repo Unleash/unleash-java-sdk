@@ -8,7 +8,6 @@ import io.getunleash.event.EventDispatcher;
 import io.getunleash.event.IsEnabledImpressionEvent;
 import io.getunleash.event.ToggleEvaluated;
 import io.getunleash.event.VariantImpressionEvent;
-import io.getunleash.metric.UnleashMetricService;
 import io.getunleash.repository.FeatureRepository;
 import io.getunleash.repository.YggdrasilAdapters;
 import io.getunleash.strategy.*;
@@ -27,7 +26,6 @@ public class DefaultUnleash implements Unleash {
 
     private static ConcurrentHashMap<String, LongAdder> initCounts = new ConcurrentHashMap<>();
 
-    private final UnleashMetricService metricService;
     private final FeatureRepository featureRepository;
     private final UnleashContextProvider contextProvider;
     private final EventDispatcher eventDispatcher;
@@ -69,7 +67,6 @@ public class DefaultUnleash implements Unleash {
 
         this.config = unleashConfig;
         this.featureRepository = engineProxy;
-        this.metricService = engineProxy;
         this.contextProvider = contextProvider;
         this.eventDispatcher = eventDispatcher;
         initCounts.compute(

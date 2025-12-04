@@ -10,7 +10,6 @@ import static org.mockito.Mockito.when;
 
 import io.getunleash.DefaultUnleash;
 import io.getunleash.FeatureDefinition;
-import io.getunleash.Unleash;
 import io.getunleash.engine.UnleashEngine;
 import io.getunleash.event.ClientFeaturesResponse;
 import io.getunleash.streaming.StreamingFeatureFetcher;
@@ -147,14 +146,13 @@ public class FeatureRepositoryTest {
                 ClientFeaturesResponse.updated(loadMockFeatures("unleash-repo-v2.json"));
         when(fetcher.fetchFeatures()).thenReturn(response);
 
-        FeatureRepository featureRepository =
-                new FeatureRepositoryImpl(
-                        config,
-                        backupHandler,
-                        new UnleashEngine(),
-                        fetcher,
-                        streamingFetcher,
-                        bootstrapHandler);
+        new FeatureRepositoryImpl(
+                config,
+                backupHandler,
+                new UnleashEngine(),
+                fetcher,
+                streamingFetcher,
+                bootstrapHandler);
 
         verify(fetcher, times(1)).fetchFeatures();
     }
@@ -171,14 +169,13 @@ public class FeatureRepositoryTest {
 
         when(fetcher.fetchFeatures()).thenReturn(response);
 
-        FeatureRepositoryImpl featureRepository =
-                new FeatureRepositoryImpl(
-                        config,
-                        backupHandler,
-                        new UnleashEngine(),
-                        fetcher,
-                        streamingFetcher,
-                        bootstrapHandler);
+        new FeatureRepositoryImpl(
+                config,
+                backupHandler,
+                new UnleashEngine(),
+                fetcher,
+                streamingFetcher,
+                bootstrapHandler);
 
         verify(fetcher, times(0)).fetchFeatures();
     }
@@ -233,14 +230,13 @@ public class FeatureRepositoryTest {
         UnleashConfig config =
                 defaultConfigBuilder().toggleBootstrapProvider(bootstrapHandler).build();
 
-        FeatureRepositoryImpl featureRepository =
-                new FeatureRepositoryImpl(
-                        config,
-                        backupHandler,
-                        new UnleashEngine(),
-                        fetcher,
-                        streamingFetcher,
-                        bootstrapHandler);
+        new FeatureRepositoryImpl(
+                config,
+                backupHandler,
+                new UnleashEngine(),
+                fetcher,
+                streamingFetcher,
+                bootstrapHandler);
 
         verify(bootstrapHandler, times(0)).read();
     }
@@ -263,7 +259,7 @@ public class FeatureRepositoryTest {
                         .toggleBootstrapProvider(toggleBootstrapProvider)
                         .build();
 
-        Unleash unleash = new DefaultUnleash(config);
+        new DefaultUnleash(config);
         assertThat(failed).isTrue();
     }
 
