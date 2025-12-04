@@ -28,8 +28,8 @@ public class UnleashMetricServiceImplTest {
                         .unleashAPI("http://unleash.com")
                         .build();
         UnleashScheduledExecutor executor = mock(UnleashScheduledExecutor.class);
-        UnleashMetricService unleashMetricService =
-                new UnleashMetricServiceImpl(config, executor, null);
+
+        new UnleashMetricServiceImpl(config, executor, null);
 
         verify(executor, times(1)).setInterval(any(Runnable.class), eq(interval), eq(interval));
     }
@@ -106,8 +106,7 @@ public class UnleashMetricServiceImplTest {
         DefaultHttpMetricsSender sender = mock(DefaultHttpMetricsSender.class);
         UnleashEngine engine = new UnleashEngine();
 
-        UnleashMetricService unleashMetricService =
-                new UnleashMetricServiceImpl(config, sender, executor, engine);
+        new UnleashMetricServiceImpl(config, sender, executor, engine);
 
         ArgumentCaptor<Runnable> sendMetricsCallback = ArgumentCaptor.forClass(Runnable.class);
         verify(executor).setInterval(sendMetricsCallback.capture(), anyLong(), anyLong());
@@ -131,8 +130,7 @@ public class UnleashMetricServiceImplTest {
         DefaultHttpMetricsSender sender = mock(DefaultHttpMetricsSender.class);
         UnleashEngine engine = new UnleashEngine();
 
-        UnleashMetricService unleashMetricService =
-                new UnleashMetricServiceImpl(config, sender, executor, engine);
+        new UnleashMetricServiceImpl(config, sender, executor, engine);
 
         engine.isEnabled("someToggle", new Context());
         engine.isEnabled("someToggle", new Context());
@@ -374,8 +372,7 @@ public class UnleashMetricServiceImplTest {
         DefaultHttpMetricsSender sender = mock(DefaultHttpMetricsSender.class);
         UnleashEngine engine = new UnleashEngine();
 
-        UnleashMetricService unleashMetricService =
-                new UnleashMetricServiceImpl(config, sender, executor, engine);
+        new UnleashMetricServiceImpl(config, sender, executor, engine);
 
         ArgumentCaptor<Runnable> sendMetricsCallback = ArgumentCaptor.forClass(Runnable.class);
         verify(executor).setInterval(sendMetricsCallback.capture(), anyLong(), anyLong());

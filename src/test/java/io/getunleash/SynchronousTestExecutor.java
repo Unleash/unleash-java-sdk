@@ -20,7 +20,7 @@ public class SynchronousTestExecutor implements UnleashScheduledExecutor {
     }
 
     @Override
-    public ScheduledFuture scheduleOnce(Runnable runnable) {
+    public ScheduledFuture<Void> scheduleOnce(Runnable runnable) {
         runnable.run();
         return new AlreadyCompletedScheduledFuture();
     }

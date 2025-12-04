@@ -23,9 +23,7 @@ import io.getunleash.util.ResourceReader;
 import io.getunleash.util.UnleashConfig;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -56,7 +54,6 @@ class DefaultUnleashTest {
         UnleashConfig unleashConfig =
                 UnleashConfig.builder().unleashAPI("http://fakeAPI").appName("fakeApp").build();
         engineProxy = mock(EngineProxy.class);
-        Map<String, Strategy> strategyMap = new HashMap<>();
         contextProvider = mock(UnleashContextProvider.class);
         eventDispatcher = mock(EventDispatcher.class);
 
@@ -145,7 +142,7 @@ class DefaultUnleashTest {
 
     @Test
     public void multiple_instantiations_of_the_same_config_gives_errors() {
-        ListAppender<ILoggingEvent> appender = new ListAppender();
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
         appender.start();
         Logger unleashLogger = (Logger) LoggerFactory.getLogger(DefaultUnleash.class);
         unleashLogger.addAppender(appender);
@@ -158,13 +155,13 @@ class DefaultUnleashTest {
                         .apiKey("default:development:1234567890123456")
                         .instanceId(instanceId)
                         .build();
-        Unleash unleash1 = new DefaultUnleash(config);
+        new DefaultUnleash(config);
         // We've only instantiated the client once, so no errors should've been logged
         assertThat(appender.list).isEmpty();
-        Unleash unleash2 = new DefaultUnleash(config);
+        new DefaultUnleash(config);
         // We've now instantiated the client twice, so we expect an error log line.
         assertThat(appender.list).hasSize(1);
-        String id = config.getClientIdentifier();
+        config.getClientIdentifier();
         assertThat(appender.list)
                 .extracting(ILoggingEvent::getFormattedMessage)
                 .containsExactly(
@@ -174,7 +171,7 @@ class DefaultUnleashTest {
                                 + instanceId
                                 + "] running. Please double check your code where you are instantiating the Unleash SDK");
         appender.list.clear();
-        Unleash unleash3 = new DefaultUnleash(config);
+        new DefaultUnleash(config);
         // We've now instantiated the client twice, so we expect an error log line.
         assertThat(appender.list).hasSize(1);
         assertThat(appender.list)
@@ -197,10 +194,10 @@ class DefaultUnleashTest {
                         .instanceId("multiple_connection_exception")
                         .build();
         String id = config.getClientIdentifier();
-        Unleash unleash1 = new DefaultUnleash(config);
+        new DefaultUnleash(config);
         assertThatThrownBy(
                         () -> {
-                            Unleash unleash2 = new DefaultUnleash(config, null, null, null, true);
+                            new DefaultUnleash(config, null, null, null, true);
                         })
                 .isInstanceOf(RuntimeException.class)
                 .withFailMessage(
@@ -294,7 +291,7 @@ class DefaultUnleashTest {
                         .unleashFeatureFetcherFactory((UnleashConfig c) -> fetcher)
                         .build();
 
-        Unleash unleash = new DefaultUnleash(config);
+        new DefaultUnleash(config);
         Thread.sleep(1);
         verify(fetcher, times(1)).fetchFeatures();
         Thread.sleep(1200);

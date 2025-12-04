@@ -48,7 +48,11 @@ public class UnleashScheduledExecutorImpl implements UnleashScheduledExecutor {
 
     @Override
     public Future<Void> scheduleOnce(Runnable runnable) {
-        return (Future<Void>) executorService.submit(runnable);
+        return executorService.submit(
+                () -> {
+                    runnable.run();
+                    return null;
+                });
     }
 
     @Override

@@ -1,4 +1,4 @@
-package io.getunleash.integration;
+package io.getunleash.streaming;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
