@@ -1,6 +1,6 @@
 package io.getunleash.util;
 
-import io.getunleash.repository.FeatureFetcher;
+import io.getunleash.repository.FeatureSource;
 import java.util.function.Function;
 
-public interface UnleashFeatureFetcherFactory extends Function<UnleashConfig, FeatureFetcher> {}
+public interface UnleashFeatureFetcherFactory extends Function<UnleashConfig, FeatureSource> {}

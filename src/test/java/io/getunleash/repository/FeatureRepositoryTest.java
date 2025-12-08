@@ -12,7 +12,7 @@ import io.getunleash.DefaultUnleash;
 import io.getunleash.FeatureDefinition;
 import io.getunleash.engine.UnleashEngine;
 import io.getunleash.event.ClientFeaturesResponse;
-import io.getunleash.streaming.StreamingFeatureFetcher;
+import io.getunleash.streaming.FetchWorker;
 import io.getunleash.util.UnleashConfig;
 import io.getunleash.util.UnleashScheduledExecutor;
 import java.io.File;
@@ -34,7 +34,7 @@ public class FeatureRepositoryTest {
     FeatureBackupHandlerFile backupHandler;
     ToggleBootstrapProvider bootstrapHandler;
     HttpFeatureFetcher fetcher;
-    StreamingFeatureFetcher streamingFetcher;
+    FetchWorker streamingFetcher;
     UnleashConfig defaultConfig;
 
     private String loadMockFeatures(String path) {
@@ -62,7 +62,7 @@ public class FeatureRepositoryTest {
         backupHandler = mock(FeatureBackupHandlerFile.class);
         bootstrapHandler = mock(ToggleBootstrapProvider.class);
         fetcher = mock(HttpFeatureFetcher.class);
-        streamingFetcher = mock(StreamingFeatureFetcher.class);
+        streamingFetcher = mock(FetchWorker.class);
 
         defaultConfig = defaultConfigBuilder().build();
     }
