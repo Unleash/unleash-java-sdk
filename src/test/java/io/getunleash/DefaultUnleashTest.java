@@ -224,7 +224,7 @@ class DefaultUnleashTest {
     }
 
     @ParameterizedTest
-    @ValueSource(ints = {401})
+    @ValueSource(ints = {401, 403, 404, 500})
     public void synchronous_fetch_on_initialisation_fails_on_non_200_response(int code)
             throws URISyntaxException {
         mockUnleashAPI(code);
