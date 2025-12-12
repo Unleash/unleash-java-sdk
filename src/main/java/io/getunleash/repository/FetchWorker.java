@@ -1,4 +1,4 @@
-package io.getunleash.streaming;
+package io.getunleash.repository;
 
 public interface FetchWorker {
     void start();

@@ -18,7 +18,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class OkHttpFeatureFetcher implements FeatureSource {
+public class OkHttpFeatureFetcher implements FeatureFetcher {
     private final HttpUrl toggleUrl;
     private final OkHttpClient client;
     private final String interval;
