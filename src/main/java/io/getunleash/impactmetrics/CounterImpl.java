@@ -13,7 +13,7 @@ public class CounterImpl implements Counter {
     private final String help;
     private final ConcurrentHashMap<String, Long> values = new ConcurrentHashMap<>();
 
-    public CounterImpl(String name, String help) {
+    CounterImpl(String name, String help) {
         this.name = name;
         this.help = help;
     }
