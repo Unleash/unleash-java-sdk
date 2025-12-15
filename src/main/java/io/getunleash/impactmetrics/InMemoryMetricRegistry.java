@@ -24,8 +24,14 @@ public class InMemoryMetricRegistry implements ImpactMetricRegistry, ImpactMetri
     @Override
     public List<CollectedMetric> collect() {
         List<CollectedMetric> collected = new ArrayList<>();
-        counters.values().forEach(c -> collected.add(c.collect()));
-        gauges.values().forEach(g -> collected.add(g.collect()));
+        counters.values().stream()
+                .map(CounterImpl::collect)
+                .filter(m -> !m.getSamples().isEmpty())
+                .forEach(collected::add);
+        gauges.values().stream()
+                .map(GaugeImpl::collect)
+                .filter(m -> !m.getSamples().isEmpty())
+                .forEach(collected::add);
         return collected;
     }
 
