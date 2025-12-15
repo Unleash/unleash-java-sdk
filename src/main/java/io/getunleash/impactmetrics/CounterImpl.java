@@ -2,6 +2,7 @@ package io.getunleash.impactmetrics;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -36,11 +37,12 @@ public class CounterImpl implements Counter {
     public CollectedMetric collect() {
         List<NumericMetricSample> samples = new ArrayList<>();
 
-        values.forEach(
-                (key, value) -> {
-                    samples.add(new NumericMetricSample(parseLabelKey(key), value));
-                });
-        values.clear();
+        for (String key : values.keySet()) {
+            Long value = values.remove(key);
+            if (value != null) {
+                samples.add(new NumericMetricSample(parseLabelKey(key), value));
+            }
+        }
 
         if (samples.isEmpty()) {
             samples.add(new NumericMetricSample(Collections.emptyMap(), 0L));
@@ -63,7 +65,7 @@ public class CounterImpl implements Counter {
         if (key == null || key.isEmpty()) {
             return Collections.emptyMap();
         }
-        ConcurrentHashMap<String, String> labels = new ConcurrentHashMap<>();
+        Map<String, String> labels = new HashMap<>();
         for (String pair : key.split(",")) {
             String[] parts = pair.split("=", 2);
             if (parts.length == 2) {
