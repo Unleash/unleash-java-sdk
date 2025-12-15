@@ -128,6 +128,10 @@ public class InMemoryMetricRegistryTest {
         counter.inc(1);
         List<CollectedMetric> firstBatch = registry.collect();
 
+        CollectedMetric expectedBatch1 =
+            new CollectedMetric("flush_test", "flush", MetricType.COUNTER, List.of(sample(1L)));
+        assertThat(firstBatch).containsExactly(expectedBatch1);
+
         List<CollectedMetric> secondBatch = registry.collect();
         CollectedMetric expectedBatch2 =
             new CollectedMetric("flush_test", "flush", MetricType.COUNTER, List.of(sample(0L)));
