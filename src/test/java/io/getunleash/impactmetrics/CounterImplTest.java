@@ -9,7 +9,7 @@ public class CounterImplTest {
 
     @Test
     public void should_increment_by_default_value() {
-        Counter counter = new CounterImpl("test_counter", "test help");
+        CounterImpl counter = new CounterImpl("test_counter", "test help");
 
         counter.inc();
 
@@ -25,7 +25,7 @@ public class CounterImplTest {
 
     @Test
     public void should_increment_with_custom_value() {
-        Counter counter = new CounterImpl("test_counter", "test help");
+        CounterImpl counter = new CounterImpl("test_counter", "test help");
 
         counter.inc(5);
         counter.inc(3);
@@ -38,7 +38,7 @@ public class CounterImplTest {
 
     @Test
     public void should_increment_with_labels() {
-        Counter counter = new CounterImpl("labeled_counter", "with labels");
+        CounterImpl counter = new CounterImpl("labeled_counter", "with labels");
 
         counter.inc(3, Map.of("foo", "bar"));
         counter.inc(2, Map.of("foo", "bar"));
@@ -52,7 +52,7 @@ public class CounterImplTest {
 
     @Test
     public void should_store_different_label_combinations_separately() {
-        Counter counter = new CounterImpl("multi_label", "label test");
+        CounterImpl counter = new CounterImpl("multi_label", "label test");
 
         counter.inc(1, Map.of("a", "x"));
         counter.inc(2, Map.of("b", "y"));
@@ -85,7 +85,7 @@ public class CounterImplTest {
 
     @Test
     public void should_return_zero_value_when_empty() {
-        Counter counter = new CounterImpl("empty_counter", "empty");
+        CounterImpl counter = new CounterImpl("empty_counter", "empty");
 
         CollectedMetric result = counter.collect();
 
@@ -96,7 +96,7 @@ public class CounterImplTest {
 
     @Test
     public void should_reset_after_collect() {
-        Counter counter = new CounterImpl("reset_test", "reset");
+        CounterImpl counter = new CounterImpl("reset_test", "reset");
 
         counter.inc(5);
         CollectedMetric first = counter.collect();

@@ -8,6 +8,4 @@ public interface Counter {
     void inc(long value);
 
     void inc(long value, Map<String, String> labels);
-
-    CollectedMetric collect();
 }
