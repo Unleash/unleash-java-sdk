@@ -64,7 +64,7 @@ public class InMemoryMetricRegistryTest {
     @Test
     public void should_return_zero_value_when_empty() {
         InMemoryMetricRegistry registry = new InMemoryMetricRegistry();
-        registry.counter(new MetricOptions("empty_counter", "empty"));
+        registry.counter(new MetricOptions("noop_counter", "noop"));
 
         List<CollectedMetric> metrics = registry.collect();
 
@@ -73,30 +73,38 @@ public class InMemoryMetricRegistryTest {
     }
 
     @Test
-    public void should_reset_after_collect() {
+    public void should_return_zero_value_after_flushing() {
         InMemoryMetricRegistry registry = new InMemoryMetricRegistry();
-        Counter counter = registry.counter(new MetricOptions("reset_test", "reset"));
+        Counter counter = registry.counter(new MetricOptions("flush_test", "flush"));
 
-        counter.inc(5);
+        counter.inc(1);
         List<CollectedMetric> firstBatch = registry.collect();
-        assertThat(firstBatch.get(0).getSamples()).containsExactly(sample(5L));
+        assertThat(firstBatch.get(0).getSamples()).containsExactly(sample(1L));
 
         List<CollectedMetric> secondBatch = registry.collect();
         assertThat(secondBatch.get(0).getSamples()).containsExactly(sample(0L));
     }
 
     @Test
-    public void should_register_same_counter_twice_returns_same_instance() {
+    public void should_restore_collected_metrics() {
         InMemoryMetricRegistry registry = new InMemoryMetricRegistry();
-        Counter c1 = registry.counter(new MetricOptions("shared", "help"));
-        Counter c2 = registry.counter(new MetricOptions("shared", "help"));
+        Counter counter = registry.counter(new MetricOptions("restore_test", "testing restore"));
 
-        c1.inc(1);
-        c2.inc(2);
+        counter.inc(5, Map.of("tag", "a"));
+        counter.inc(2, Map.of("tag", "b"));
 
-        List<CollectedMetric> metrics = registry.collect();
-        assertThat(metrics).hasSize(1);
-        assertThat(metrics.get(0).getSamples()).containsExactly(sample(3L));
+        List<CollectedMetric> flushed = registry.collect();
+        assertThat(flushed).hasSize(1);
+
+        List<CollectedMetric> afterFlush = registry.collect();
+        assertThat(afterFlush.get(0).getSamples()).containsExactly(sample(0L));
+
+        registry.restore(flushed);
+
+        List<CollectedMetric> restored = registry.collect();
+        assertThat(restored.get(0).getSamples())
+                .containsExactlyInAnyOrder(
+                        sample(Map.of("tag", "a"), 5L), sample(Map.of("tag", "b"), 2L));
     }
 
     private NumericMetricSample sample(long value) {

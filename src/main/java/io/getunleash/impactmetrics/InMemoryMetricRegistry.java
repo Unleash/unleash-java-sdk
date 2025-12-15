@@ -20,4 +20,16 @@ public class InMemoryMetricRegistry implements ImpactMetricRegistry, ImpactMetri
         counters.values().forEach(c -> collected.add(c.collect()));
         return collected;
     }
+
+    @Override
+    public void restore(List<CollectedMetric> metrics) {
+        for (CollectedMetric metric : metrics) {
+            if (metric.getType() == MetricType.COUNTER) {
+                Counter counter = counter(new MetricOptions(metric.getName(), metric.getHelp()));
+                for (NumericMetricSample sample : metric.getSamples()) {
+                    counter.inc(sample.getValue(), sample.getLabels());
+                }
+            }
+        }
+    }
 }
