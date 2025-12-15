@@ -34,6 +34,7 @@ public class CounterImpl implements Counter {
         values.compute(key, (k, current) -> (current == null ? 0L : current) + value);
     }
 
+    @Override
     public CollectedMetric collect() {
         List<NumericMetricSample> samples = new ArrayList<>();
 

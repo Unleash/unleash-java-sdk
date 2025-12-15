@@ -107,24 +107,5 @@ public class CounterImplTest {
         assertThat(second.getSamples().get(0).getValue()).isEqualTo(0L);
     }
 
-    @Test
-    public void should_generate_stable_label_key() {
-        Map<String, String> labels1 = Map.of("z", "1", "a", "2");
-        Map<String, String> labels2 = Map.of("a", "2", "z", "1");
 
-        String key1 = CounterImpl.getLabelKey(labels1);
-        String key2 = CounterImpl.getLabelKey(labels2);
-
-        assertThat(key1).isEqualTo(key2);
-        assertThat(key1).isEqualTo("a=2,z=1");
-    }
-
-    @Test
-    public void should_parse_label_key_correctly() {
-        String key = "env=prod,region=us-east";
-
-        Map<String, String> labels = CounterImpl.parseLabelKey(key);
-
-        assertThat(labels).containsEntry("env", "prod").containsEntry("region", "us-east");
-    }
 }

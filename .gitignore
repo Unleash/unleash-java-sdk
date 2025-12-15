@@ -1,6 +1,7 @@
 # Logs
 logs
 *.log
+unleash-node-sdk
 
 # Runtime data
 pids
