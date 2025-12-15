@@ -17,12 +17,12 @@ public class InMemoryMetricRegistryTest {
         counter.inc();
 
         List<CollectedMetric> metrics = registry.collect();
-        assertThat(metrics).hasSize(1);
-        CollectedMetric result = metrics.get(0);
 
-        assertThat(result.getName()).isEqualTo("test_counter");
-        assertThat(result.getType()).isEqualTo(MetricType.COUNTER);
-        assertThat(result.getSamples()).containsExactly(sample(1L));
+        CollectedMetric expected =
+                new CollectedMetric(
+                        "test_counter", "test help", MetricType.COUNTER, List.of(sample(1L)));
+
+        assertThat(metrics).containsExactly(expected);
     }
 
     @Test
@@ -34,13 +34,15 @@ public class InMemoryMetricRegistryTest {
         counter.inc(2, Map.of("foo", "bar"));
 
         List<CollectedMetric> metrics = registry.collect();
-        assertThat(metrics).hasSize(1);
 
-        CollectedMetric metric = metrics.get(0);
-        assertThat(metric.getName()).isEqualTo("labeled_counter");
-        assertThat(metric.getHelp()).isEqualTo("with labels");
-        assertThat(metric.getType()).isEqualTo(MetricType.COUNTER);
-        assertThat(metric.getSamples()).containsExactly(sample(Map.of("foo", "bar"), 5L));
+        CollectedMetric expected =
+                new CollectedMetric(
+                        "labeled_counter",
+                        "with labels",
+                        MetricType.COUNTER,
+                        List.of(sample(Map.of("foo", "bar"), 5L)));
+
+        assertThat(metrics).containsExactly(expected);
     }
 
     @Test
@@ -53,7 +55,6 @@ public class InMemoryMetricRegistryTest {
         counter.inc(3);
 
         List<CollectedMetric> metrics = registry.collect();
-        assertThat(metrics).hasSize(1);
         CollectedMetric result = metrics.get(0);
 
         assertThat(result.getSamples())
@@ -68,8 +69,11 @@ public class InMemoryMetricRegistryTest {
 
         List<CollectedMetric> metrics = registry.collect();
 
-        assertThat(metrics).hasSize(1);
-        assertThat(metrics.get(0).getSamples()).containsExactly(sample(0L));
+        CollectedMetric expected =
+                new CollectedMetric(
+                        "noop_counter", "noop", MetricType.COUNTER, List.of(sample(0L)));
+
+        assertThat(metrics).containsExactly(expected);
     }
 
     @Test
@@ -79,10 +83,14 @@ public class InMemoryMetricRegistryTest {
 
         counter.inc(1);
         List<CollectedMetric> firstBatch = registry.collect();
-        assertThat(firstBatch.get(0).getSamples()).containsExactly(sample(1L));
+        CollectedMetric expectedBatch1 =
+                new CollectedMetric("flush_test", "flush", MetricType.COUNTER, List.of(sample(1L)));
+        assertThat(firstBatch).containsExactly(expectedBatch1);
 
         List<CollectedMetric> secondBatch = registry.collect();
-        assertThat(secondBatch.get(0).getSamples()).containsExactly(sample(0L));
+        CollectedMetric expectedBatch2 =
+                new CollectedMetric("flush_test", "flush", MetricType.COUNTER, List.of(sample(0L)));
+        assertThat(secondBatch).containsExactly(expectedBatch2);
     }
 
     @Test
@@ -94,7 +102,6 @@ public class InMemoryMetricRegistryTest {
         counter.inc(2, Map.of("tag", "b"));
 
         List<CollectedMetric> flushed = registry.collect();
-        assertThat(flushed).hasSize(1);
 
         List<CollectedMetric> afterFlush = registry.collect();
         assertThat(afterFlush.get(0).getSamples()).containsExactly(sample(0L));

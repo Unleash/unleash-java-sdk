@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-public class CounterImpl implements Counter {
+class CounterImpl implements Counter {
     private final String name;
     private final String help;
     private final ConcurrentHashMap<String, Long> values = new ConcurrentHashMap<>();
