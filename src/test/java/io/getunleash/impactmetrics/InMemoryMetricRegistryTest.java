@@ -106,18 +106,18 @@ public class InMemoryMetricRegistryTest {
     }
 
     @Test
-    public void should_return_counter_with_zero_value_when_counter_is_empty() {
+    public void should_return_zero_value_when_empty() {
         InMemoryMetricRegistry registry = new InMemoryMetricRegistry();
         registry.counter(new MetricOptions("noop_counter", "noop"));
         registry.gauge(new MetricOptions("noop_gauge", "noop"));
 
         List<CollectedMetric> metrics = registry.collect();
 
-        CollectedMetric expectedCounter =
+        CollectedMetric expected =
             new CollectedMetric(
                 "noop_counter", "noop", MetricType.COUNTER, List.of(sample(0L)));
 
-        assertThat(metrics).containsExactly(expectedCounter);
+        assertThat(metrics).containsExactly(expected);
     }
 
     @Test
