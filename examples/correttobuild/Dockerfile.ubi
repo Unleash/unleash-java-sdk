@@ -1,0 +1,12 @@
+FROM ubuntu:24.04 AS builder
+
+RUN apt update -y && apt install unzip -y
+WORKDIR /app
+
+COPY build/distributions/cli-example.zip cli-example.zip
+RUN unzip cli-example.zip
+
+FROM registry.redhat.io/ubi9/openjdk-21-runtime:1.23-6.1764764731
+WORKDIR /app
+COPY --from=builder /app/* /app/
+CMD ["java", "-cp", "/app/lib/*", "io.getunleash.example.AdvancedConstraints"]

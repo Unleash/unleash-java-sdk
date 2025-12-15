@@ -1,0 +1,7 @@
+*
+!gradle
+!build.gradle.kts
+!src
+!settings.gradle.kts
+!.gradle
+!build/distributions/cli-example.zip
