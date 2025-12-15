@@ -114,6 +114,53 @@ public class InMemoryMetricRegistryTest {
                         sample(Map.of("tag", "a"), 5L), sample(Map.of("tag", "b"), 2L));
     }
 
+    @Test
+    public void should_handle_gauges_set_inc_dec() {
+        InMemoryMetricRegistry registry = new InMemoryMetricRegistry();
+        Gauge gauge = registry.gauge(new MetricOptions("my_gauge", "gauge help"));
+
+        gauge.set(100);
+        gauge.inc(10); // 110
+        gauge.dec(20); // 90
+
+        List<CollectedMetric> metrics = registry.collect();
+        CollectedMetric expected =
+                new CollectedMetric(
+                        "my_gauge", "gauge help", MetricType.GAUGE, List.of(sample(90L)));
+        assertThat(metrics).contains(expected);
+    }
+
+    @Test
+    public void gauge_should_clear_value_after_collection() {
+        InMemoryMetricRegistry registry = new InMemoryMetricRegistry();
+        Gauge gauge = registry.gauge(new MetricOptions("persistent_gauge", "persists"));
+
+        gauge.set(42);
+
+        registry.collect(); // First collection
+
+        List<CollectedMetric> secondBatch = registry.collect(); // Second collection
+        assertThat(secondBatch).isEmpty();
+    }
+
+    @Test
+    public void should_restore_gauge_metrics() {
+        InMemoryMetricRegistry registry = new InMemoryMetricRegistry();
+        Gauge gauge = registry.gauge(new MetricOptions("restored_gauge", "help"));
+
+        gauge.set(123, Map.of("k", "v"));
+
+        List<CollectedMetric> flushed = registry.collect();
+
+        // Start fresh
+        InMemoryMetricRegistry newRegistry = new InMemoryMetricRegistry();
+        newRegistry.restore(flushed);
+
+        List<CollectedMetric> restored = newRegistry.collect();
+        assertThat(restored).hasSize(1);
+        assertThat(restored.get(0).getSamples()).containsExactly(sample(Map.of("k", "v"), 123L));
+    }
+
     private NumericMetricSample sample(long value) {
         return sample(Collections.emptyMap(), value);
     }

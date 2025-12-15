@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class InMemoryMetricRegistry implements ImpactMetricRegistry, ImpactMetricsDataSource {
     private final Map<String, CounterImpl> counters = new ConcurrentHashMap<>();
+    private final Map<String, GaugeImpl> gauges = new ConcurrentHashMap<>();
 
     @Override
     public Counter counter(MetricOptions options) {
@@ -15,9 +16,16 @@ public class InMemoryMetricRegistry implements ImpactMetricRegistry, ImpactMetri
     }
 
     @Override
+    public Gauge gauge(MetricOptions options) {
+        return gauges.computeIfAbsent(
+                options.getName(), name -> new GaugeImpl(name, options.getHelp()));
+    }
+
+    @Override
     public List<CollectedMetric> collect() {
         List<CollectedMetric> collected = new ArrayList<>();
         counters.values().forEach(c -> collected.add(c.collect()));
+        gauges.values().forEach(g -> collected.add(g.collect()));
         return collected;
     }
 
@@ -28,6 +36,11 @@ public class InMemoryMetricRegistry implements ImpactMetricRegistry, ImpactMetri
                 Counter counter = counter(new MetricOptions(metric.getName(), metric.getHelp()));
                 for (NumericMetricSample sample : metric.getSamples()) {
                     counter.inc(sample.getValue(), sample.getLabels());
+                }
+            } else if (metric.getType() == MetricType.GAUGE) {
+                Gauge gauge = gauge(new MetricOptions(metric.getName(), metric.getHelp()));
+                for (NumericMetricSample sample : metric.getSamples()) {
+                    gauge.set(sample.getValue(), sample.getLabels());
                 }
             }
         }
