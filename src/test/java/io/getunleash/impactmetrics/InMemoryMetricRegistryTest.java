@@ -12,7 +12,7 @@ public class InMemoryMetricRegistryTest {
     @Test
     public void should_increment_by_default_value() {
         InMemoryMetricRegistry registry = new InMemoryMetricRegistry();
-        Counter counter = registry.counter(new MetricOptions("test_counter", "test help"));
+        Counter counter = registry.counter(new MetricOptions("test_counter", "testing"));
 
         counter.inc();
 
@@ -20,7 +20,7 @@ public class InMemoryMetricRegistryTest {
 
         CollectedMetric expected =
                 new CollectedMetric(
-                        "test_counter", "test help", MetricType.COUNTER, List.of(sample(1L)));
+                        "test_counter", "testing", MetricType.COUNTER, List.of(sample(1L)));
 
         assertThat(metrics).containsExactly(expected);
     }
