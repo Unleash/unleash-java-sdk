@@ -2,7 +2,9 @@ package io.getunleash.impactmetrics;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Collections;
 import java.util.Map;
+
 import org.junit.jupiter.api.Test;
 
 public class CounterImplTest {
@@ -60,27 +62,9 @@ public class CounterImplTest {
 
         CollectedMetric result = counter.collect();
 
-        assertThat(result.getSamples()).hasSize(3);
-
-        NumericMetricSample sampleAX =
-                result.getSamples().stream()
-                        .filter(s -> s.getLabels().containsKey("a"))
-                        .findFirst()
-                        .orElseThrow();
-        NumericMetricSample sampleBY =
-                result.getSamples().stream()
-                        .filter(s -> s.getLabels().containsKey("b"))
-                        .findFirst()
-                        .orElseThrow();
-        NumericMetricSample sampleEmpty =
-                result.getSamples().stream()
-                        .filter(s -> s.getLabels().isEmpty())
-                        .findFirst()
-                        .orElseThrow();
-
-        assertThat(sampleAX.getValue()).isEqualTo(1L);
-        assertThat(sampleBY.getValue()).isEqualTo(2L);
-        assertThat(sampleEmpty.getValue()).isEqualTo(3L);
+        assertThat(result.getSamples())
+            .containsExactlyInAnyOrder(
+                sample(Map.of("a", "x"), 1L), sample(Map.of("b", "y"), 2L), sample(3L));
     }
 
     @Test
@@ -89,9 +73,7 @@ public class CounterImplTest {
 
         CollectedMetric result = counter.collect();
 
-        assertThat(result.getSamples()).hasSize(1);
-        assertThat(result.getSamples().get(0).getValue()).isEqualTo(0L);
-        assertThat(result.getSamples().get(0).getLabels()).isEmpty();
+        assertThat(result.getSamples()).containsExactly(sample(0L));
     }
 
     @Test
@@ -100,12 +82,17 @@ public class CounterImplTest {
 
         counter.inc(5);
         CollectedMetric first = counter.collect();
-        assertThat(first.getSamples().get(0).getValue()).isEqualTo(5L);
+        assertThat(first.getSamples()).containsExactly(sample(5L));
 
         CollectedMetric second = counter.collect();
-        assertThat(second.getSamples()).hasSize(1);
-        assertThat(second.getSamples().get(0).getValue()).isEqualTo(0L);
+        assertThat(second.getSamples()).containsExactly(sample(0L));
     }
 
+    private NumericMetricSample sample(long value) {
+        return sample(Collections.emptyMap(), value);
+    }
 
+    private NumericMetricSample sample(Map<String, String> labels, long value) {
+        return new NumericMetricSample(labels, value);
+    }
 }
