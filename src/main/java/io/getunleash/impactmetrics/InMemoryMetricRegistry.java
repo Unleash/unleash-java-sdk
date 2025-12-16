@@ -11,14 +11,12 @@ public class InMemoryMetricRegistry implements ImpactMetricRegistry, ImpactMetri
 
     @Override
     public Counter counter(MetricOptions options) {
-        return counters.computeIfAbsent(
-                options.getName(), name -> new CounterImpl(name, options.getHelp()));
+        return counters.computeIfAbsent(options.getName(), name -> new CounterImpl(options));
     }
 
     @Override
     public Gauge gauge(MetricOptions options) {
-        return gauges.computeIfAbsent(
-                options.getName(), name -> new GaugeImpl(name, options.getHelp()));
+        return gauges.computeIfAbsent(options.getName(), name -> new GaugeImpl(options));
     }
 
     @Override

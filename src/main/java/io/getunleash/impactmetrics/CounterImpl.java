@@ -9,13 +9,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 class CounterImpl implements Counter {
-    private final String name;
-    private final String help;
+    private final MetricOptions options;
     private final ConcurrentHashMap<String, Long> values = new ConcurrentHashMap<>();
 
-    CounterImpl(String name, String help) {
-        this.name = name;
-        this.help = help;
+    CounterImpl(MetricOptions options) {
+        this.options = options;
     }
 
     @Override
@@ -48,7 +46,8 @@ class CounterImpl implements Counter {
             samples.add(new NumericMetricSample(Collections.emptyMap(), 0L));
         }
 
-        return new CollectedMetric(name, help, MetricType.COUNTER, samples);
+        return new CollectedMetric(
+                options.getName(), options.getHelp(), MetricType.COUNTER, samples);
     }
 
     static String getLabelKey(Map<String, String> labels) {

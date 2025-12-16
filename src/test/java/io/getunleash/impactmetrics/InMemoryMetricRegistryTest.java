@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
 import org.junit.jupiter.api.Test;
 
 public class InMemoryMetricRegistryTest {
@@ -20,8 +19,8 @@ public class InMemoryMetricRegistryTest {
         List<CollectedMetric> metrics = registry.collect();
 
         CollectedMetric expected =
-            new CollectedMetric(
-                "test_counter", "testing", MetricType.COUNTER, List.of(sample(1L)));
+                new CollectedMetric(
+                        "test_counter", "testing", MetricType.COUNTER, List.of(sample(1L)));
 
         assertThat(metrics).containsExactly(expected);
     }
@@ -37,11 +36,11 @@ public class InMemoryMetricRegistryTest {
         List<CollectedMetric> metrics = registry.collect();
 
         CollectedMetric expected =
-            new CollectedMetric(
-                "labeled_counter",
-                "with labels",
-                MetricType.COUNTER,
-                List.of(sample(Map.of("foo", "bar"), 5L)));
+                new CollectedMetric(
+                        "labeled_counter",
+                        "with labels",
+                        MetricType.COUNTER,
+                        List.of(sample(Map.of("foo", "bar"), 5L)));
 
         assertThat(metrics).containsExactly(expected);
     }
@@ -58,11 +57,11 @@ public class InMemoryMetricRegistryTest {
         List<CollectedMetric> metrics = registry.collect();
 
         CollectedMetric expected =
-            new CollectedMetric(
-                "test_gauge",
-                "gauge test",
-                MetricType.GAUGE,
-                List.of(sample(Map.of("env", "prod"), 10L)));
+                new CollectedMetric(
+                        "test_gauge",
+                        "gauge test",
+                        MetricType.GAUGE,
+                        List.of(sample(Map.of("env", "prod"), 10L)));
 
         assertThat(metrics).containsExactly(expected);
     }
@@ -81,8 +80,8 @@ public class InMemoryMetricRegistryTest {
 
         assertThat(result.getName()).isEqualTo("multi_label");
         assertThat(result.getSamples())
-            .containsExactlyInAnyOrder(
-                sample(Map.of("a", "x"), 1L), sample(Map.of("b", "y"), 2L), sample(3L));
+                .containsExactlyInAnyOrder(
+                        sample(Map.of("a", "x"), 1L), sample(Map.of("b", "y"), 2L), sample(3L));
     }
 
     @Test
@@ -99,10 +98,10 @@ public class InMemoryMetricRegistryTest {
 
         assertThat(result.getName()).isEqualTo("multi_env_gauge");
         assertThat(result.getSamples())
-            .containsExactlyInAnyOrder(
-                sample(Map.of("env", "prod"), 5L),
-                sample(Map.of("env", "dev"), -2L),
-                sample(Map.of("env", "test"), 10L));
+                .containsExactlyInAnyOrder(
+                        sample(Map.of("env", "prod"), 5L),
+                        sample(Map.of("env", "dev"), -2L),
+                        sample(Map.of("env", "test"), 10L));
     }
 
     @Test
@@ -114,8 +113,8 @@ public class InMemoryMetricRegistryTest {
         List<CollectedMetric> metrics = registry.collect();
 
         CollectedMetric expected =
-            new CollectedMetric(
-                "noop_counter", "noop", MetricType.COUNTER, List.of(sample(0L)));
+                new CollectedMetric(
+                        "noop_counter", "noop", MetricType.COUNTER, List.of(sample(0L)));
 
         assertThat(metrics).containsExactly(expected);
     }
@@ -129,12 +128,12 @@ public class InMemoryMetricRegistryTest {
         List<CollectedMetric> firstBatch = registry.collect();
 
         CollectedMetric expectedBatch1 =
-            new CollectedMetric("flush_test", "flush", MetricType.COUNTER, List.of(sample(1L)));
+                new CollectedMetric("flush_test", "flush", MetricType.COUNTER, List.of(sample(1L)));
         assertThat(firstBatch).containsExactly(expectedBatch1);
 
         List<CollectedMetric> secondBatch = registry.collect();
         CollectedMetric expectedBatch2 =
-            new CollectedMetric("flush_test", "flush", MetricType.COUNTER, List.of(sample(0L)));
+                new CollectedMetric("flush_test", "flush", MetricType.COUNTER, List.of(sample(0L)));
         assertThat(secondBatch).containsExactly(expectedBatch2);
     }
 
@@ -155,8 +154,8 @@ public class InMemoryMetricRegistryTest {
 
         List<CollectedMetric> restored = registry.collect();
         assertThat(restored.get(0).getSamples())
-            .containsExactlyInAnyOrder(
-                sample(Map.of("tag", "a"), 5L), sample(Map.of("tag", "b"), 2L));
+                .containsExactlyInAnyOrder(
+                        sample(Map.of("tag", "a"), 5L), sample(Map.of("tag", "b"), 2L));
     }
 
     private NumericMetricSample sample(long value) {

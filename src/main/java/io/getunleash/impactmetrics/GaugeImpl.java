@@ -6,13 +6,11 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 class GaugeImpl implements Gauge {
-    private final String name;
-    private final String help;
+    private final MetricOptions options;
     private final ConcurrentHashMap<String, Long> values = new ConcurrentHashMap<>();
 
-    GaugeImpl(String name, String help) {
-        this.name = name;
-        this.help = help;
+    GaugeImpl(MetricOptions options) {
+        this.options = options;
     }
 
     @Override
@@ -68,6 +66,6 @@ class GaugeImpl implements Gauge {
             }
         }
 
-        return new CollectedMetric(name, help, MetricType.GAUGE, samples);
+        return new CollectedMetric(options.getName(), options.getHelp(), MetricType.GAUGE, samples);
     }
 }
