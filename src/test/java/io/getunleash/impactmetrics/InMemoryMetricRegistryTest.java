@@ -46,6 +46,27 @@ public class InMemoryMetricRegistryTest {
     }
 
     @Test
+    public void should_support_gauge_inc_dec_and_set() {
+        InMemoryMetricRegistry registry = new InMemoryMetricRegistry();
+        Gauge gauge = registry.gauge(new MetricOptions("test_gauge", "gauge test"));
+
+        gauge.inc(5, Map.of("env", "prod"));
+        gauge.dec(2, Map.of("env", "prod"));
+        gauge.set(10, Map.of("env", "prod"));
+
+        List<CollectedMetric> metrics = registry.collect();
+
+        CollectedMetric expected =
+                new CollectedMetric(
+                        "test_gauge",
+                        "gauge test",
+                        MetricType.GAUGE,
+                        List.of(sample(Map.of("env", "prod"), 10L)));
+
+        assertThat(metrics).containsExactly(expected);
+    }
+
+    @Test
     public void should_store_different_label_combinations_separately() {
         InMemoryMetricRegistry registry = new InMemoryMetricRegistry();
         Counter counter = registry.counter(new MetricOptions("multi_label", "label test"));
@@ -57,15 +78,37 @@ public class InMemoryMetricRegistryTest {
         List<CollectedMetric> metrics = registry.collect();
         CollectedMetric result = metrics.get(0);
 
+        assertThat(result.getName()).isEqualTo("multi_label");
         assertThat(result.getSamples())
                 .containsExactlyInAnyOrder(
                         sample(Map.of("a", "x"), 1L), sample(Map.of("b", "y"), 2L), sample(3L));
     }
 
     @Test
+    public void should_track_gauge_values_separately_per_label_set() {
+        InMemoryMetricRegistry registry = new InMemoryMetricRegistry();
+        Gauge gauge = registry.gauge(new MetricOptions("multi_env_gauge", "tracks multiple envs"));
+
+        gauge.inc(5, Map.of("env", "prod"));
+        gauge.dec(2, Map.of("env", "dev"));
+        gauge.set(10, Map.of("env", "test"));
+
+        List<CollectedMetric> metrics = registry.collect();
+        CollectedMetric result = metrics.get(0);
+
+        assertThat(result.getName()).isEqualTo("multi_env_gauge");
+        assertThat(result.getSamples())
+                .containsExactlyInAnyOrder(
+                        sample(Map.of("env", "prod"), 5L),
+                        sample(Map.of("env", "dev"), -2L),
+                        sample(Map.of("env", "test"), 10L));
+    }
+
+    @Test
     public void should_return_zero_value_when_empty() {
         InMemoryMetricRegistry registry = new InMemoryMetricRegistry();
         registry.counter(new MetricOptions("noop_counter", "noop"));
+        registry.gauge(new MetricOptions("noop_gauge", "noop"));
 
         List<CollectedMetric> metrics = registry.collect();
 
@@ -83,6 +126,7 @@ public class InMemoryMetricRegistryTest {
 
         counter.inc(1);
         List<CollectedMetric> firstBatch = registry.collect();
+
         CollectedMetric expectedBatch1 =
                 new CollectedMetric("flush_test", "flush", MetricType.COUNTER, List.of(sample(1L)));
         assertThat(firstBatch).containsExactly(expectedBatch1);
