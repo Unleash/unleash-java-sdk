@@ -196,7 +196,7 @@ public class InMemoryMetricRegistryTest {
     }
 
     @Test
-    public void histogram_should_track_different_label_combinations_separately() {
+    public void should_track_different_label_combinations_separately_in_histogram() {
         InMemoryMetricRegistry registry = new InMemoryMetricRegistry();
         Histogram histogram =
                 registry.histogram(
@@ -242,7 +242,7 @@ public class InMemoryMetricRegistryTest {
     }
 
     @Test
-    public void histogram_restoration_should_preserve_exact_data() {
+    public void should_preserve_exact_data_when_restoring_histogram() {
         InMemoryMetricRegistry registry = new InMemoryMetricRegistry();
         Histogram histogram =
                 registry.histogram(

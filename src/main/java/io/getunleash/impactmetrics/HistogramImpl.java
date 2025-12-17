@@ -46,11 +46,13 @@ class HistogramImpl implements Histogram {
                     if (data == null) {
                         data = new HistogramData(0, 0.0, buckets);
                     }
-                    data.count++;
-                    data.sum += value;
-                    for (Map.Entry<Double, Long> entry : data.buckets.entrySet()) {
-                        if (value <= entry.getKey()) {
-                            entry.setValue(entry.getValue() + 1);
+                    synchronized (data) {
+                        data.count++;
+                        data.sum += value;
+                        for (Map.Entry<Double, Long> entry : data.buckets.entrySet()) {
+                            if (value <= entry.getKey()) {
+                                entry.setValue(entry.getValue() + 1);
+                            }
                         }
                     }
                     return data;
@@ -76,13 +78,23 @@ class HistogramImpl implements Histogram {
             HistogramData data = entry.getValue();
 
             List<HistogramBucket> bucketSamples = new ArrayList<>();
-            for (Double le : buckets) {
-                bucketSamples.add(new HistogramBucket(le, data.buckets.getOrDefault(le, 0L)));
+            long countSnapshot;
+            double sumSnapshot;
+            synchronized (data) {
+                countSnapshot = data.count;
+                sumSnapshot = data.sum;
+                for (Double le : buckets) {
+                    bucketSamples.add(
+                            new HistogramBucket(le, data.buckets.getOrDefault(le, 0L)));
+                }
             }
 
             samples.add(
                     new BucketMetricSample(
-                            CounterImpl.parseLabelKey(key), data.count, data.sum, bucketSamples));
+                            CounterImpl.parseLabelKey(key),
+                            countSnapshot,
+                            sumSnapshot,
+                            bucketSamples));
         }
 
         values.clear();
