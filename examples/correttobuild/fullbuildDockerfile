@@ -1,0 +1,11 @@
+FROM gradle:9.1.0 AS builder
+WORKDIR /app
+COPY . /app
+RUN gradle assembleDist --no-daemon
+
+FROM amazoncorretto:21 AS final
+WORKDIR /app
+COPY --from=builder /app/build/distributions/cli-example.zip cli-example.zip
+RUN jar xf cli-example.zip
+RUN chmod a+x -R /app/cli-example/bin
+CMD ["java", "-cp", "/app/cli-example/lib/*", "io.getunleash.example.AdvancedConstraints"]

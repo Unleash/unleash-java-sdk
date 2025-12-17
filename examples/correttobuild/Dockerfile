@@ -1,0 +1,6 @@
+FROM amazoncorretto:21
+WORKDIR /app
+COPY build/distributions/cli-example.zip cli-example.zip
+RUN jar xf cli-example.zip
+RUN chmod a+x -R /app/cli-example/bin
+CMD ["java", "-cp", "/app/cli-example/lib/*", "io.getunleash.example.AdvancedConstraints"]
