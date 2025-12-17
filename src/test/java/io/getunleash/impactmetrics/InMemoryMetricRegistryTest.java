@@ -158,6 +158,141 @@ public class InMemoryMetricRegistryTest {
                         sample(Map.of("tag", "a"), 5L), sample(Map.of("tag", "b"), 2L));
     }
 
+    @Test
+    public void should_observe_histogram_values() {
+        InMemoryMetricRegistry registry = new InMemoryMetricRegistry();
+        Histogram histogram =
+                registry.histogram(
+                        new BucketMetricOptions(
+                                "test_histogram",
+                                "testing histogram",
+                                List.of(0.1, 0.5, 1.0, 2.5, 5.0)));
+
+        histogram.observe(0.05, Map.of("env", "prod"));
+        histogram.observe(0.75, Map.of("env", "prod"));
+        histogram.observe(3, Map.of("env", "prod"));
+
+        List<CollectedMetric> metrics = registry.collect();
+
+        CollectedMetric expected =
+                new CollectedMetric(
+                        "test_histogram",
+                        "testing histogram",
+                        MetricType.HISTOGRAM,
+                        List.of(
+                                new BucketMetricSample(
+                                        Map.of("env", "prod"),
+                                        3L,
+                                        3.8,
+                                        List.of(
+                                                bucket(0.1, 1),
+                                                bucket(0.5, 1),
+                                                bucket(1.0, 2),
+                                                bucket(2.5, 2),
+                                                bucket(5.0, 3),
+                                                bucket(Double.POSITIVE_INFINITY, 3)))));
+
+        assertThat(metrics).containsExactly(expected);
+    }
+
+    @Test
+    public void histogram_should_track_different_label_combinations_separately() {
+        InMemoryMetricRegistry registry = new InMemoryMetricRegistry();
+        Histogram histogram =
+                registry.histogram(
+                        new BucketMetricOptions(
+                                "multi_label_histogram",
+                                "histogram with multiple labels",
+                                List.of(1.0, 10.0)));
+
+        histogram.observe(0.5, Map.of("method", "GET"));
+        histogram.observe(5, Map.of("method", "POST"));
+        histogram.observe(15);
+
+        List<CollectedMetric> metrics = registry.collect();
+        CollectedMetric result = metrics.get(0);
+
+        assertThat(result.getName()).isEqualTo("multi_label_histogram");
+        assertThat(result.getSamples())
+                .containsExactlyInAnyOrder(
+                        new BucketMetricSample(
+                                Map.of("method", "GET"),
+                                1L,
+                                0.5,
+                                List.of(
+                                        bucket(1.0, 1),
+                                        bucket(10.0, 1),
+                                        bucket(Double.POSITIVE_INFINITY, 1))),
+                        new BucketMetricSample(
+                                Map.of("method", "POST"),
+                                1L,
+                                5.0,
+                                List.of(
+                                        bucket(1.0, 0),
+                                        bucket(10.0, 1),
+                                        bucket(Double.POSITIVE_INFINITY, 1))),
+                        new BucketMetricSample(
+                                Collections.emptyMap(),
+                                1L,
+                                15.0,
+                                List.of(
+                                        bucket(1.0, 0),
+                                        bucket(10.0, 0),
+                                        bucket(Double.POSITIVE_INFINITY, 1))));
+    }
+
+    @Test
+    public void histogram_restoration_should_preserve_exact_data() {
+        InMemoryMetricRegistry registry = new InMemoryMetricRegistry();
+        Histogram histogram =
+                registry.histogram(
+                        new BucketMetricOptions(
+                                "restore_histogram",
+                                "testing histogram restore",
+                                List.of(0.1, 1.0, 10.0)));
+
+        histogram.observe(0.05, Map.of("method", "GET"));
+        histogram.observe(0.5, Map.of("method", "GET"));
+        histogram.observe(5, Map.of("method", "POST"));
+        histogram.observe(15, Map.of("method", "POST"));
+
+        List<CollectedMetric> firstCollect = registry.collect();
+        assertThat(firstCollect).hasSize(1);
+
+        List<CollectedMetric> emptyCollect = registry.collect();
+
+        CollectedMetric expectedEmpty =
+                new CollectedMetric(
+                        "restore_histogram",
+                        "testing histogram restore",
+                        MetricType.HISTOGRAM,
+                        List.of(
+                                new BucketMetricSample(
+                                        Collections.emptyMap(),
+                                        0L,
+                                        0.0,
+                                        List.of(
+                                                bucket(0.1, 0),
+                                                bucket(1.0, 0),
+                                                bucket(10.0, 0),
+                                                bucket(Double.POSITIVE_INFINITY, 0)))));
+
+        assertThat(emptyCollect).containsExactly(expectedEmpty);
+
+        registry.restore(firstCollect);
+
+        List<CollectedMetric> restoredCollect = registry.collect();
+
+        assertThat(restoredCollect).hasSize(1);
+        assertThat(restoredCollect.get(0).getName()).isEqualTo("restore_histogram");
+        assertThat(restoredCollect.get(0).getSamples())
+                .containsExactlyInAnyOrderElementsOf(firstCollect.get(0).getSamples());
+    }
+
+    private HistogramBucket bucket(double le, long count) {
+        return new HistogramBucket(le, count);
+    }
+
     private NumericMetricSample sample(long value) {
         return sample(Collections.emptyMap(), value);
     }
