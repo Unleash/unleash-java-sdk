@@ -4,8 +4,10 @@ import io.getunleash.engine.MetricsBucket;
 import io.getunleash.engine.UnleashEngine;
 import io.getunleash.event.UnleashEvent;
 import io.getunleash.event.UnleashSubscriber;
+import io.getunleash.impactmetrics.CollectedMetric;
 import io.getunleash.lang.Nullable;
 import io.getunleash.util.UnleashConfig;
+import java.util.List;
 
 public class ClientMetrics implements UnleashEvent {
 
@@ -18,8 +20,16 @@ public class ClientMetrics implements UnleashEvent {
     @Nullable private final String platformName;
     @Nullable private final String platformVersion;
     @Nullable private final String yggdrasilVersion;
+    @Nullable private final List<CollectedMetric> impactMetrics;
 
     ClientMetrics(UnleashConfig config, @Nullable MetricsBucket bucket) {
+        this(config, bucket, null);
+    }
+
+    ClientMetrics(
+            UnleashConfig config,
+            @Nullable MetricsBucket bucket,
+            @Nullable List<CollectedMetric> impactMetrics) {
         this.environment = config.getEnvironment();
         this.appName = config.getAppName();
         this.instanceId = config.getInstanceId();
@@ -29,6 +39,7 @@ public class ClientMetrics implements UnleashEvent {
         this.platformName = System.getProperty("java.vm.name");
         this.platformVersion = System.getProperty("java.version");
         this.yggdrasilVersion = UnleashEngine.getCoreVersion();
+        this.impactMetrics = impactMetrics;
     }
 
     public String getAppName() {
@@ -69,6 +80,11 @@ public class ClientMetrics implements UnleashEvent {
     @Nullable
     public String getYggdrasilVersion() {
         return yggdrasilVersion;
+    }
+
+    @Nullable
+    public List<CollectedMetric> getImpactMetrics() {
+        return impactMetrics;
     }
 
     @Override

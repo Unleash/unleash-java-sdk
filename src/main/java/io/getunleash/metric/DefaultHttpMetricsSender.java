@@ -5,8 +5,10 @@ import static io.getunleash.util.UnleashConfig.UNLEASH_INTERVAL;
 import com.google.gson.*;
 import io.getunleash.UnleashException;
 import io.getunleash.event.EventDispatcher;
+import io.getunleash.impactmetrics.HistogramBucket;
 import io.getunleash.util.AtomicLongSerializer;
 import io.getunleash.util.DateTimeSerializer;
+import io.getunleash.util.HistogramBucketSerializer;
 import io.getunleash.util.InstantSerializer;
 import io.getunleash.util.UnleashConfig;
 import io.getunleash.util.UnleashURLs;
@@ -38,6 +40,7 @@ public class DefaultHttpMetricsSender implements MetricSender {
                         .registerTypeAdapter(LocalDateTime.class, new DateTimeSerializer())
                         .registerTypeAdapter(Instant.class, new InstantSerializer())
                         .registerTypeAdapter(AtomicLong.class, new AtomicLongSerializer())
+                        .registerTypeAdapter(HistogramBucket.class, new HistogramBucketSerializer())
                         .create();
     }
 

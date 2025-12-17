@@ -84,8 +84,7 @@ class HistogramImpl implements Histogram {
                 countSnapshot = data.count;
                 sumSnapshot = data.sum;
                 for (Double le : buckets) {
-                    bucketSamples.add(
-                            new HistogramBucket(le, data.buckets.getOrDefault(le, 0L)));
+                    bucketSamples.add(new HistogramBucket(le, data.buckets.getOrDefault(le, 0L)));
                 }
             }
 
