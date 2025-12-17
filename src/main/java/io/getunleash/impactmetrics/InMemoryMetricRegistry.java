@@ -8,6 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class InMemoryMetricRegistry implements ImpactMetricRegistry, ImpactMetricsDataSource {
     private final Map<String, CounterImpl> counters = new ConcurrentHashMap<>();
     private final Map<String, GaugeImpl> gauges = new ConcurrentHashMap<>();
+    private final Map<String, HistogramImpl> histograms = new ConcurrentHashMap<>();
 
     @Override
     public Counter counter(MetricOptions options) {
@@ -17,6 +18,11 @@ public class InMemoryMetricRegistry implements ImpactMetricRegistry, ImpactMetri
     @Override
     public Gauge gauge(MetricOptions options) {
         return gauges.computeIfAbsent(options.getName(), name -> new GaugeImpl(options));
+    }
+
+    @Override
+    public Histogram histogram(BucketMetricOptions options) {
+        return histograms.computeIfAbsent(options.getName(), name -> new HistogramImpl(options));
     }
 
     @Override
@@ -30,6 +36,10 @@ public class InMemoryMetricRegistry implements ImpactMetricRegistry, ImpactMetri
                 .map(GaugeImpl::collect)
                 .filter(m -> !m.getSamples().isEmpty())
                 .forEach(collected::add);
+        histograms.values().stream()
+                .map(HistogramImpl::collect)
+                .filter(m -> !m.getSamples().isEmpty())
+                .forEach(collected::add);
         return collected;
     }
 
@@ -38,13 +48,44 @@ public class InMemoryMetricRegistry implements ImpactMetricRegistry, ImpactMetri
         for (CollectedMetric metric : metrics) {
             if (metric.getType() == MetricType.COUNTER) {
                 Counter counter = counter(new MetricOptions(metric.getName(), metric.getHelp()));
-                for (NumericMetricSample sample : metric.getSamples()) {
-                    counter.inc(sample.getValue(), sample.getLabels());
+                for (MetricSample sample : metric.getSamples()) {
+                    if (sample instanceof NumericMetricSample) {
+                        NumericMetricSample numericSample = (NumericMetricSample) sample;
+                        counter.inc(numericSample.getValue(), numericSample.getLabels());
+                    }
                 }
             } else if (metric.getType() == MetricType.GAUGE) {
                 Gauge gauge = gauge(new MetricOptions(metric.getName(), metric.getHelp()));
-                for (NumericMetricSample sample : metric.getSamples()) {
-                    gauge.set(sample.getValue(), sample.getLabels());
+                for (MetricSample sample : metric.getSamples()) {
+                    if (sample instanceof NumericMetricSample) {
+                        NumericMetricSample numericSample = (NumericMetricSample) sample;
+                        gauge.set(numericSample.getValue(), numericSample.getLabels());
+                    }
+                }
+            } else if (metric.getType() == MetricType.HISTOGRAM) {
+                List<Double> buckets = new ArrayList<>();
+                boolean foundBuckets = false;
+                for (MetricSample sample : metric.getSamples()) {
+                    if (sample instanceof BucketMetricSample) {
+                        BucketMetricSample bms = (BucketMetricSample) sample;
+                        for (HistogramBucket hb : bms.getBuckets()) {
+                            buckets.add(hb.getLe());
+                        }
+                        foundBuckets = true;
+                        break;
+                    }
+                }
+
+                if (foundBuckets) {
+                    Histogram histogram =
+                            histogram(
+                                    new BucketMetricOptions(
+                                            metric.getName(), metric.getHelp(), buckets));
+                    for (MetricSample sample : metric.getSamples()) {
+                        if (sample instanceof BucketMetricSample) {
+                            histogram.restore((BucketMetricSample) sample);
+                        }
+                    }
                 }
             }
         }

@@ -1,5 +1,6 @@
 package io.getunleash.impactmetrics;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -7,14 +8,14 @@ public class CollectedMetric {
     private final String name;
     private final String help;
     private final MetricType type;
-    private final List<NumericMetricSample> samples;
+    private final List<MetricSample> samples;
 
     public CollectedMetric(
-            String name, String help, MetricType type, List<NumericMetricSample> samples) {
+            String name, String help, MetricType type, List<? extends MetricSample> samples) {
         this.name = name;
         this.help = help;
         this.type = type;
-        this.samples = samples;
+        this.samples = new ArrayList<>(samples);
     }
 
     public String getName() {
@@ -29,7 +30,7 @@ public class CollectedMetric {
         return type;
     }
 
-    public List<NumericMetricSample> getSamples() {
+    public List<MetricSample> getSamples() {
         return samples;
     }
 

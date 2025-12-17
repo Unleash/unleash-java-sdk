@@ -3,7 +3,7 @@ package io.getunleash.impactmetrics;
 import java.util.Map;
 import java.util.Objects;
 
-public class NumericMetricSample {
+public class NumericMetricSample implements MetricSample {
     private final Map<String, String> labels;
     private final long value;
 

@@ -57,7 +57,7 @@ class GaugeImpl implements Gauge {
     }
 
     public CollectedMetric collect() {
-        List<NumericMetricSample> samples = new ArrayList<>();
+        List<MetricSample> samples = new ArrayList<>();
 
         for (String key : values.keySet()) {
             Long value = values.remove(key);
