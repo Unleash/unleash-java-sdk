@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-public class InMemoryMetricRegistryTest {
+public class MetricTypeTest {
 
     @Test
     public void should_increment_by_default_value() {
