@@ -76,8 +76,6 @@ class HistogramImpl implements Histogram {
             HistogramData data = entry.getValue();
 
             List<HistogramBucket> bucketSamples = new ArrayList<>();
-            // Ensure we export all buckets even if count 0?
-            // Node SDK exports all buckets.
             for (Double le : buckets) {
                 bucketSamples.add(new HistogramBucket(le, data.buckets.getOrDefault(le, 0L)));
             }
@@ -90,7 +88,6 @@ class HistogramImpl implements Histogram {
         values.clear();
 
         if (samples.isEmpty()) {
-            // Return zeroed sample
             List<HistogramBucket> zeroBuckets = new ArrayList<>();
             for (Double le : buckets) {
                 zeroBuckets.add(new HistogramBucket(le, 0L));
