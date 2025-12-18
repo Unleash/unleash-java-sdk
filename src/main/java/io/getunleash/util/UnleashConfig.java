@@ -6,6 +6,7 @@ import io.getunleash.UnleashContextProvider;
 import io.getunleash.UnleashException;
 import io.getunleash.event.NoOpSubscriber;
 import io.getunleash.event.UnleashSubscriber;
+import io.getunleash.impactmetrics.ImpactMetricsDataSource;
 import io.getunleash.lang.Nullable;
 import io.getunleash.metric.DefaultHttpMetricsSender;
 import io.getunleash.repository.HttpFeatureFetcher;
@@ -73,6 +74,7 @@ public class UnleashConfig {
     @Nullable private final ToggleBootstrapProvider toggleBootstrapProvider;
     @Nullable private final Proxy proxy;
     @Nullable private final Consumer<UnleashException> startupExceptionHandler;
+    @Nullable private final ImpactMetricsDataSource impactMetricsRegistry;
 
     private UnleashConfig(
             @Nullable URI unleashAPI,
@@ -106,7 +108,8 @@ public class UnleashConfig {
             @Nullable ToggleBootstrapProvider unleashBootstrapProvider,
             @Nullable Proxy proxy,
             @Nullable Authenticator proxyAuthenticator,
-            @Nullable Consumer<UnleashException> startupExceptionHandler) {
+            @Nullable Consumer<UnleashException> startupExceptionHandler,
+            @Nullable ImpactMetricsDataSource impactMetricsRegistry) {
 
         if (appName == null) {
             throw new IllegalStateException("You are required to specify the unleash appName");
@@ -172,6 +175,7 @@ public class UnleashConfig {
         this.clientSpecificationVersion =
                 UnleashProperties.getProperty("client.specification.version");
         this.startupExceptionHandler = startupExceptionHandler;
+        this.impactMetricsRegistry = impactMetricsRegistry;
     }
 
     public static Builder builder() {
@@ -352,6 +356,11 @@ public class UnleashConfig {
         return proxy;
     }
 
+    @Nullable
+    public ImpactMetricsDataSource getImpactMetricsRegistry() {
+        return impactMetricsRegistry;
+    }
+
     public MetricSenderFactory getMetricSenderFactory() {
         return this.metricSenderFactory;
     }
@@ -462,6 +471,7 @@ public class UnleashConfig {
         private @Nullable Authenticator proxyAuthenticator;
 
         private @Nullable Consumer<UnleashException> startupExceptionHandler;
+        private @Nullable ImpactMetricsDataSource impactMetricsRegistry;
 
         private static String getHostname() {
             String hostName = System.getProperty("hostname");
@@ -715,6 +725,12 @@ public class UnleashConfig {
             return this;
         }
 
+        public Builder impactMetricsRegistry(
+                @Nullable ImpactMetricsDataSource impactMetricsRegistry) {
+            this.impactMetricsRegistry = impactMetricsRegistry;
+            return this;
+        }
+
         public UnleashConfig build() {
             return new UnleashConfig(
                     unleashAPI,
@@ -749,7 +765,8 @@ public class UnleashConfig {
                     toggleBootstrapProvider,
                     proxy,
                     proxyAuthenticator,
-                    startupExceptionHandler);
+                    startupExceptionHandler,
+                    impactMetricsRegistry);
         }
 
         public String getDefaultSdkVersion() {
