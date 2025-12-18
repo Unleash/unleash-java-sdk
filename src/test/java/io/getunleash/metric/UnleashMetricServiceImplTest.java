@@ -8,10 +8,14 @@ import io.getunleash.engine.MetricsBucket;
 import io.getunleash.engine.UnleashEngine;
 import io.getunleash.engine.YggdrasilError;
 import io.getunleash.engine.YggdrasilInvalidInputException;
+import io.getunleash.impactmetrics.CollectedMetric;
+import io.getunleash.impactmetrics.ImpactMetricsDataSource;
 import io.getunleash.util.UnleashConfig;
 import io.getunleash.util.UnleashScheduledExecutor;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -357,6 +361,129 @@ public class UnleashMetricServiceImplTest {
         sendMetricsCallback.getValue().run();
         assertThat(unleashMetricService.getFailures()).isEqualTo(0);
         assertThat(unleashMetricService.getSkips()).isEqualTo(0);
+    }
+
+    @Test
+    public void should_include_impact_metrics_in_clientmetrics_payload() throws YggdrasilError {
+        UnleashConfig config =
+                UnleashConfig.builder()
+                        .appName("test")
+                        .sendMetricsInterval(10)
+                        .unleashAPI("http://unleash.com")
+                        .impactMetricsRegistry(mock(ImpactMetricsDataSource.class))
+                        .build();
+
+        UnleashScheduledExecutor executor = mock(UnleashScheduledExecutor.class);
+        DefaultHttpMetricsSender sender = mock(DefaultHttpMetricsSender.class);
+        UnleashEngine engine = new UnleashEngine();
+        ImpactMetricsDataSource registry = mock(ImpactMetricsDataSource.class);
+
+        CollectedMetric sample =
+                new CollectedMetric(
+                        "feature_toggle_used",
+                        "tracks toggle usage",
+                        io.getunleash.impactmetrics.MetricType.COUNTER,
+                        Collections.emptyList());
+        when(registry.collect()).thenReturn(List.of(sample));
+
+        UnleashConfig configWithRegistry =
+                UnleashConfig.builder()
+                        .appName("test")
+                        .sendMetricsInterval(10)
+                        .unleashAPI("http://unleash.com")
+                        .impactMetricsRegistry(registry)
+                        .build();
+
+        UnleashMetricServiceImpl unleashMetricService =
+                new UnleashMetricServiceImpl(configWithRegistry, sender, executor, engine);
+
+        ArgumentCaptor<Runnable> sendMetricsCallback = ArgumentCaptor.forClass(Runnable.class);
+        verify(executor).setInterval(sendMetricsCallback.capture(), anyLong(), anyLong());
+
+        when(sender.sendMetrics(any(ClientMetrics.class))).thenReturn(200);
+
+        sendMetricsCallback.getValue().run();
+
+        ArgumentCaptor<ClientMetrics> cmCaptor = ArgumentCaptor.forClass(ClientMetrics.class);
+        verify(sender).sendMetrics(cmCaptor.capture());
+
+        ClientMetrics metricsSent = cmCaptor.getValue();
+        assertThat(metricsSent.getImpactMetrics()).isNotNull();
+        assertThat(metricsSent.getImpactMetrics()).hasSize(1);
+        assertThat(metricsSent.getImpactMetrics().get(0).getName())
+                .isEqualTo("feature_toggle_used");
+    }
+
+    @Test
+    public void should_restore_impact_metrics_on_failure() throws YggdrasilError {
+        ImpactMetricsDataSource registry = mock(ImpactMetricsDataSource.class);
+
+        CollectedMetric sample =
+                new CollectedMetric(
+                        "feature_toggle_used",
+                        "tracks toggle usage",
+                        io.getunleash.impactmetrics.MetricType.COUNTER,
+                        Collections.emptyList());
+        when(registry.collect()).thenReturn(List.of(sample));
+
+        UnleashConfig config =
+                UnleashConfig.builder()
+                        .appName("test")
+                        .sendMetricsInterval(10)
+                        .unleashAPI("http://unleash.com")
+                        .impactMetricsRegistry(registry)
+                        .build();
+
+        UnleashScheduledExecutor executor = mock(UnleashScheduledExecutor.class);
+        DefaultHttpMetricsSender sender = mock(DefaultHttpMetricsSender.class);
+        UnleashEngine engine = new UnleashEngine();
+
+        UnleashMetricServiceImpl unleashMetricService =
+                new UnleashMetricServiceImpl(config, sender, executor, engine);
+
+        ArgumentCaptor<Runnable> sendMetricsCallback = ArgumentCaptor.forClass(Runnable.class);
+        verify(executor).setInterval(sendMetricsCallback.capture(), anyLong(), anyLong());
+
+        when(sender.sendMetrics(any(ClientMetrics.class))).thenReturn(500);
+
+        sendMetricsCallback.getValue().run();
+
+        verify(registry, times(1)).restore(List.of(sample));
+    }
+
+    @Test
+    public void should_not_include_impact_metrics_field_when_empty() throws YggdrasilError {
+        ImpactMetricsDataSource registry = mock(ImpactMetricsDataSource.class);
+        when(registry.collect()).thenReturn(Collections.emptyList());
+
+        UnleashConfig config =
+                UnleashConfig.builder()
+                        .appName("test")
+                        .sendMetricsInterval(10)
+                        .unleashAPI("http://unleash.com")
+                        .impactMetricsRegistry(registry)
+                        .build();
+
+        UnleashScheduledExecutor executor = mock(UnleashScheduledExecutor.class);
+        DefaultHttpMetricsSender sender = mock(DefaultHttpMetricsSender.class);
+        UnleashEngine engine = new UnleashEngine();
+
+        UnleashMetricServiceImpl unleashMetricService =
+                new UnleashMetricServiceImpl(config, sender, executor, engine);
+
+        ArgumentCaptor<Runnable> sendMetricsCallback = ArgumentCaptor.forClass(Runnable.class);
+        verify(executor).setInterval(sendMetricsCallback.capture(), anyLong(), anyLong());
+
+        when(sender.sendMetrics(any(ClientMetrics.class))).thenReturn(200);
+
+        sendMetricsCallback.getValue().run();
+
+        ArgumentCaptor<ClientMetrics> cmCaptor = ArgumentCaptor.forClass(ClientMetrics.class);
+        verify(sender).sendMetrics(cmCaptor.capture());
+
+        ClientMetrics metricsSent = cmCaptor.getValue();
+        assertThat(metricsSent.getImpactMetrics()).isNull();
+        verify(registry, times(1)).collect();
     }
 
     @Test
