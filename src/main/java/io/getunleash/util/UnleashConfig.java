@@ -7,6 +7,7 @@ import io.getunleash.UnleashException;
 import io.getunleash.event.NoOpSubscriber;
 import io.getunleash.event.UnleashSubscriber;
 import io.getunleash.impactmetrics.ImpactMetricsDataSource;
+import io.getunleash.impactmetrics.InMemoryMetricRegistry;
 import io.getunleash.lang.Nullable;
 import io.getunleash.metric.DefaultHttpMetricsSender;
 import io.getunleash.repository.HttpFeatureFetcher;
@@ -74,7 +75,7 @@ public class UnleashConfig {
     @Nullable private final ToggleBootstrapProvider toggleBootstrapProvider;
     @Nullable private final Proxy proxy;
     @Nullable private final Consumer<UnleashException> startupExceptionHandler;
-    @Nullable private final ImpactMetricsDataSource impactMetricsRegistry;
+    private final ImpactMetricsDataSource impactMetricsRegistry;
 
     private UnleashConfig(
             @Nullable URI unleashAPI,
@@ -109,7 +110,7 @@ public class UnleashConfig {
             @Nullable Proxy proxy,
             @Nullable Authenticator proxyAuthenticator,
             @Nullable Consumer<UnleashException> startupExceptionHandler,
-            @Nullable ImpactMetricsDataSource impactMetricsRegistry) {
+            ImpactMetricsDataSource impactMetricsRegistry) {
 
         if (appName == null) {
             throw new IllegalStateException("You are required to specify the unleash appName");
@@ -356,7 +357,6 @@ public class UnleashConfig {
         return proxy;
     }
 
-    @Nullable
     public ImpactMetricsDataSource getImpactMetricsRegistry() {
         return impactMetricsRegistry;
     }
@@ -766,7 +766,8 @@ public class UnleashConfig {
                     proxy,
                     proxyAuthenticator,
                     startupExceptionHandler,
-                    impactMetricsRegistry);
+                    Optional.ofNullable(impactMetricsRegistry)
+                            .orElseGet(InMemoryMetricRegistry::new));
         }
 
         public String getDefaultSdkVersion() {

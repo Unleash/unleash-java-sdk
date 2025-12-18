@@ -2,11 +2,14 @@ package io.getunleash.metric;
 
 import io.getunleash.engine.MetricsBucket;
 import io.getunleash.engine.UnleashEngine;
+import io.getunleash.impactmetrics.CollectedMetric;
+import io.getunleash.impactmetrics.ImpactMetricsDataSource;
 import io.getunleash.util.Throttler;
 import io.getunleash.util.UnleashConfig;
 import io.getunleash.util.UnleashScheduledExecutor;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.Set;
 
 public class UnleashMetricServiceImpl implements UnleashMetricService {
@@ -18,6 +21,8 @@ public class UnleashMetricServiceImpl implements UnleashMetricService {
     private final UnleashEngine engine;
 
     private final Throttler throttler;
+
+    private final ImpactMetricsDataSource impactMetricsRegistry;
 
     public UnleashMetricServiceImpl(
             UnleashConfig unleashConfig, UnleashScheduledExecutor executor, UnleashEngine engine) {
@@ -42,6 +47,7 @@ public class UnleashMetricServiceImpl implements UnleashMetricService {
                         300,
                         unleashConfig.getUnleashURLs().getClientMetricsURL());
         this.engine = engine;
+        this.impactMetricsRegistry = unleashConfig.getImpactMetricsRegistry();
         long metricsInterval = unleashConfig.getSendMetricsInterval();
 
         executor.setInterval(sendMetrics(), metricsInterval, metricsInterval);
@@ -59,13 +65,21 @@ public class UnleashMetricServiceImpl implements UnleashMetricService {
             if (throttler.performAction()) {
                 MetricsBucket bucket = this.engine.getMetrics();
 
-                ClientMetrics metrics = new ClientMetrics(unleashConfig, bucket);
+                List<CollectedMetric> impactMetrics = impactMetricsRegistry.collect();
+                List<CollectedMetric> impactMetricsOrNull =
+                        impactMetrics.isEmpty() ? null : impactMetrics;
+
+                ClientMetrics metrics =
+                        new ClientMetrics(unleashConfig, bucket, impactMetricsOrNull);
                 int statusCode = metricSender.sendMetrics(metrics);
                 if (statusCode >= 200 && statusCode < 400) {
                     throttler.decrementFailureCountAndResetSkips();
                 }
                 if (statusCode >= 400) {
                     throttler.handleHttpErrorCodes(statusCode);
+                    if (impactMetricsOrNull != null) {
+                        impactMetricsRegistry.restore(impactMetricsOrNull);
+                    }
                 }
 
             } else {
