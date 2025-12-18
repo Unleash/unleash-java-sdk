@@ -4,7 +4,6 @@ import io.getunleash.engine.MetricsBucket;
 import io.getunleash.engine.UnleashEngine;
 import io.getunleash.impactmetrics.CollectedMetric;
 import io.getunleash.impactmetrics.ImpactMetricsDataSource;
-import io.getunleash.impactmetrics.InMemoryMetricRegistry;
 import io.getunleash.util.Throttler;
 import io.getunleash.util.UnleashConfig;
 import io.getunleash.util.UnleashScheduledExecutor;
@@ -48,9 +47,7 @@ public class UnleashMetricServiceImpl implements UnleashMetricService {
                         300,
                         unleashConfig.getUnleashURLs().getClientMetricsURL());
         this.engine = engine;
-        ImpactMetricsDataSource configuredRegistry = unleashConfig.getImpactMetricsRegistry();
-        this.impactMetricsRegistry =
-                configuredRegistry != null ? configuredRegistry : new InMemoryMetricRegistry();
+        this.impactMetricsRegistry = unleashConfig.getImpactMetricsRegistry();
         long metricsInterval = unleashConfig.getSendMetricsInterval();
 
         executor.setInterval(sendMetrics(), metricsInterval, metricsInterval);
