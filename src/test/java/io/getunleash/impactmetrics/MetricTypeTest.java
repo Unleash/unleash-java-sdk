@@ -2,6 +2,9 @@ package io.getunleash.impactmetrics;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import io.getunleash.util.HistogramBucketSerializer;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -299,5 +302,61 @@ public class MetricTypeTest {
 
     private NumericMetricSample sample(Map<String, String> labels, long value) {
         return new NumericMetricSample(labels, value);
+    }
+
+    @Test
+    public void should_serialize_histogram_with_positive_infinity_as_plus_inf_string() {
+        InMemoryMetricRegistry registry = new InMemoryMetricRegistry();
+        Histogram histogram =
+                registry.histogram(
+                        new BucketMetricOptions(
+                                "serialization_test", "test serialization", List.of(1.0, 5.0)));
+
+        histogram.observe(10.0, Map.of("env", "prod"));
+
+        List<CollectedMetric> metrics = registry.collect();
+        assertThat(metrics).hasSize(1);
+
+        Gson gson =
+                new GsonBuilder()
+                        .registerTypeAdapter(HistogramBucket.class, new HistogramBucketSerializer())
+                        .create();
+
+        String json = gson.toJson(metrics.get(0));
+
+        assertThat(json).contains("\"le\":\"+Inf\"");
+        assertThat(json).contains("\"le\":1.0");
+        assertThat(json).contains("\"le\":5.0");
+    }
+
+    @Test
+    public void should_serialize_histogram_buckets_correctly() {
+        InMemoryMetricRegistry registry = new InMemoryMetricRegistry();
+        Histogram histogram =
+                registry.histogram(
+                        new BucketMetricOptions(
+                                "bucket_serialization", "test buckets", List.of(0.5, 2.0)));
+
+        histogram.observe(0.3);
+        histogram.observe(1.5);
+        histogram.observe(10.0);
+
+        List<CollectedMetric> metrics = registry.collect();
+        assertThat(metrics).hasSize(1);
+
+        BucketMetricSample sample = (BucketMetricSample) metrics.get(0).getSamples().get(0);
+        assertThat(sample.getBuckets()).hasSize(3);
+
+        Gson gson =
+                new GsonBuilder()
+                        .registerTypeAdapter(HistogramBucket.class, new HistogramBucketSerializer())
+                        .create();
+
+        String json = gson.toJson(sample);
+
+        assertThat(json).contains("\"le\":0.5");
+        assertThat(json).contains("\"le\":2.0");
+        assertThat(json).contains("\"le\":\"+Inf\"");
+        assertThat(json).contains("\"count\":");
     }
 }
