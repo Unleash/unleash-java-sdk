@@ -7,6 +7,7 @@ import io.getunleash.UnleashException;
 import io.getunleash.event.NoOpSubscriber;
 import io.getunleash.event.UnleashSubscriber;
 import io.getunleash.impactmetrics.ImpactMetricsDataSource;
+import io.getunleash.impactmetrics.InMemoryMetricRegistry;
 import io.getunleash.lang.Nullable;
 import io.getunleash.metric.DefaultHttpMetricsSender;
 import io.getunleash.repository.HttpFeatureFetcher;
@@ -766,7 +767,7 @@ public class UnleashConfig {
                     proxyAuthenticator,
                     startupExceptionHandler,
                     Optional.ofNullable(impactMetricsRegistry)
-                            .orElseGet(io.getunleash.impactmetrics.InMemoryMetricRegistry::new));
+                            .orElseGet(InMemoryMetricRegistry::new));
         }
 
         public String getDefaultSdkVersion() {
