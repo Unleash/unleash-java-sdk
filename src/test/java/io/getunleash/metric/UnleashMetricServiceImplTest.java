@@ -9,7 +9,7 @@ import io.getunleash.engine.UnleashEngine;
 import io.getunleash.engine.YggdrasilError;
 import io.getunleash.engine.YggdrasilInvalidInputException;
 import io.getunleash.impactmetrics.CollectedMetric;
-import io.getunleash.impactmetrics.ImpactMetricsDataSource;
+import io.getunleash.impactmetrics.ImpactMetricRegistryAndDataSource;
 import io.getunleash.util.UnleashConfig;
 import io.getunleash.util.UnleashScheduledExecutor;
 import java.time.LocalDateTime;
@@ -370,13 +370,13 @@ public class UnleashMetricServiceImplTest {
                         .appName("test")
                         .sendMetricsInterval(10)
                         .unleashAPI("http://unleash.com")
-                        .impactMetricsRegistry(mock(ImpactMetricsDataSource.class))
+                        .impactMetricsRegistry(mock(ImpactMetricRegistryAndDataSource.class))
                         .build();
 
         UnleashScheduledExecutor executor = mock(UnleashScheduledExecutor.class);
         DefaultHttpMetricsSender sender = mock(DefaultHttpMetricsSender.class);
         UnleashEngine engine = new UnleashEngine();
-        ImpactMetricsDataSource registry = mock(ImpactMetricsDataSource.class);
+        ImpactMetricRegistryAndDataSource registry = mock(ImpactMetricRegistryAndDataSource.class);
 
         CollectedMetric sample =
                 new CollectedMetric(
@@ -416,7 +416,7 @@ public class UnleashMetricServiceImplTest {
 
     @Test
     public void should_restore_impact_metrics_on_failure() throws YggdrasilError {
-        ImpactMetricsDataSource registry = mock(ImpactMetricsDataSource.class);
+        ImpactMetricRegistryAndDataSource registry = mock(ImpactMetricRegistryAndDataSource.class);
 
         CollectedMetric sample =
                 new CollectedMetric(
@@ -453,7 +453,7 @@ public class UnleashMetricServiceImplTest {
 
     @Test
     public void should_not_include_impact_metrics_field_when_empty() throws YggdrasilError {
-        ImpactMetricsDataSource registry = mock(ImpactMetricsDataSource.class);
+        ImpactMetricRegistryAndDataSource registry = mock(ImpactMetricRegistryAndDataSource.class);
         when(registry.collect()).thenReturn(Collections.emptyList());
 
         UnleashConfig config =

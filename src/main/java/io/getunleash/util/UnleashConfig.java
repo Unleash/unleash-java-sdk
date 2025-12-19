@@ -6,7 +6,7 @@ import io.getunleash.UnleashContextProvider;
 import io.getunleash.UnleashException;
 import io.getunleash.event.NoOpSubscriber;
 import io.getunleash.event.UnleashSubscriber;
-import io.getunleash.impactmetrics.ImpactMetricsDataSource;
+import io.getunleash.impactmetrics.ImpactMetricRegistryAndDataSource;
 import io.getunleash.impactmetrics.InMemoryMetricRegistry;
 import io.getunleash.lang.Nullable;
 import io.getunleash.metric.DefaultHttpMetricsSender;
@@ -75,7 +75,7 @@ public class UnleashConfig {
     @Nullable private final ToggleBootstrapProvider toggleBootstrapProvider;
     @Nullable private final Proxy proxy;
     @Nullable private final Consumer<UnleashException> startupExceptionHandler;
-    private final ImpactMetricsDataSource impactMetricsRegistry;
+    private final ImpactMetricRegistryAndDataSource impactMetricsRegistry;
 
     private UnleashConfig(
             @Nullable URI unleashAPI,
@@ -110,7 +110,7 @@ public class UnleashConfig {
             @Nullable Proxy proxy,
             @Nullable Authenticator proxyAuthenticator,
             @Nullable Consumer<UnleashException> startupExceptionHandler,
-            ImpactMetricsDataSource impactMetricsRegistry) {
+            ImpactMetricRegistryAndDataSource impactMetricsRegistry) {
 
         if (appName == null) {
             throw new IllegalStateException("You are required to specify the unleash appName");
@@ -357,7 +357,7 @@ public class UnleashConfig {
         return proxy;
     }
 
-    public ImpactMetricsDataSource getImpactMetricsRegistry() {
+    public ImpactMetricRegistryAndDataSource getImpactMetricsRegistry() {
         return impactMetricsRegistry;
     }
 
@@ -471,7 +471,7 @@ public class UnleashConfig {
         private @Nullable Authenticator proxyAuthenticator;
 
         private @Nullable Consumer<UnleashException> startupExceptionHandler;
-        private @Nullable ImpactMetricsDataSource impactMetricsRegistry;
+        private @Nullable ImpactMetricRegistryAndDataSource impactMetricsRegistry;
 
         private static String getHostname() {
             String hostName = System.getProperty("hostname");
@@ -726,7 +726,7 @@ public class UnleashConfig {
         }
 
         public Builder impactMetricsRegistry(
-                @Nullable ImpactMetricsDataSource impactMetricsRegistry) {
+                @Nullable ImpactMetricRegistryAndDataSource impactMetricsRegistry) {
             this.impactMetricsRegistry = impactMetricsRegistry;
             return this;
         }

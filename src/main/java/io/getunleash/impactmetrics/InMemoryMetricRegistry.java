@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class InMemoryMetricRegistry implements ImpactMetricRegistry, ImpactMetricsDataSource {
+public class InMemoryMetricRegistry implements ImpactMetricRegistryAndDataSource {
     private final Map<String, CounterImpl> counters = new ConcurrentHashMap<>();
     private final Map<String, GaugeImpl> gauges = new ConcurrentHashMap<>();
     private final Map<String, HistogramImpl> histograms = new ConcurrentHashMap<>();
@@ -23,6 +23,21 @@ public class InMemoryMetricRegistry implements ImpactMetricRegistry, ImpactMetri
     @Override
     public Histogram histogram(BucketMetricOptions options) {
         return histograms.computeIfAbsent(options.getName(), name -> new HistogramImpl(options));
+    }
+
+    @Override
+    public Counter getCounter(String name) {
+        return counters.get(name);
+    }
+
+    @Override
+    public Gauge getGauge(String name) {
+        return gauges.get(name);
+    }
+
+    @Override
+    public Histogram getHistogram(String name) {
+        return histograms.get(name);
     }
 
     @Override

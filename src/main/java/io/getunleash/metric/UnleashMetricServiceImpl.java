@@ -3,7 +3,7 @@ package io.getunleash.metric;
 import io.getunleash.engine.MetricsBucket;
 import io.getunleash.engine.UnleashEngine;
 import io.getunleash.impactmetrics.CollectedMetric;
-import io.getunleash.impactmetrics.ImpactMetricsDataSource;
+import io.getunleash.impactmetrics.ImpactMetricRegistryAndDataSource;
 import io.getunleash.util.Throttler;
 import io.getunleash.util.UnleashConfig;
 import io.getunleash.util.UnleashScheduledExecutor;
@@ -22,7 +22,7 @@ public class UnleashMetricServiceImpl implements UnleashMetricService {
 
     private final Throttler throttler;
 
-    private final ImpactMetricsDataSource impactMetricsRegistry;
+    private final ImpactMetricRegistryAndDataSource impactMetricsRegistry;
 
     public UnleashMetricServiceImpl(
             UnleashConfig unleashConfig, UnleashScheduledExecutor executor, UnleashEngine engine) {
