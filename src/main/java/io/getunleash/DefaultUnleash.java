@@ -151,11 +151,9 @@ public class DefaultUnleash implements Unleash {
 
     @Override
     public Variant getVariant(String toggleName, UnleashContext context, Variant defaultValue) {
-        UnleashContext enhancedContext = context.applyStaticFields(config);
-        Variant variant = resolveVariant(toggleName, enhancedContext, defaultValue);
+        Optional<FlatResponse<VariantDef>> response = getVariantResponse(toggleName, context);
+        Variant variant = resolveVariant(response, defaultValue);
         eventDispatcher.dispatch(new ToggleEvaluated(toggleName, variant.isFeatureEnabled()));
-        Optional<FlatResponse<VariantDef>> response =
-                Optional.ofNullable(this.featureRepository.getVariant(toggleName, enhancedContext));
         if (response.map(r -> r.impressionData).orElse(false)) {
             eventDispatcher.dispatch(
                     new VariantImpressionEvent(
@@ -165,14 +163,18 @@ public class DefaultUnleash implements Unleash {
     }
 
     private Variant getVariantForMetrics(String toggleName, UnleashContext context) {
+        Optional<FlatResponse<VariantDef>> response = getVariantResponse(toggleName, context);
+        return resolveVariant(response, Variant.DISABLED_VARIANT);
+    }
+
+    private Optional<FlatResponse<VariantDef>> getVariantResponse(
+            String toggleName, UnleashContext context) {
         UnleashContext enhancedContext = context.applyStaticFields(config);
-        return resolveVariant(toggleName, enhancedContext, Variant.DISABLED_VARIANT);
+        return Optional.ofNullable(this.featureRepository.getVariant(toggleName, enhancedContext));
     }
 
     private Variant resolveVariant(
-            String toggleName, UnleashContext enhancedContext, Variant defaultValue) {
-        Optional<FlatResponse<VariantDef>> response =
-                Optional.ofNullable(this.featureRepository.getVariant(toggleName, enhancedContext));
+            Optional<FlatResponse<VariantDef>> response, Variant defaultValue) {
         Optional<VariantDef> variantDef = response.map(r -> r.value);
         return YggdrasilAdapters.adapt(variantDef, defaultValue);
     }
