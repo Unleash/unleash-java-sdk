@@ -34,7 +34,7 @@ public class DefaultUnleash implements Unleash {
     private final UnleashContextProvider contextProvider;
     private final EventDispatcher eventDispatcher;
     private final UnleashConfig config;
-    public final MetricsAPI impactMetrics;
+    private final MetricsAPI impactMetrics;
 
     private static EngineProxy defaultToggleRepository(
             UnleashConfig unleashConfig, Strategy... strategies) {
@@ -188,6 +188,11 @@ public class DefaultUnleash implements Unleash {
     @Override
     public MoreOperations more() {
         return new DefaultMore();
+    }
+
+    @Override
+    public MetricsAPI getImpactMetrics() {
+        return impactMetrics;
     }
 
     public class DefaultMore implements MoreOperations {

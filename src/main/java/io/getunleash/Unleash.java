@@ -1,5 +1,6 @@
 package io.getunleash;
 
+import io.getunleash.impactmetrics.MetricsAPI;
 import io.getunleash.variant.Variant;
 import java.util.function.BiPredicate;
 
@@ -46,4 +47,6 @@ public interface Unleash {
     default void shutdown() {}
 
     MoreOperations more();
+
+    MetricsAPI getImpactMetrics();
 }
