@@ -28,7 +28,7 @@ public class MetricsAPITest {
                         !variantName.equals("disabled"),
                         null,
                         featureEnabled);
-        when(resolver.forceGetVariant(any(String.class), any(UnleashContext.class)))
+        when(resolver.getVariantForImpactMetrics(any(String.class), any(UnleashContext.class)))
                 .thenReturn(variant);
         return resolver;
     }

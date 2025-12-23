@@ -57,7 +57,8 @@ public class MetricsAPI {
         Map<String, String> flagLabels = new HashMap<>();
         if (flagContext != null) {
             for (String flag : flagContext.getFlagNames()) {
-                Variant variant = variantResolver.forceGetVariant(flag, flagContext.getContext());
+                Variant variant =
+                        variantResolver.getVariantForImpactMetrics(flag, flagContext.getContext());
 
                 if (variant.isEnabled()) {
                     flagLabels.put(flag, variant.getName());

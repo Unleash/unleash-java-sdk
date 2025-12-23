@@ -76,7 +76,7 @@ public class DefaultUnleash implements Unleash {
         this.eventDispatcher = eventDispatcher;
 
         ImpactMetricRegistryAndDataSource registry = unleashConfig.getImpactMetricsRegistry();
-        VariantResolver variantResolver = this::getVariantForMetrics;
+        VariantResolver variantResolver = this::getVariantForImpactMetrics;
         StaticContext staticContext =
                 new StaticContext(unleashConfig.getAppName(), unleashConfig.getEnvironment());
         this.impactMetrics = new MetricsAPI(registry, variantResolver, staticContext);
@@ -162,7 +162,7 @@ public class DefaultUnleash implements Unleash {
         return variant;
     }
 
-    private Variant getVariantForMetrics(String toggleName, UnleashContext context) {
+    private Variant getVariantForImpactMetrics(String toggleName, UnleashContext context) {
         Optional<FlatResponse<VariantDef>> response = getVariantResponse(toggleName, context);
         return resolveVariant(response, Variant.DISABLED_VARIANT);
     }
