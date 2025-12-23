@@ -72,6 +72,14 @@ public class MetricsAPI {
         return flagLabels;
     }
 
+    public void incrementCounter(String name) {
+        incrementCounter(name, null, null);
+    }
+
+    public void incrementCounter(String name, long value) {
+        incrementCounter(name, value, null);
+    }
+
     public void incrementCounter(
             String name, @Nullable Long value, @Nullable MetricFlagContext flagContext) {
         Counter counter = metricRegistry.getCounter(name);
@@ -88,6 +96,10 @@ public class MetricsAPI {
         counter.inc(value != null ? value : 1L, labels);
     }
 
+    public void updateGauge(String name, long value) {
+        updateGauge(name, value, null);
+    }
+
     public void updateGauge(String name, long value, @Nullable MetricFlagContext flagContext) {
         Gauge gauge = metricRegistry.getGauge(name);
         if (gauge == null) {
@@ -101,6 +113,10 @@ public class MetricsAPI {
         labels.put("environment", staticContext.getEnvironment());
 
         gauge.set(value, labels);
+    }
+
+    public void observeHistogram(String name, double value) {
+        observeHistogram(name, value, null);
     }
 
     public void observeHistogram(
