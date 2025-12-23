@@ -1,5 +1,10 @@
 package io.getunleash;
 
+import io.getunleash.impactmetrics.ImpactMetricRegistry;
+import io.getunleash.impactmetrics.InMemoryMetricRegistry;
+import io.getunleash.impactmetrics.MetricsAPI;
+import io.getunleash.impactmetrics.StaticContext;
+import io.getunleash.impactmetrics.VariantResolver;
 import io.getunleash.lang.Nullable;
 import io.getunleash.variant.Variant;
 import java.util.*;
@@ -24,6 +29,14 @@ public class FakeUnleash implements Unleash {
     private final Map<String, Boolean> excludedFeatures = new ConcurrentHashMap<>();
     private final Map<String, Boolean> features = new ConcurrentHashMap<>();
     private final Map<String, Variant> variants = new ConcurrentHashMap<>();
+    private final MetricsAPI impactMetrics;
+
+    public FakeUnleash() {
+        ImpactMetricRegistry registry = new InMemoryMetricRegistry();
+        VariantResolver variantResolver = (flagName, context) -> Variant.DISABLED_VARIANT;
+        StaticContext staticContext = new StaticContext("fake-app", "test");
+        this.impactMetrics = new MetricsAPI(registry, variantResolver, staticContext);
+    }
 
     @Override
     public boolean isEnabled(
@@ -81,6 +94,11 @@ public class FakeUnleash implements Unleash {
     @Override
     public MoreOperations more() {
         return new FakeMore();
+    }
+
+    @Override
+    public MetricsAPI getImpactMetrics() {
+        return impactMetrics;
     }
 
     public void enableAll() {

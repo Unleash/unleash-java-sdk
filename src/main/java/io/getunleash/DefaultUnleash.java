@@ -8,6 +8,10 @@ import io.getunleash.event.EventDispatcher;
 import io.getunleash.event.IsEnabledImpressionEvent;
 import io.getunleash.event.ToggleEvaluated;
 import io.getunleash.event.VariantImpressionEvent;
+import io.getunleash.impactmetrics.ImpactMetricRegistryAndDataSource;
+import io.getunleash.impactmetrics.MetricsAPI;
+import io.getunleash.impactmetrics.StaticContext;
+import io.getunleash.impactmetrics.VariantResolver;
 import io.getunleash.repository.FeatureRepository;
 import io.getunleash.repository.YggdrasilAdapters;
 import io.getunleash.strategy.*;
@@ -30,6 +34,7 @@ public class DefaultUnleash implements Unleash {
     private final UnleashContextProvider contextProvider;
     private final EventDispatcher eventDispatcher;
     private final UnleashConfig config;
+    private final MetricsAPI impactMetrics;
 
     private static EngineProxy defaultToggleRepository(
             UnleashConfig unleashConfig, Strategy... strategies) {
@@ -69,6 +74,13 @@ public class DefaultUnleash implements Unleash {
         this.featureRepository = engineProxy;
         this.contextProvider = contextProvider;
         this.eventDispatcher = eventDispatcher;
+
+        ImpactMetricRegistryAndDataSource registry = unleashConfig.getImpactMetricsRegistry();
+        VariantResolver variantResolver = this::getVariantForImpactMetrics;
+        StaticContext staticContext =
+                new StaticContext(unleashConfig.getAppName(), unleashConfig.getEnvironment());
+        this.impactMetrics = new MetricsAPI(registry, variantResolver, staticContext);
+
         initCounts.compute(
                 config.getClientIdentifier(),
                 (key, inits) -> {
@@ -139,12 +151,8 @@ public class DefaultUnleash implements Unleash {
 
     @Override
     public Variant getVariant(String toggleName, UnleashContext context, Variant defaultValue) {
-        UnleashContext enhancedContext = context.applyStaticFields(config);
-        Optional<FlatResponse<VariantDef>> response =
-                Optional.ofNullable(this.featureRepository.getVariant(toggleName, enhancedContext));
-        Optional<VariantDef> variantDef = response.map(r -> r.value);
-
-        Variant variant = YggdrasilAdapters.adapt(variantDef, defaultValue);
+        Optional<FlatResponse<VariantDef>> response = getVariantResponse(toggleName, context);
+        Variant variant = resolveVariant(response, defaultValue);
         eventDispatcher.dispatch(new ToggleEvaluated(toggleName, variant.isFeatureEnabled()));
         if (response.map(r -> r.impressionData).orElse(false)) {
             eventDispatcher.dispatch(
@@ -152,6 +160,23 @@ public class DefaultUnleash implements Unleash {
                             toggleName, variant.isFeatureEnabled(), context, variant.getName()));
         }
         return variant;
+    }
+
+    private Variant getVariantForImpactMetrics(String toggleName, UnleashContext context) {
+        Optional<FlatResponse<VariantDef>> response = getVariantResponse(toggleName, context);
+        return resolveVariant(response, Variant.DISABLED_VARIANT);
+    }
+
+    private Optional<FlatResponse<VariantDef>> getVariantResponse(
+            String toggleName, UnleashContext context) {
+        UnleashContext enhancedContext = context.applyStaticFields(config);
+        return Optional.ofNullable(this.featureRepository.getVariant(toggleName, enhancedContext));
+    }
+
+    private Variant resolveVariant(
+            Optional<FlatResponse<VariantDef>> response, Variant defaultValue) {
+        Optional<VariantDef> variantDef = response.map(r -> r.value);
+        return YggdrasilAdapters.adapt(variantDef, defaultValue);
     }
 
     @Override
@@ -163,6 +188,11 @@ public class DefaultUnleash implements Unleash {
     @Override
     public MoreOperations more() {
         return new DefaultMore();
+    }
+
+    @Override
+    public MetricsAPI getImpactMetrics() {
+        return impactMetrics;
     }
 
     public class DefaultMore implements MoreOperations {
