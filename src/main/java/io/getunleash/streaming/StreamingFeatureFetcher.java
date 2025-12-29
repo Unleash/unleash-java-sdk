@@ -1,7 +1,5 @@
 package io.getunleash.streaming;
 
-public interface StreamingFeatureFetcher {
-    void start();
+import io.getunleash.repository.FetchWorker;
 
-    void stop();
-}
+public interface StreamingFeatureFetcher extends FetchWorker {}
