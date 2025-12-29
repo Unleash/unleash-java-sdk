@@ -43,6 +43,10 @@ public class MetricsAPI {
         metricRegistry.gauge(new MetricOptions(name, help, labelNames));
     }
 
+    public void defineHistogram(String name, String help) {
+        defineHistogram(name, help, null);
+    }
+
     public void defineHistogram(String name, String help, @Nullable List<Double> buckets) {
         if (name == null || name.isEmpty() || help == null || help.isEmpty()) {
             LOGGER.warn("Histogram name or help cannot be empty: {}, {}", name, help);

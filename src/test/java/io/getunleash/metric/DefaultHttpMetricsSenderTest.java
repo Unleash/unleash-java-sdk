@@ -145,7 +145,7 @@ public class DefaultHttpMetricsSenderTest {
                 postRequestedFor(urlMatching("/client/metrics"))
                         .withRequestBody(matching(".*\"impactMetrics\".*"))
                         .withRequestBody(matching(".*\"name\"\\s*:\\s*\"test_histogram\".*"))
-                        .withRequestBody(matching(".*\"type\"\\s*:\\s*\"HISTOGRAM\".*"))
+                        .withRequestBody(matching(".*\"type\"\\s*:\\s*\"histogram\".*"))
                         .withRequestBody(matching(".*\"le\"\\s*:\\s*\"\\+Inf\".*"))
                         .withHeader(
                                 UNLEASH_INTERVAL, matching(config.getSendMetricsIntervalMillis()))
