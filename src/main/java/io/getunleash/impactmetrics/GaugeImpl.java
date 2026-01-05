@@ -56,7 +56,7 @@ class GaugeImpl implements Gauge {
         values.compute(key, (k, current) -> (current == null ? 0L : current) - value);
     }
 
-    public CollectedMetric collect() {
+    CollectedMetric collect() {
         List<MetricSample> samples = new ArrayList<>();
 
         for (String key : values.keySet()) {
