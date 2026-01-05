@@ -70,7 +70,7 @@ class HistogramImpl implements Histogram {
         values.put(key, data);
     }
 
-    public CollectedMetric collect() {
+    CollectedMetric collect() {
         List<MetricSample> samples = new ArrayList<>();
 
         for (Map.Entry<String, HistogramData> entry : values.entrySet()) {
