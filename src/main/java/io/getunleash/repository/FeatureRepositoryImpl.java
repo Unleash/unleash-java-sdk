@@ -10,7 +10,6 @@ import io.getunleash.engine.YggdrasilInvalidInputException;
 import io.getunleash.event.EventDispatcher;
 import io.getunleash.event.GatedEventEmitter;
 import io.getunleash.streaming.StreamingFeatureFetcherImpl;
-import io.getunleash.util.Throttler;
 import io.getunleash.util.UnleashConfig;
 import io.getunleash.util.UnleashScheduledExecutor;
 import java.util.Optional;
@@ -27,7 +26,6 @@ public class FeatureRepositoryImpl implements FeatureRepository {
     private final FetchWorker pollingFeatureFetcher;
     private final GatedEventEmitter eventDispatcher;
     private final UnleashEngine engine;
-    private final Throttler throttler;
 
     public FeatureRepositoryImpl(UnleashConfig unleashConfig, UnleashEngine engine) {
         this(unleashConfig, new FeatureBackupHandlerFile(unleashConfig), engine);
@@ -56,7 +54,6 @@ public class FeatureRepositoryImpl implements FeatureRepository {
                         engine,
                         featureBackupHandler);
         this.bootstrapper = unleashConfig.getToggleBootstrapProvider();
-        this.throttler = initializeThrottler(unleashConfig);
         this.initCollections(unleashConfig.getScheduledExecutor());
     }
 
@@ -110,16 +107,8 @@ public class FeatureRepositoryImpl implements FeatureRepository {
                         unleashConfig, fetcher, engine, featureBackupHandler, readyOnceGate);
         this.bootstrapper = unleashConfig.getToggleBootstrapProvider();
         this.eventDispatcher = readyOnceGate;
-        this.throttler = initializeThrottler(unleashConfig);
         this.streamingFeatureFetcher = streamingFeatureFetcher;
         this.initCollections(unleashConfig.getScheduledExecutor());
-    }
-
-    private Throttler initializeThrottler(UnleashConfig config) {
-        return new Throttler(
-                (int) config.getFetchTogglesInterval(),
-                300,
-                config.getUnleashURLs().getFetchTogglesURL());
     }
 
     private void initCollections(UnleashScheduledExecutor executor) {
@@ -141,14 +130,6 @@ public class FeatureRepositoryImpl implements FeatureRepository {
         } else {
             pollingFeatureFetcher.start();
         }
-    }
-
-    public Integer getFailures() {
-        return this.throttler.getFailures();
-    }
-
-    public Integer getSkips() {
-        return this.throttler.getSkips();
     }
 
     @Override

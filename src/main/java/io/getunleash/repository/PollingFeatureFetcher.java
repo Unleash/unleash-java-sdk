@@ -57,12 +57,12 @@ class PollingFeatureFetcher implements FetchWorker {
                                 })
                         .run();
             }
+        } else if (!unleashConfig.isDisablePolling()) {
+            Runnable initialFetch = runInitialFetch(this.eventEmitter::error);
+            executor.scheduleOnce(initialFetch);
         }
 
         if (!unleashConfig.isDisablePolling()) {
-            Runnable initialFetch = runInitialFetch(this.eventEmitter::error);
-            executor.scheduleOnce(initialFetch);
-
             if (unleashConfig.getFetchTogglesInterval() > 0) {
                 Runnable updateFeatures = runSteadyStateFetch(this.eventEmitter::error);
                 executor.setInterval(
