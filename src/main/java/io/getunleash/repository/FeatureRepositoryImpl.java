@@ -33,12 +33,7 @@ public class FeatureRepositoryImpl implements FeatureRepository {
         this(unleashConfig, new FeatureBackupHandlerFile(unleashConfig), engine);
     }
 
-    /**
-     * @deprecated This constructor is deprecated and will be removed in version 12, prefer using
-     *     the constructor that sets internal components via UnleashConfig.
-     */
-    @Deprecated
-    public FeatureRepositoryImpl(
+    FeatureRepositoryImpl(
             UnleashConfig unleashConfig, BackupHandler featureBackupHandler, UnleashEngine engine) {
 
         GatedEventEmitter readyOnceGate = new GatedEventEmitter(new EventDispatcher(unleashConfig));
@@ -65,12 +60,7 @@ public class FeatureRepositoryImpl implements FeatureRepository {
         this.initCollections(unleashConfig.getScheduledExecutor());
     }
 
-    /**
-     * @deprecated This constructor is deprecated and will be removed in version 12, prefer using
-     *     the constructor that sets internal components via UnleashConfig.
-     */
-    @Deprecated
-    public FeatureRepositoryImpl(
+    FeatureRepositoryImpl(
             UnleashConfig unleashConfig,
             BackupHandler featureBackupHandler,
             UnleashEngine engine,
@@ -85,12 +75,7 @@ public class FeatureRepositoryImpl implements FeatureRepository {
                 unleashConfig.getToggleBootstrapProvider());
     }
 
-    /**
-     * @deprecated This constructor is deprecated and will be removed in version 12, prefer using
-     *     the constructor that sets internal components via UnleashConfig.
-     */
-    @Deprecated
-    public FeatureRepositoryImpl(
+    FeatureRepositoryImpl(
             UnleashConfig unleashConfig,
             BackupHandler featureBackupHandler,
             UnleashEngine engine,
@@ -107,12 +92,7 @@ public class FeatureRepositoryImpl implements FeatureRepository {
                 new EventDispatcher(unleashConfig));
     }
 
-    /**
-     * @deprecated This constructor is deprecated and will be removed in version 12, prefer using
-     *     the constructor that sets internal components via UnleashConfig.
-     */
-    @Deprecated
-    public FeatureRepositoryImpl(
+    FeatureRepositoryImpl(
             UnleashConfig unleashConfig,
             BackupHandler featureBackupHandler,
             UnleashEngine engine,

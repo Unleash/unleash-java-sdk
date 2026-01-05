@@ -5,7 +5,6 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.getunleash.DefaultUnleash;
@@ -163,7 +162,7 @@ public class StreamingFeatureFetchingTest {
         streamingFetcher.handleStreamingUpdate(streamingData);
 
         ArgumentCaptor<String> backupContentCaptor = ArgumentCaptor.forClass(String.class);
-        verify(backupHandler, times(1)).write(backupContentCaptor.capture());
+        org.mockito.Mockito.verify(backupHandler, times(1)).write(backupContentCaptor.capture());
 
         String savedBackupContent = backupContentCaptor.getValue();
 
