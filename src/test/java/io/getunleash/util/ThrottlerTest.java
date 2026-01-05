@@ -75,7 +75,7 @@ class ThrottlerTest {
 
     @ParameterizedTest
     @ValueSource(ints = {403, 404})
-    public void recovers_on_successful_call_from_error(int errorCode)
+    public void recoversOnSuccessfulCallFromError(int errorCode)
             throws URISyntaxException, IOException {
         Throttler throttler =
                 new Throttler(100, 2000, URI.create("https://localhost:1500/api").toURL());
