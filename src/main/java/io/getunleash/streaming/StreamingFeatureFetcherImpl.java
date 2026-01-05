@@ -11,6 +11,7 @@ import io.getunleash.event.ClientFeaturesResponse;
 import io.getunleash.event.EventDispatcher;
 import io.getunleash.event.UnleashReady;
 import io.getunleash.repository.BackupHandler;
+import io.getunleash.repository.FetchWorker;
 import io.getunleash.util.UnleashConfig;
 import java.net.URI;
 import java.time.Duration;
@@ -19,7 +20,7 @@ import okhttp3.OkHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class StreamingFeatureFetcherImpl implements StreamingFeatureFetcher {
+public class StreamingFeatureFetcherImpl implements FetchWorker {
     private static final Logger LOGGER = LoggerFactory.getLogger(StreamingFeatureFetcherImpl.class);
 
     private final UnleashConfig config;
