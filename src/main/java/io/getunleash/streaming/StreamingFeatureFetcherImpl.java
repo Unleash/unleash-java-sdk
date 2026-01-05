@@ -5,31 +5,41 @@ import com.launchdarkly.eventsource.EventSource;
 import com.launchdarkly.eventsource.MessageEvent;
 import com.launchdarkly.eventsource.background.BackgroundEventHandler;
 import com.launchdarkly.eventsource.background.BackgroundEventSource;
+import io.getunleash.UnleashException;
+import io.getunleash.engine.UnleashEngine;
+import io.getunleash.event.ClientFeaturesResponse;
+import io.getunleash.event.EventDispatcher;
+import io.getunleash.event.UnleashReady;
+import io.getunleash.repository.BackupHandler;
+import io.getunleash.repository.FetchWorker;
 import io.getunleash.util.UnleashConfig;
 import java.net.URI;
 import java.time.Duration;
-import java.util.function.Consumer;
 import okhttp3.Headers;
 import okhttp3.OkHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class StreamingFeatureFetcherImpl implements StreamingFeatureFetcher {
+public class StreamingFeatureFetcherImpl implements FetchWorker {
     private static final Logger LOGGER = LoggerFactory.getLogger(StreamingFeatureFetcherImpl.class);
 
     private final UnleashConfig config;
-    private final Consumer<String> streamingUpdateHandler;
-    private final Consumer<Throwable> streamingErrorHandler;
+    private final EventDispatcher eventDispatcher;
+    private final UnleashEngine engine;
+    private final BackupHandler featureBackupHandler;
+    private boolean ready;
 
     private volatile BackgroundEventSource eventSource;
 
     public StreamingFeatureFetcherImpl(
             UnleashConfig config,
-            Consumer<String> streamingUpdateHandler,
-            Consumer<Throwable> streamingErrorHandler) {
+            EventDispatcher eventDispatcher,
+            UnleashEngine engine,
+            BackupHandler featureBackupHandler) {
         this.config = config;
-        this.streamingUpdateHandler = streamingUpdateHandler;
-        this.streamingErrorHandler = streamingErrorHandler;
+        this.eventDispatcher = eventDispatcher;
+        this.engine = engine;
+        this.featureBackupHandler = featureBackupHandler;
     }
 
     public void start() {
@@ -84,6 +94,28 @@ public class StreamingFeatureFetcherImpl implements StreamingFeatureFetcher {
         }
     }
 
+    synchronized void handleStreamingUpdate(String data) {
+        try {
+            engine.takeState(data);
+
+            String currentState = engine.getState();
+            featureBackupHandler.write(currentState);
+
+            ClientFeaturesResponse response = ClientFeaturesResponse.updated(data);
+            eventDispatcher.dispatch(response);
+
+            if (!ready) {
+                eventDispatcher.dispatch(new UnleashReady());
+                ready = true;
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed to process streaming update", e);
+            UnleashException unleashException =
+                    new UnleashException("Failed to process streaming update", e);
+            eventDispatcher.dispatch(unleashException);
+        }
+    }
+
     private class UnleashEventHandler implements BackgroundEventHandler {
 
         @Override
@@ -107,7 +139,7 @@ public class StreamingFeatureFetcherImpl implements StreamingFeatureFetcher {
                 switch (event) {
                     case "unleash-connected":
                     case "unleash-updated":
-                        streamingUpdateHandler.accept(messageEvent.getData());
+                        handleStreamingUpdate(messageEvent.getData());
                         break;
                     default:
                         LOGGER.debug("Ignoring unknown event type: {}", event);
@@ -126,7 +158,9 @@ public class StreamingFeatureFetcherImpl implements StreamingFeatureFetcher {
 
         @Override
         public void onError(Throwable t) {
-            streamingErrorHandler.accept(t);
+            UnleashException unleashException =
+                    new UnleashException("Streaming connection error", t);
+            eventDispatcher.dispatch(unleashException);
         }
     }
 }

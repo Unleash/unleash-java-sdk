@@ -2,9 +2,13 @@ package io.getunleash.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class ThrottlerTest {
 
@@ -67,5 +71,19 @@ class ThrottlerTest {
         throttler.decrementFailureCountAndResetSkips();
         assertThat(throttler.getSkips()).isEqualTo(0);
         assertThat(throttler.getFailures()).isEqualTo(0);
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {403, 404})
+    public void recoversOnSuccessfulCallFromError(int errorCode)
+            throws URISyntaxException, IOException {
+        Throttler throttler =
+                new Throttler(100, 2000, URI.create("https://localhost:1500/api").toURL());
+
+        throttler.handleHttpErrorCodes(errorCode);
+        assertThat(throttler.getSkips()).isEqualTo(20);
+
+        throttler.decrementFailureCountAndResetSkips();
+        assertThat(throttler.performAction()).isTrue();
     }
 }
