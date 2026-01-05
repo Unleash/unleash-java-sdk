@@ -51,13 +51,16 @@ public class FeatureRepositoryImpl implements FeatureRepository {
         this.bootstrapper = unleashConfig.getToggleBootstrapProvider();
         this.eventDispatcher = eventDispatcher;
         this.throttler = initializeThrottler(unleashConfig);
-        this.streamingFeatureFetcher = new StreamingFeatureFetcherImpl(unleashConfig, eventDispatcher, engine, featureBackupHandler);
-        this.pollingFeatureFetcher = new PollingFeatureFetcher(
-                unleashConfig,
-                eventDispatcher,
-                featureFetcher,
-                engine,
-                featureBackupHandler);
+        this.streamingFeatureFetcher =
+                new StreamingFeatureFetcherImpl(
+                        unleashConfig, eventDispatcher, engine, featureBackupHandler);
+        this.pollingFeatureFetcher =
+                new PollingFeatureFetcher(
+                        unleashConfig,
+                        eventDispatcher,
+                        featureFetcher,
+                        engine,
+                        featureBackupHandler);
 
         this.initCollections(unleashConfig.getScheduledExecutor());
     }

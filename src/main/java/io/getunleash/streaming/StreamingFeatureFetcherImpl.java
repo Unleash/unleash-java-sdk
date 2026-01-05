@@ -30,7 +30,10 @@ public class StreamingFeatureFetcherImpl implements FetchWorker {
 
     private volatile BackgroundEventSource eventSource;
 
-    public StreamingFeatureFetcherImpl(UnleashConfig config, EventDispatcher eventDispatcher, UnleashEngine engine,
+    public StreamingFeatureFetcherImpl(
+            UnleashConfig config,
+            EventDispatcher eventDispatcher,
+            UnleashEngine engine,
             BackupHandler featureBackupHandler) {
         this.config = config;
         this.eventDispatcher = eventDispatcher;
@@ -53,19 +56,22 @@ public class StreamingFeatureFetcherImpl implements FetchWorker {
             headersBuilder.add(UnleashConfig.UNLEASH_SDK_HEADER, config.getSdkVersion());
             headersBuilder.add("Unleash-Client-Spec", config.getClientSpecificationVersion());
 
-            OkHttpClient httpClient = new OkHttpClient.Builder()
-                    .readTimeout(Duration.ofSeconds(60)) // Heartbeat detection
-                    .connectTimeout(Duration.ofSeconds(10))
-                    .build();
+            OkHttpClient httpClient =
+                    new OkHttpClient.Builder()
+                            .readTimeout(Duration.ofSeconds(60)) // Heartbeat detection
+                            .connectTimeout(Duration.ofSeconds(10))
+                            .build();
 
-            ConnectStrategy connectStrategy = ConnectStrategy.http(streamingUri)
-                    .headers(headersBuilder.build())
-                    .httpClient(httpClient);
+            ConnectStrategy connectStrategy =
+                    ConnectStrategy.http(streamingUri)
+                            .headers(headersBuilder.build())
+                            .httpClient(httpClient);
 
             EventSource.Builder eventSourceBuilder = new EventSource.Builder(connectStrategy);
 
-            BackgroundEventSource.Builder builder = new BackgroundEventSource.Builder(
-                    new UnleashEventHandler(), eventSourceBuilder);
+            BackgroundEventSource.Builder builder =
+                    new BackgroundEventSource.Builder(
+                            new UnleashEventHandler(), eventSourceBuilder);
 
             BackgroundEventSource newEventSource = builder.build();
             newEventSource.start();
@@ -103,7 +109,8 @@ public class StreamingFeatureFetcherImpl implements FetchWorker {
             }
         } catch (Exception e) {
             LOGGER.error("Failed to process streaming update", e);
-            UnleashException unleashException = new UnleashException("Failed to process streaming update", e);
+            UnleashException unleashException =
+                    new UnleashException("Failed to process streaming update", e);
             eventDispatcher.dispatch(unleashException);
         }
     }
@@ -146,12 +153,12 @@ public class StreamingFeatureFetcherImpl implements FetchWorker {
         }
 
         @Override
-        public void onComment(String comment) throws Exception {
-        }
+        public void onComment(String comment) throws Exception {}
 
         @Override
         public void onError(Throwable t) {
-            UnleashException unleashException = new UnleashException("Streaming connection error", t);
+            UnleashException unleashException =
+                    new UnleashException("Streaming connection error", t);
             eventDispatcher.dispatch(unleashException);
         }
     }
