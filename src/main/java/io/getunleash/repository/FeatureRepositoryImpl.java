@@ -8,7 +8,7 @@ import io.getunleash.engine.UnleashEngine;
 import io.getunleash.engine.VariantDef;
 import io.getunleash.engine.YggdrasilInvalidInputException;
 import io.getunleash.event.EventDispatcher;
-import io.getunleash.streaming.FetchWorker;
+import io.getunleash.event.GatedEventEmitter;
 import io.getunleash.streaming.StreamingFeatureFetcherImpl;
 import io.getunleash.util.Throttler;
 import io.getunleash.util.UnleashConfig;
@@ -23,10 +23,9 @@ public class FeatureRepositoryImpl implements FeatureRepository {
     private final UnleashConfig unleashConfig;
     private final BackupHandler featureBackupHandler;
     private final ToggleBootstrapProvider bootstrapper;
-    private final FeatureSource featureFetcher;
     private final FetchWorker streamingFeatureFetcher;
     private final FetchWorker pollingFeatureFetcher;
-    private final EventDispatcher eventDispatcher;
+    private final GatedEventEmitter eventDispatcher;
     private final UnleashEngine engine;
     private final Throttler throttler;
 
@@ -34,61 +33,69 @@ public class FeatureRepositoryImpl implements FeatureRepository {
         this(unleashConfig, new FeatureBackupHandlerFile(unleashConfig), engine);
     }
 
+    /**
+     * @deprecated This constructor is deprecated and will be removed in version 12, prefer using
+     *     the constructor that sets internal components via UnleashConfig.
+     */
+    @Deprecated
     public FeatureRepositoryImpl(
             UnleashConfig unleashConfig, BackupHandler featureBackupHandler, UnleashEngine engine) {
-        this(unleashConfig, featureBackupHandler, engine, new EventDispatcher(unleashConfig));
-    }
 
-    private FeatureRepositoryImpl(
-            UnleashConfig unleashConfig,
-            BackupHandler featureBackupHandler,
-            UnleashEngine engine,
-            EventDispatcher eventDispatcher) {
+        GatedEventEmitter readyOnceGate = new GatedEventEmitter(new EventDispatcher(unleashConfig));
+
         this.unleashConfig = unleashConfig;
         this.featureBackupHandler = featureBackupHandler;
         this.engine = engine;
-        this.featureFetcher = unleashConfig.getUnleashFeatureFetcherFactory().apply(unleashConfig);
-        this.bootstrapper = unleashConfig.getToggleBootstrapProvider();
-        this.eventDispatcher = eventDispatcher;
-        this.throttler = initializeThrottler(unleashConfig);
-        this.streamingFeatureFetcher =
-                new StreamingFeatureFetcherImpl(
-                        unleashConfig, eventDispatcher, engine, featureBackupHandler);
+        this.eventDispatcher = readyOnceGate;
         this.pollingFeatureFetcher =
                 new PollingFeatureFetcher(
                         unleashConfig,
-                        eventDispatcher,
-                        featureFetcher,
+                        unleashConfig.getUnleashFeatureFetcherFactory().apply(unleashConfig),
+                        engine,
+                        featureBackupHandler,
+                        readyOnceGate);
+        this.streamingFeatureFetcher =
+                new StreamingFeatureFetcherImpl(
+                        unleashConfig,
+                        new EventDispatcher(unleashConfig),
                         engine,
                         featureBackupHandler);
-
+        this.bootstrapper = unleashConfig.getToggleBootstrapProvider();
+        this.throttler = initializeThrottler(unleashConfig);
         this.initCollections(unleashConfig.getScheduledExecutor());
     }
 
+    /**
+     * @deprecated This constructor is deprecated and will be removed in version 12, prefer using
+     *     the constructor that sets internal components via UnleashConfig.
+     */
+    @Deprecated
     public FeatureRepositoryImpl(
             UnleashConfig unleashConfig,
             BackupHandler featureBackupHandler,
             UnleashEngine engine,
-            FeatureSource fetcher,
-            FetchWorker streamingFeatureFetcher,
-            FetchWorker pollingFeatureFetcher) {
+            FeatureFetcher fetcher,
+            FetchWorker streamingFeatureFetcher) {
         this(
                 unleashConfig,
                 featureBackupHandler,
                 engine,
                 fetcher,
                 streamingFeatureFetcher,
-                pollingFeatureFetcher,
                 unleashConfig.getToggleBootstrapProvider());
     }
 
+    /**
+     * @deprecated This constructor is deprecated and will be removed in version 12, prefer using
+     *     the constructor that sets internal components via UnleashConfig.
+     */
+    @Deprecated
     public FeatureRepositoryImpl(
             UnleashConfig unleashConfig,
             BackupHandler featureBackupHandler,
             UnleashEngine engine,
-            FeatureSource fetcher,
+            FeatureFetcher fetcher,
             FetchWorker streamingFeatureFetcher,
-            FetchWorker pollingFeatureFetcher,
             ToggleBootstrapProvider bootstrapHandler) {
         this(
                 unleashConfig,
@@ -96,29 +103,35 @@ public class FeatureRepositoryImpl implements FeatureRepository {
                 engine,
                 fetcher,
                 streamingFeatureFetcher,
-                pollingFeatureFetcher,
                 bootstrapHandler,
                 new EventDispatcher(unleashConfig));
     }
 
+    /**
+     * @deprecated This constructor is deprecated and will be removed in version 12, prefer using
+     *     the constructor that sets internal components via UnleashConfig.
+     */
+    @Deprecated
     public FeatureRepositoryImpl(
             UnleashConfig unleashConfig,
             BackupHandler featureBackupHandler,
             UnleashEngine engine,
-            FeatureSource fetcher,
+            FeatureFetcher fetcher,
             FetchWorker streamingFeatureFetcher,
-            FetchWorker pollingFeatureFetcher,
             ToggleBootstrapProvider bootstrapHandler,
             EventDispatcher eventDispatcher) {
+        GatedEventEmitter readyOnceGate = new GatedEventEmitter(eventDispatcher);
+
         this.unleashConfig = unleashConfig;
         this.featureBackupHandler = featureBackupHandler;
         this.engine = engine;
-        this.featureFetcher = fetcher;
-        this.streamingFeatureFetcher = streamingFeatureFetcher;
-        this.pollingFeatureFetcher = pollingFeatureFetcher;
-        this.bootstrapper = bootstrapHandler;
-        this.eventDispatcher = eventDispatcher;
+        this.pollingFeatureFetcher =
+                new PollingFeatureFetcher(
+                        unleashConfig, fetcher, engine, featureBackupHandler, readyOnceGate);
+        this.bootstrapper = unleashConfig.getToggleBootstrapProvider();
+        this.eventDispatcher = readyOnceGate;
         this.throttler = initializeThrottler(unleashConfig);
+        this.streamingFeatureFetcher = streamingFeatureFetcher;
         this.initCollections(unleashConfig.getScheduledExecutor());
     }
 
@@ -139,11 +152,11 @@ public class FeatureRepositoryImpl implements FeatureRepository {
                 this.engine.takeState(features.get());
             } catch (YggdrasilInvalidInputException e) {
                 LOGGER.error("Error when initializing feature toggles", e);
-                eventDispatcher.dispatch(new UnleashException("Failed to read backup file:", e));
+                eventDispatcher.error(new UnleashException("Failed to read backup file:", e));
             }
         }
 
-        if (!unleashConfig.isStreamingMode()) {
+        if (unleashConfig.isStreamingMode()) {
             streamingFeatureFetcher.start();
         } else {
             pollingFeatureFetcher.start();

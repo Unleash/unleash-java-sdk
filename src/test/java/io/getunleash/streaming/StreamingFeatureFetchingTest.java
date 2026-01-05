@@ -3,14 +3,21 @@ package io.getunleash.streaming;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.getunleash.DefaultUnleash;
 import io.getunleash.SynchronousTestExecutor;
 import io.getunleash.Unleash;
+import io.getunleash.engine.UnleashEngine;
 import io.getunleash.event.ClientFeaturesResponse;
+import io.getunleash.event.EventDispatcher;
 import io.getunleash.event.UnleashSubscriber;
+import io.getunleash.repository.FeatureBackupHandlerFile;
 import io.getunleash.util.UnleashConfig;
+import io.getunleash.util.UnleashScheduledExecutor;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.mockito.ArgumentCaptor;
 
 public class StreamingFeatureFetchingTest {
 
@@ -126,6 +134,48 @@ public class StreamingFeatureFetchingTest {
         unleash.shutdown();
 
         verify(getRequestedFor(urlMatching("/api/client/streaming")));
+    }
+
+    @Test
+    public void should_write_backup_file_when_streaming_update_received() throws Exception {
+        UnleashConfig streamingConfig =
+                UnleashConfig.builder()
+                        .appName("streaming-test")
+                        .unleashAPI("http://localhost:4242/api/")
+                        .scheduledExecutor(mock(UnleashScheduledExecutor.class))
+                        .disableMetrics()
+                        .disablePolling()
+                        .experimentalStreamingMode()
+                        .build();
+
+        FeatureBackupHandlerFile backupHandler = mock(FeatureBackupHandlerFile.class);
+
+        StreamingFeatureFetcherImpl streamingFetcher =
+                new StreamingFeatureFetcherImpl(
+                        streamingConfig,
+                        new EventDispatcher(streamingConfig),
+                        new UnleashEngine(),
+                        backupHandler);
+
+        String streamingData =
+                "{\"events\":[{\"type\":\"hydration\",\"eventId\":1,\"features\":[{\"name\":\"testFeature\",\"enabled\":true,\"strategies\":[],\"variants\":[]}],\"segments\":[]}]}";
+
+        streamingFetcher.handleStreamingUpdate(streamingData);
+
+        ArgumentCaptor<String> backupContentCaptor = ArgumentCaptor.forClass(String.class);
+        verify(backupHandler, times(1)).write(backupContentCaptor.capture());
+
+        String savedBackupContent = backupContentCaptor.getValue();
+
+        assertThat(savedBackupContent).contains("\"features\"");
+        assertThat(savedBackupContent).contains("\"segments\"");
+
+        assertThat(savedBackupContent).contains("\"testFeature\"");
+
+        assertThat(savedBackupContent).contains("\"version\":2");
+        assertThat(savedBackupContent).contains("\"query\":");
+
+        assertThat(savedBackupContent).doesNotContain("\"events\""); // store state
     }
 
     private static class TestSubscriber implements UnleashSubscriber {

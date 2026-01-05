@@ -4,9 +4,7 @@ import io.getunleash.UnleashException;
 import io.getunleash.engine.UnleashEngine;
 import io.getunleash.engine.YggdrasilInvalidInputException;
 import io.getunleash.event.ClientFeaturesResponse;
-import io.getunleash.event.EventDispatcher;
-import io.getunleash.event.UnleashReady;
-import io.getunleash.streaming.FetchWorker;
+import io.getunleash.event.GatedEventEmitter;
 import io.getunleash.util.Throttler;
 import io.getunleash.util.UnleashConfig;
 import io.getunleash.util.UnleashScheduledExecutor;
@@ -18,29 +16,24 @@ class PollingFeatureFetcher implements FetchWorker {
     private static final Logger LOGGER = LoggerFactory.getLogger(PollingFeatureFetcher.class);
 
     private final UnleashConfig unleashConfig;
-    private final EventDispatcher eventDispatcher;
     private final Throttler throttler;
-    private final FeatureSource featureFetcher;
+    private final FeatureFetcher featureFetcher;
     private final UnleashEngine engine;
     private final BackupHandler featureBackupHandler;
-    private boolean ready;
+    private final GatedEventEmitter eventEmitter;
 
     PollingFeatureFetcher(
             UnleashConfig unleashConfig,
-            EventDispatcher eventDispatcher,
-            FeatureSource fetcher,
+            FeatureFetcher fetcher,
             UnleashEngine engine,
-            BackupHandler featureBackupHandler) {
+            BackupHandler featureBackupHandler,
+            GatedEventEmitter readyOnceGate) {
         this.unleashConfig = unleashConfig;
-        this.eventDispatcher = eventDispatcher;
         this.featureFetcher = fetcher;
         this.engine = engine;
         this.featureBackupHandler = featureBackupHandler;
+        this.eventEmitter = readyOnceGate;
         this.throttler = initializeThrottler(unleashConfig);
-
-        // don't love starting long running tasks in constructors
-        // but you deal with the architecture you have not the one you want
-        start();
     }
 
     private Throttler initializeThrottler(UnleashConfig config) {
@@ -55,9 +48,9 @@ class PollingFeatureFetcher implements FetchWorker {
         UnleashScheduledExecutor executor = unleashConfig.getScheduledExecutor();
         if (unleashConfig.isSynchronousFetchOnInitialisation()) {
             if (this.unleashConfig.getStartupExceptionHandler() != null) {
-                updateFeatures(this.unleashConfig.getStartupExceptionHandler()).run();
+                runInitialFetch(this.unleashConfig.getStartupExceptionHandler()).run();
             } else {
-                updateFeatures(
+                runInitialFetch(
                                 // just throw exception handler
                                 e -> {
                                     throw e;
@@ -66,46 +59,54 @@ class PollingFeatureFetcher implements FetchWorker {
             }
         }
 
-        if (!unleashConfig.isDisablePolling()) {
-            Runnable updateFeatures = updateFeatures(this.eventDispatcher::dispatch);
-            if (unleashConfig.getFetchTogglesInterval() > 0) {
-                executor.setInterval(updateFeatures, 0, unleashConfig.getFetchTogglesInterval());
-            } else {
-                executor.scheduleOnce(updateFeatures);
-            }
+        if (!unleashConfig.isDisablePolling() && unleashConfig.getFetchTogglesInterval() > 0) {
+            Runnable updateFeatures = runSteadyStateFetch(this.eventEmitter::error);
+            executor.setInterval(
+                    updateFeatures,
+                    unleashConfig.getFetchTogglesInterval(),
+                    unleashConfig.getFetchTogglesInterval());
         }
     }
 
     @SuppressWarnings("FutureReturnValueIgnored")
-    private Runnable updateFeatures(final Consumer<UnleashException> handler) {
+    private Runnable runInitialFetch(final Consumer<UnleashException> handler) {
+        return () -> {
+            try {
+                ClientFeaturesResponse response = featureFetcher.fetchFeatures();
+                eventEmitter.update(response);
+                if (response.getStatus() == ClientFeaturesResponse.Status.CHANGED) {
+                    updateFeatures(response);
+                } else if (response.getStatus() == ClientFeaturesResponse.Status.UNAVAILABLE) {
+                    if (unleashConfig.isSynchronousFetchOnInitialisation()) {
+                        throw new UnleashException(
+                                String.format(
+                                        "Could not initialize Unleash, got response code %d",
+                                        response.getHttpStatusCode()),
+                                null);
+                    }
+                }
+            } catch (UnleashException e) {
+                handler.accept(e);
+            } catch (YggdrasilInvalidInputException e) {
+                handler.accept(new UnleashException("Error on initial fetch", e));
+            }
+        };
+    }
+
+    @SuppressWarnings("FutureReturnValueIgnored")
+    private Runnable runSteadyStateFetch(final Consumer<UnleashException> handler) {
         return () -> {
             if (throttler.performAction()) {
                 try {
                     ClientFeaturesResponse response = featureFetcher.fetchFeatures();
-                    eventDispatcher.dispatch(response);
+                    eventEmitter.update(response);
                     if (response.getStatus() == ClientFeaturesResponse.Status.CHANGED) {
-                        String clientFeatures = response.getClientFeatures().get();
-
-                        this.engine.takeState(clientFeatures);
-                        this.featureBackupHandler.write(clientFeatures);
+                        updateFeatures(response);
                     } else if (response.getStatus() == ClientFeaturesResponse.Status.UNAVAILABLE) {
-                        if (!ready && unleashConfig.isSynchronousFetchOnInitialisation()) {
-                            throw new UnleashException(
-                                    String.format(
-                                            "Could not initialize Unleash, got response code %d",
-                                            response.getHttpStatusCode()),
-                                    null);
-                        }
-                        if (ready) {
-                            throttler.handleHttpErrorCodes(response.getHttpStatusCode());
-                        }
+                        throttler.handleHttpErrorCodes(response.getHttpStatusCode());
                         return;
                     }
                     throttler.decrementFailureCountAndResetSkips();
-                    if (!ready) {
-                        eventDispatcher.dispatch(new UnleashReady());
-                        ready = true;
-                    }
                 } catch (UnleashException e) {
                     handler.accept(e);
                 } catch (YggdrasilInvalidInputException e) {
@@ -115,6 +116,14 @@ class PollingFeatureFetcher implements FetchWorker {
                 throttler.skipped(); // We didn't do anything this iteration, just reduce the count
             }
         };
+    }
+
+    private void updateFeatures(ClientFeaturesResponse response)
+            throws YggdrasilInvalidInputException {
+        String clientFeatures = response.getClientFeatures().get();
+        this.engine.takeState(clientFeatures);
+        this.featureBackupHandler.write(clientFeatures);
+        eventEmitter.ready();
     }
 
     public Integer getFailures() {

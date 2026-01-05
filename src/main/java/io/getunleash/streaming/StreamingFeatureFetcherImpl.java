@@ -19,7 +19,7 @@ import okhttp3.OkHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class StreamingFeatureFetcherImpl implements FetchWorker {
+public class StreamingFeatureFetcherImpl implements StreamingFeatureFetcher {
     private static final Logger LOGGER = LoggerFactory.getLogger(StreamingFeatureFetcherImpl.class);
 
     private final UnleashConfig config;

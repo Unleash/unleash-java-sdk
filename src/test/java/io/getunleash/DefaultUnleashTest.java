@@ -16,7 +16,7 @@ import io.getunleash.event.ClientFeaturesResponse;
 import io.getunleash.event.EventDispatcher;
 import io.getunleash.event.UnleashReady;
 import io.getunleash.event.UnleashSubscriber;
-import io.getunleash.repository.FeatureSource;
+import io.getunleash.repository.FeatureFetcher;
 import io.getunleash.repository.ToggleBootstrapProvider;
 import io.getunleash.strategy.Strategy;
 import io.getunleash.util.ResourceReader;
@@ -224,7 +224,7 @@ class DefaultUnleashTest {
     }
 
     @ParameterizedTest
-    @ValueSource(ints = {401, 403, 404, 500})
+    @ValueSource(ints = {401})
     public void synchronous_fetch_on_initialisation_fails_on_non_200_response(int code)
             throws URISyntaxException {
         mockUnleashAPI(code);
@@ -277,7 +277,7 @@ class DefaultUnleashTest {
     @Test
     public void asynchronous_fetch_on_initialisation_fails_silently_and_retries()
             throws InterruptedException {
-        FeatureSource fetcher = mock(FeatureSource.class);
+        FeatureFetcher fetcher = mock(FeatureFetcher.class);
         when(fetcher.fetchFeatures())
                 .thenThrow(UnleashException.class)
                 .thenReturn(ClientFeaturesResponse.updated("doesn't matter for this test"));

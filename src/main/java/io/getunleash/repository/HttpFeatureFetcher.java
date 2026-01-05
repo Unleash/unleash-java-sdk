@@ -15,7 +15,7 @@ import java.util.zip.GZIPInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class HttpFeatureFetcher implements FeatureSource {
+public class HttpFeatureFetcher implements FeatureFetcher {
     private static final Logger LOG = LoggerFactory.getLogger(HttpFeatureFetcher.class);
     private Optional<String> etag = Optional.empty();
 
