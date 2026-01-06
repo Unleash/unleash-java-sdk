@@ -25,11 +25,7 @@ class FailoverStrategy {
         this.relaxTimeMs = relaxTimeMs;
     }
 
-    boolean shouldFailover(FailEvent event) {
-        return shouldFailover(event, Instant.now());
-    }
-
-    boolean shouldFailover(FailEvent event, Instant now) {
+    synchronized boolean shouldFailover(FailEvent event, Instant now) {
         long nowMs = now.toEpochMilli();
         pruneOldFailures(nowMs);
 
