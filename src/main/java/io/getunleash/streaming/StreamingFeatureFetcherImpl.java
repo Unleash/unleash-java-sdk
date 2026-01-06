@@ -3,6 +3,7 @@ package io.getunleash.streaming;
 import com.launchdarkly.eventsource.ConnectStrategy;
 import com.launchdarkly.eventsource.EventSource;
 import com.launchdarkly.eventsource.MessageEvent;
+import com.launchdarkly.eventsource.StreamHttpErrorException;
 import com.launchdarkly.eventsource.background.BackgroundEventHandler;
 import com.launchdarkly.eventsource.background.BackgroundEventSource;
 import io.getunleash.UnleashException;
@@ -15,6 +16,7 @@ import io.getunleash.repository.FetchWorker;
 import io.getunleash.util.UnleashConfig;
 import java.net.URI;
 import java.time.Duration;
+import java.time.Instant;
 import okhttp3.Headers;
 import okhttp3.OkHttpClient;
 import org.slf4j.Logger;
@@ -22,11 +24,14 @@ import org.slf4j.LoggerFactory;
 
 public class StreamingFeatureFetcherImpl implements FetchWorker {
     private static final Logger LOGGER = LoggerFactory.getLogger(StreamingFeatureFetcherImpl.class);
+    private static final int DEFAULT_MAX_FAILURES = 5;
+    private static final long DEFAULT_FAIL_WINDOW_MS = 60_000L;
 
     private final UnleashConfig config;
     private final EventDispatcher eventDispatcher;
     private final UnleashEngine engine;
     private final BackupHandler featureBackupHandler;
+    private final FailoverStrategy failoverStrategy;
     private boolean ready;
 
     private volatile BackgroundEventSource eventSource;
@@ -36,10 +41,25 @@ public class StreamingFeatureFetcherImpl implements FetchWorker {
             EventDispatcher eventDispatcher,
             UnleashEngine engine,
             BackupHandler featureBackupHandler) {
+        this(
+                config,
+                eventDispatcher,
+                engine,
+                featureBackupHandler,
+                new FailoverStrategy(DEFAULT_MAX_FAILURES, DEFAULT_FAIL_WINDOW_MS));
+    }
+
+    StreamingFeatureFetcherImpl(
+            UnleashConfig config,
+            EventDispatcher eventDispatcher,
+            UnleashEngine engine,
+            BackupHandler featureBackupHandler,
+            FailoverStrategy failoverStrategy) {
         this.config = config;
         this.eventDispatcher = eventDispatcher;
         this.engine = engine;
         this.featureBackupHandler = featureBackupHandler;
+        this.failoverStrategy = failoverStrategy;
     }
 
     public void start() {
@@ -116,6 +136,61 @@ public class StreamingFeatureFetcherImpl implements FetchWorker {
         }
     }
 
+    void handleStreamingError(Throwable throwable) {
+        handleFailoverDecision(toFailEvent(throwable));
+    }
+
+    void handleModeChange(String eventData) {
+        if (eventData.equals("polling")) {
+            FailoverStrategy.ServerEvent failEvent =
+                    new FailoverStrategy.ServerEvent(
+                            Instant.now(),
+                            "Server has explicitly requested switching to polling mode",
+                            eventData);
+            handleFailoverDecision(failEvent);
+        } else {
+            LOGGER.debug("Ignoring an unrecognized fetch mode change to {}", eventData);
+        }
+    }
+
+    void handleServerDisconnect() {
+        FailoverStrategy.NetworkEventError failEvent =
+                new FailoverStrategy.NetworkEventError(
+                        Instant.now(), "Server closed the streaming connection");
+        handleFailoverDecision(failEvent);
+    }
+
+    private FailoverStrategy.FailEvent toFailEvent(Throwable throwable) {
+        Instant now = Instant.now();
+        if (throwable instanceof StreamHttpErrorException) {
+            int statusCode = ((StreamHttpErrorException) throwable).getCode();
+            String message =
+                    throwable.getMessage() != null
+                            ? throwable.getMessage()
+                            : String.format(
+                                    "Streaming failed with http status code %d", statusCode);
+            return new FailoverStrategy.HttpStatusError(now, message, statusCode);
+        }
+
+        // Not an HTTP problem so something has likely gone wrong on the network layer
+        String message =
+                (throwable != null && throwable.getMessage() != null)
+                        ? throwable.getMessage()
+                        : "Network error occurred in streaming";
+        return new FailoverStrategy.NetworkEventError(now, message);
+    }
+
+    private void handleFailoverDecision(FailoverStrategy.FailEvent failEvent) {
+        boolean shouldFail = failoverStrategy.shouldFailover(failEvent, Instant.now());
+        if (shouldFail) {
+            LOGGER.warn(
+                    "Streaming failover triggered: {}. Client is switching over to polling mode.",
+                    failEvent.getMessage());
+
+            // changeToPolling()
+        }
+    }
+
     private class UnleashEventHandler implements BackgroundEventHandler {
 
         @Override
@@ -126,6 +201,7 @@ public class StreamingFeatureFetcherImpl implements FetchWorker {
         @Override
         public void onClosed() throws Exception {
             LOGGER.info("Streaming connection to Unleash server closed");
+            handleServerDisconnect();
         }
 
         @Override
@@ -141,6 +217,9 @@ public class StreamingFeatureFetcherImpl implements FetchWorker {
                     case "unleash-updated":
                         handleStreamingUpdate(messageEvent.getData());
                         break;
+                    case "fetch-mode":
+                        handleModeChange(messageEvent.getData());
+                        break;
                     default:
                         LOGGER.debug("Ignoring unknown event type: {}", event);
                 }
@@ -154,13 +233,13 @@ public class StreamingFeatureFetcherImpl implements FetchWorker {
         }
 
         @Override
-        public void onComment(String comment) throws Exception {}
+        public void onComment(String comment) throws Exception {
+            // gotta implement this because inheritance reasons but we don't care about it
+        }
 
         @Override
         public void onError(Throwable t) {
-            UnleashException unleashException =
-                    new UnleashException("Streaming connection error", t);
-            eventDispatcher.dispatch(unleashException);
+            handleStreamingError(t);
         }
     }
 }
