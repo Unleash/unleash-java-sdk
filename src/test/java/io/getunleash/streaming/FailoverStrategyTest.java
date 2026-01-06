@@ -15,7 +15,7 @@ class FailoverStrategyTest {
         FailoverStrategy strategy = new FailoverStrategy(3, 5_000);
         ServerEvent event = new ServerEvent(Instant.now(), "Switch to polling", "polling");
 
-        assertThat(strategy.shouldFailover(event)).isTrue();
+        assertThat(strategy.shouldFailover(event, Instant.now())).isTrue();
     }
 
     @Test
@@ -23,7 +23,7 @@ class FailoverStrategyTest {
         FailoverStrategy strategy = new FailoverStrategy(3, 5_000);
         ServerEvent event = new ServerEvent(Instant.now(), "Restart complete", "unleash-restarted");
 
-        assertThat(strategy.shouldFailover(event)).isFalse();
+        assertThat(strategy.shouldFailover(event, Instant.now())).isFalse();
     }
 
     @Test
@@ -31,7 +31,7 @@ class FailoverStrategyTest {
         FailoverStrategy strategy = new FailoverStrategy(3, 5_000);
         HttpStatusError error = new HttpStatusError(Instant.now(), "Too many connections", 429);
 
-        assertThat(strategy.shouldFailover(error)).isTrue();
+        assertThat(strategy.shouldFailover(error, Instant.now())).isTrue();
     }
 
     @Test
