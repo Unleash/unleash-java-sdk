@@ -84,83 +84,75 @@ class FailoverStrategy {
         }
     }
 
-    interface FailEvent {
-        Instant getOccurredAt();
-
-        String getMessage();
-
-        EventType getType();
-    }
-
-    private enum EventType {
+    enum EventType {
         NETWORK_ERROR,
         HTTP_STATUS_ERROR,
         SERVER_HINT
     }
 
-    abstract static class BaseFailEvent implements FailEvent {
+    abstract static class FailEvent {
         private final Instant occurredAt;
         private final String message;
 
-        protected BaseFailEvent(Instant occurredAt, String message) {
+        protected FailEvent(Instant occurredAt, String message) {
             this.occurredAt = occurredAt;
             this.message = message;
         }
 
-        @Override
-        public Instant getOccurredAt() {
+        abstract EventType getType();
+
+        Instant getOccurredAt() {
             return occurredAt;
         }
 
-        @Override
-        public String getMessage() {
+        String getMessage() {
             return message;
         }
     }
 
-    static final class NetworkEventError extends BaseFailEvent {
-        public NetworkEventError(Instant occurredAt, String message) {
+    static final class NetworkEventError extends FailEvent {
+        NetworkEventError(Instant occurredAt, String message) {
             super(occurredAt, message);
         }
 
         @Override
-        public EventType getType() {
+        EventType getType() {
             return EventType.NETWORK_ERROR;
         }
     }
 
-    static final class HttpStatusError extends BaseFailEvent {
+    static final class HttpStatusError extends FailEvent {
         private final int statusCode;
 
-        public HttpStatusError(Instant occurredAt, String message, int statusCode) {
+        HttpStatusError(Instant occurredAt, String message, int statusCode) {
             super(occurredAt, message);
             this.statusCode = statusCode;
         }
 
-        public int getStatusCode() {
+        int getStatusCode() {
             return statusCode;
         }
 
         @Override
-        public EventType getType() {
+        EventType getType() {
             return EventType.HTTP_STATUS_ERROR;
         }
     }
 
-    static final class ServerEvent extends BaseFailEvent {
+    static final class ServerEvent extends FailEvent {
         private final String event;
 
-        public ServerEvent(Instant occurredAt, String message, String event) {
+        ServerEvent(Instant occurredAt, String message, String event) {
             super(occurredAt, message);
             this.event = event;
         }
 
-        public String getEvent() {
+        String getEvent() {
             return event;
         }
 
         @Override
-        public EventType getType() {
+        EventType getType() {
             return EventType.SERVER_HINT;
         }
     }
