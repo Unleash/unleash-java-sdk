@@ -118,7 +118,7 @@ class FailoverStrategy {
         }
     }
 
-    public static final class NetworkEventError extends BaseFailEvent {
+    static final class NetworkEventError extends BaseFailEvent {
         public NetworkEventError(Instant occurredAt, String message) {
             super(occurredAt, message);
         }
@@ -129,7 +129,7 @@ class FailoverStrategy {
         }
     }
 
-    public static final class HttpStatusError extends BaseFailEvent {
+    static final class HttpStatusError extends BaseFailEvent {
         private final int statusCode;
 
         public HttpStatusError(Instant occurredAt, String message, int statusCode) {
@@ -147,7 +147,7 @@ class FailoverStrategy {
         }
     }
 
-    public static final class ServerEvent extends BaseFailEvent {
+    static final class ServerEvent extends BaseFailEvent {
         private final String event;
 
         public ServerEvent(Instant occurredAt, String message, String event) {

@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 class FailoverStrategyTest {
 
     @Test
-    void should_fail_immediately_on_server_hint_polling() {
+    void should_fail_immediately_on_server_requests_polling() {
         FailoverStrategy strategy = new FailoverStrategy(3, 5_000);
         ServerEvent event = new ServerEvent(Instant.now(), "Switch to polling", "polling");
 
