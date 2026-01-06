@@ -42,7 +42,7 @@ class FailoverStrategy {
                 return handleNetwork(event);
             default:
                 LOGGER.warn(
-                        "Responding to an unknown event, this should not have occurred please report this. Streaming will continue to operate without failing over to polling");
+                        "Responding to an unknown event, this should not have occurred. Please report this. Streaming will continue to operate without failing over to polling");
                 return false;
         }
     }
