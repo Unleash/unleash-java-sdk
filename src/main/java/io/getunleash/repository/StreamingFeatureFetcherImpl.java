@@ -1,4 +1,4 @@
-package io.getunleash.streaming;
+package io.getunleash.repository;
 
 import com.launchdarkly.eventsource.ConnectStrategy;
 import com.launchdarkly.eventsource.EventSource;
@@ -9,10 +9,7 @@ import com.launchdarkly.eventsource.background.BackgroundEventSource;
 import io.getunleash.UnleashException;
 import io.getunleash.engine.UnleashEngine;
 import io.getunleash.event.ClientFeaturesResponse;
-import io.getunleash.event.EventDispatcher;
-import io.getunleash.event.UnleashReady;
-import io.getunleash.repository.BackupHandler;
-import io.getunleash.repository.FetchWorker;
+import io.getunleash.event.GatedEventEmitter;
 import io.getunleash.util.UnleashConfig;
 import java.net.URI;
 import java.time.Duration;
@@ -22,44 +19,49 @@ import okhttp3.OkHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class StreamingFeatureFetcherImpl implements FetchWorker {
+class StreamingFeatureFetcherImpl implements FetchWorker {
     private static final Logger LOGGER = LoggerFactory.getLogger(StreamingFeatureFetcherImpl.class);
     private static final int DEFAULT_MAX_FAILURES = 5;
     private static final long DEFAULT_FAIL_WINDOW_MS = 60_000L;
 
     private final UnleashConfig config;
-    private final EventDispatcher eventDispatcher;
+    private final GatedEventEmitter eventDispatcher;
     private final UnleashEngine engine;
     private final BackupHandler featureBackupHandler;
     private final FailoverStrategy failoverStrategy;
+    private final ModeController modeController;
     private boolean ready;
 
     private volatile BackgroundEventSource eventSource;
 
-    public StreamingFeatureFetcherImpl(
+    StreamingFeatureFetcherImpl(
             UnleashConfig config,
-            EventDispatcher eventDispatcher,
+            GatedEventEmitter eventDispatcher,
             UnleashEngine engine,
-            BackupHandler featureBackupHandler) {
+            BackupHandler featureBackupHandler,
+            ModeController modeController) {
         this(
                 config,
                 eventDispatcher,
                 engine,
                 featureBackupHandler,
-                new FailoverStrategy(DEFAULT_MAX_FAILURES, DEFAULT_FAIL_WINDOW_MS));
+                new FailoverStrategy(DEFAULT_MAX_FAILURES, DEFAULT_FAIL_WINDOW_MS),
+                modeController);
     }
 
     StreamingFeatureFetcherImpl(
             UnleashConfig config,
-            EventDispatcher eventDispatcher,
+            GatedEventEmitter eventDispatcher,
             UnleashEngine engine,
             BackupHandler featureBackupHandler,
-            FailoverStrategy failoverStrategy) {
+            FailoverStrategy failoverStrategy,
+            ModeController modeController) {
         this.config = config;
         this.eventDispatcher = eventDispatcher;
         this.engine = engine;
         this.featureBackupHandler = featureBackupHandler;
         this.failoverStrategy = failoverStrategy;
+        this.modeController = modeController;
     }
 
     public void start() {
@@ -122,17 +124,17 @@ public class StreamingFeatureFetcherImpl implements FetchWorker {
             featureBackupHandler.write(currentState);
 
             ClientFeaturesResponse response = ClientFeaturesResponse.updated(data);
-            eventDispatcher.dispatch(response);
+            eventDispatcher.update(response);
 
             if (!ready) {
-                eventDispatcher.dispatch(new UnleashReady());
+                eventDispatcher.ready();
                 ready = true;
             }
         } catch (Exception e) {
             LOGGER.error("Failed to process streaming update", e);
             UnleashException unleashException =
                     new UnleashException("Failed to process streaming update", e);
-            eventDispatcher.dispatch(unleashException);
+            eventDispatcher.error(unleashException);
         }
     }
 
@@ -187,7 +189,12 @@ public class StreamingFeatureFetcherImpl implements FetchWorker {
                     "Streaming failover triggered: {}. Client is switching over to polling mode.",
                     failEvent.getMessage());
 
-            // changeToPolling()
+            if (modeController != null) {
+                modeController.requestFailover();
+            } else {
+                LOGGER.warn(
+                        "No ModeController configured, cannot request failover to polling mode.");
+            }
         }
     }
 

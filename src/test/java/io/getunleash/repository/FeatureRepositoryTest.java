@@ -12,6 +12,8 @@ import io.getunleash.DefaultUnleash;
 import io.getunleash.FeatureDefinition;
 import io.getunleash.engine.UnleashEngine;
 import io.getunleash.event.ClientFeaturesResponse;
+import io.getunleash.event.EventDispatcher;
+import io.getunleash.event.GatedEventEmitter;
 import io.getunleash.util.UnleashConfig;
 import io.getunleash.util.UnleashScheduledExecutor;
 import java.io.File;
@@ -29,8 +31,8 @@ public class FeatureRepositoryTest {
     FeatureBackupHandlerFile backupHandler;
     ToggleBootstrapProvider bootstrapHandler;
     HttpFeatureFetcher fetcher;
-    FetchWorker streamingFetcher;
     UnleashConfig defaultConfig;
+    UnleashEngine engine;
 
     private String loadMockFeatures(String path) {
         try {
@@ -57,7 +59,7 @@ public class FeatureRepositoryTest {
         backupHandler = mock(FeatureBackupHandlerFile.class);
         bootstrapHandler = mock(ToggleBootstrapProvider.class);
         fetcher = mock(HttpFeatureFetcher.class);
-        streamingFetcher = mock(FetchWorker.class);
+        engine = new UnleashEngine();
 
         defaultConfig = defaultConfigBuilder().build();
     }
@@ -107,14 +109,18 @@ public class FeatureRepositoryTest {
 
         when(backupHandler.read()).thenReturn(Optional.empty());
 
+        FetchWorker pollingFetcher =
+                new PollingFeatureFetcher(
+                        config, fetcher, engine, backupHandler, mock(GatedEventEmitter.class));
+
         FeatureRepository featureRepository =
                 new FeatureRepositoryImpl(
                         config,
                         backupHandler,
-                        new UnleashEngine(),
-                        fetcher,
-                        streamingFetcher,
-                        bootstrapHandler);
+                        engine,
+                        pollingFetcher,
+                        bootstrapHandler,
+                        mock(EventDispatcher.class));
 
         verify(executor).setInterval(runnableArgumentCaptor.capture(), anyLong(), anyLong());
         verify(fetcher, times(0)).fetchFeatures();
@@ -141,13 +147,17 @@ public class FeatureRepositoryTest {
                 ClientFeaturesResponse.updated(loadMockFeatures("unleash-repo-v2.json"));
         when(fetcher.fetchFeatures()).thenReturn(response);
 
+        FetchWorker pollingFetcher =
+                new PollingFeatureFetcher(
+                        config, fetcher, engine, backupHandler, mock(GatedEventEmitter.class));
+
         new FeatureRepositoryImpl(
                 config,
                 backupHandler,
                 new UnleashEngine(),
-                fetcher,
-                streamingFetcher,
-                bootstrapHandler);
+                pollingFetcher,
+                bootstrapHandler,
+                mock(EventDispatcher.class));
 
         verify(fetcher, times(1)).fetchFeatures();
     }
@@ -162,15 +172,19 @@ public class FeatureRepositoryTest {
         ClientFeaturesResponse response =
                 ClientFeaturesResponse.updated(loadMockFeatures("unleash-repo-v2.json"));
 
+        FetchWorker pollingFetcher =
+                new PollingFeatureFetcher(
+                        config, fetcher, engine, backupHandler, mock(GatedEventEmitter.class));
+
         when(fetcher.fetchFeatures()).thenReturn(response);
 
         new FeatureRepositoryImpl(
                 config,
                 backupHandler,
                 new UnleashEngine(),
-                fetcher,
-                streamingFetcher,
-                bootstrapHandler);
+                pollingFetcher,
+                bootstrapHandler,
+                mock(EventDispatcher.class));
 
         verify(fetcher, times(0)).fetchFeatures();
     }
@@ -225,13 +239,17 @@ public class FeatureRepositoryTest {
         UnleashConfig config =
                 defaultConfigBuilder().toggleBootstrapProvider(bootstrapHandler).build();
 
+        FetchWorker pollingFetcher =
+                new PollingFeatureFetcher(
+                        config, fetcher, engine, backupHandler, mock(GatedEventEmitter.class));
+
         new FeatureRepositoryImpl(
                 config,
                 backupHandler,
                 new UnleashEngine(),
-                fetcher,
-                streamingFetcher,
-                bootstrapHandler);
+                pollingFetcher,
+                bootstrapHandler,
+                mock(EventDispatcher.class));
 
         verify(bootstrapHandler, times(0)).read();
     }

@@ -1,6 +1,6 @@
 // reference implementation here: https://github.com/Unleash/unleash-node-sdk/pull/780
 
-package io.getunleash.streaming;
+package io.getunleash.repository;
 
 import java.time.Instant;
 import java.util.ArrayList;
