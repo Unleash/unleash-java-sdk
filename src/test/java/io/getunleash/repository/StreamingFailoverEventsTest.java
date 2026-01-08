@@ -1,4 +1,4 @@
-package io.getunleash.streaming;
+package io.getunleash.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -9,7 +9,7 @@ import static org.mockito.Mockito.when;
 import com.launchdarkly.eventsource.StreamHttpErrorException;
 import io.getunleash.engine.UnleashEngine;
 import io.getunleash.event.EventDispatcher;
-import io.getunleash.repository.BackupHandler;
+import io.getunleash.event.GatedEventEmitter;
 import io.getunleash.util.UnleashConfig;
 import java.time.Instant;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,7 +19,7 @@ import org.mockito.ArgumentCaptor;
 class StreamingFailoverEventsTest {
 
     private UnleashConfig config;
-    private EventDispatcher dispatcher;
+    private GatedEventEmitter dispatcher;
     private UnleashEngine engine;
     private BackupHandler backupHandler;
 
@@ -33,7 +33,7 @@ class StreamingFailoverEventsTest {
                         .experimentalStreamingMode()
                         .disableMetrics()
                         .build();
-        dispatcher = new EventDispatcher(config);
+        dispatcher = new GatedEventEmitter(new EventDispatcher(config));
         engine = new UnleashEngine();
         backupHandler = mock(BackupHandler.class);
     }
@@ -103,6 +103,7 @@ class StreamingFailoverEventsTest {
     }
 
     private StreamingFeatureFetcherImpl newFetcher(FailoverStrategy strategy) {
-        return new StreamingFeatureFetcherImpl(config, dispatcher, engine, backupHandler, strategy);
+        return new StreamingFeatureFetcherImpl(
+                config, dispatcher, engine, backupHandler, strategy, null);
     }
 }

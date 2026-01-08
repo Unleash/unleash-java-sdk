@@ -1,4 +1,4 @@
-package io.getunleash.streaming;
+package io.getunleash.repository;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
@@ -13,8 +13,8 @@ import io.getunleash.Unleash;
 import io.getunleash.engine.UnleashEngine;
 import io.getunleash.event.ClientFeaturesResponse;
 import io.getunleash.event.EventDispatcher;
+import io.getunleash.event.GatedEventEmitter;
 import io.getunleash.event.UnleashSubscriber;
-import io.getunleash.repository.FeatureBackupHandlerFile;
 import io.getunleash.util.UnleashConfig;
 import io.getunleash.util.UnleashScheduledExecutor;
 import java.net.URI;
@@ -152,9 +152,10 @@ public class StreamingFeatureFetchingTest {
         StreamingFeatureFetcherImpl streamingFetcher =
                 new StreamingFeatureFetcherImpl(
                         streamingConfig,
-                        new EventDispatcher(streamingConfig),
+                        new GatedEventEmitter(new EventDispatcher(streamingConfig)),
                         new UnleashEngine(),
-                        backupHandler);
+                        backupHandler,
+                        null);
 
         String streamingData =
                 "{\"events\":[{\"type\":\"hydration\",\"eventId\":1,\"features\":[{\"name\":\"testFeature\",\"enabled\":true,\"strategies\":[],\"variants\":[]}],\"segments\":[]}]}";

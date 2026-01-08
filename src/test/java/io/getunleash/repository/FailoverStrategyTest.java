@@ -1,10 +1,10 @@
-package io.getunleash.streaming;
+package io.getunleash.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.getunleash.streaming.FailoverStrategy.HttpStatusError;
-import io.getunleash.streaming.FailoverStrategy.NetworkEventError;
-import io.getunleash.streaming.FailoverStrategy.ServerEvent;
+import io.getunleash.repository.FailoverStrategy.HttpStatusError;
+import io.getunleash.repository.FailoverStrategy.NetworkEventError;
+import io.getunleash.repository.FailoverStrategy.ServerEvent;
 import java.time.Instant;
 import org.junit.jupiter.api.Test;
 

@@ -9,7 +9,6 @@ import io.getunleash.engine.VariantDef;
 import io.getunleash.engine.YggdrasilInvalidInputException;
 import io.getunleash.event.EventDispatcher;
 import io.getunleash.event.GatedEventEmitter;
-import io.getunleash.streaming.StreamingFeatureFetcherImpl;
 import io.getunleash.util.UnleashConfig;
 import io.getunleash.util.UnleashScheduledExecutor;
 import java.util.Optional;
@@ -19,11 +18,9 @@ import org.slf4j.LoggerFactory;
 
 public class FeatureRepositoryImpl implements FeatureRepository {
     private static final Logger LOGGER = LoggerFactory.getLogger(FeatureRepositoryImpl.class);
-    private final UnleashConfig unleashConfig;
     private final BackupHandler featureBackupHandler;
     private final ToggleBootstrapProvider bootstrapper;
-    private final FetchWorker streamingFeatureFetcher;
-    private final FetchWorker pollingFeatureFetcher;
+    private final FetchWorker fetcher;
     private final GatedEventEmitter eventDispatcher;
     private final UnleashEngine engine;
 
@@ -36,23 +33,10 @@ public class FeatureRepositoryImpl implements FeatureRepository {
 
         GatedEventEmitter readyOnceGate = new GatedEventEmitter(new EventDispatcher(unleashConfig));
 
-        this.unleashConfig = unleashConfig;
         this.featureBackupHandler = featureBackupHandler;
         this.engine = engine;
         this.eventDispatcher = readyOnceGate;
-        this.pollingFeatureFetcher =
-                new PollingFeatureFetcher(
-                        unleashConfig,
-                        unleashConfig.getUnleashFeatureFetcherFactory().apply(unleashConfig),
-                        engine,
-                        featureBackupHandler,
-                        readyOnceGate);
-        this.streamingFeatureFetcher =
-                new StreamingFeatureFetcherImpl(
-                        unleashConfig,
-                        new EventDispatcher(unleashConfig),
-                        engine,
-                        featureBackupHandler);
+        this.fetcher = new AdaptiveFetcher(unleashConfig, featureBackupHandler, engine);
         this.bootstrapper = unleashConfig.getToggleBootstrapProvider();
         this.initCollections(unleashConfig.getScheduledExecutor());
     }
@@ -61,53 +45,16 @@ public class FeatureRepositoryImpl implements FeatureRepository {
             UnleashConfig unleashConfig,
             BackupHandler featureBackupHandler,
             UnleashEngine engine,
-            FeatureFetcher fetcher,
-            FetchWorker streamingFeatureFetcher) {
-        this(
-                unleashConfig,
-                featureBackupHandler,
-                engine,
-                fetcher,
-                streamingFeatureFetcher,
-                unleashConfig.getToggleBootstrapProvider());
-    }
-
-    FeatureRepositoryImpl(
-            UnleashConfig unleashConfig,
-            BackupHandler featureBackupHandler,
-            UnleashEngine engine,
-            FeatureFetcher fetcher,
-            FetchWorker streamingFeatureFetcher,
-            ToggleBootstrapProvider bootstrapHandler) {
-        this(
-                unleashConfig,
-                featureBackupHandler,
-                engine,
-                fetcher,
-                streamingFeatureFetcher,
-                bootstrapHandler,
-                new EventDispatcher(unleashConfig));
-    }
-
-    FeatureRepositoryImpl(
-            UnleashConfig unleashConfig,
-            BackupHandler featureBackupHandler,
-            UnleashEngine engine,
-            FeatureFetcher fetcher,
-            FetchWorker streamingFeatureFetcher,
+            FetchWorker fetcher,
             ToggleBootstrapProvider bootstrapHandler,
             EventDispatcher eventDispatcher) {
         GatedEventEmitter readyOnceGate = new GatedEventEmitter(eventDispatcher);
 
-        this.unleashConfig = unleashConfig;
         this.featureBackupHandler = featureBackupHandler;
         this.engine = engine;
-        this.pollingFeatureFetcher =
-                new PollingFeatureFetcher(
-                        unleashConfig, fetcher, engine, featureBackupHandler, readyOnceGate);
-        this.bootstrapper = unleashConfig.getToggleBootstrapProvider();
+        this.bootstrapper = bootstrapHandler;
         this.eventDispatcher = readyOnceGate;
-        this.streamingFeatureFetcher = streamingFeatureFetcher;
+        this.fetcher = fetcher;
         this.initCollections(unleashConfig.getScheduledExecutor());
     }
 
@@ -124,12 +71,7 @@ public class FeatureRepositoryImpl implements FeatureRepository {
                 eventDispatcher.error(new UnleashException("Failed to read backup file:", e));
             }
         }
-
-        if (unleashConfig.isStreamingMode()) {
-            streamingFeatureFetcher.start();
-        } else {
-            pollingFeatureFetcher.start();
-        }
+        fetcher.start();
     }
 
     @Override
@@ -159,6 +101,6 @@ public class FeatureRepositoryImpl implements FeatureRepository {
 
     @Override
     public void shutdown() {
-        this.streamingFeatureFetcher.stop();
+        this.fetcher.stop();
     }
 }
