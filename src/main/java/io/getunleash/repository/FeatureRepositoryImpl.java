@@ -52,7 +52,7 @@ public class FeatureRepositoryImpl implements FeatureRepository {
 
         this.featureBackupHandler = featureBackupHandler;
         this.engine = engine;
-        this.bootstrapper = unleashConfig.getToggleBootstrapProvider();
+        this.bootstrapper = bootstrapHandler;
         this.eventDispatcher = readyOnceGate;
         this.fetcher = fetcher;
         this.initCollections(unleashConfig.getScheduledExecutor());
