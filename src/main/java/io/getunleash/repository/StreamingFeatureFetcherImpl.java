@@ -6,8 +6,8 @@ import com.launchdarkly.eventsource.MessageEvent;
 import com.launchdarkly.eventsource.StreamHttpErrorException;
 import com.launchdarkly.eventsource.background.BackgroundEventHandler;
 import com.launchdarkly.eventsource.background.BackgroundEventSource;
-import io.getunleash.UnleashException;
 import io.getunleash.engine.UnleashEngine;
+import io.getunleash.engine.YggdrasilInvalidInputException;
 import io.getunleash.event.ClientFeaturesResponse;
 import io.getunleash.event.GatedEventEmitter;
 import io.getunleash.util.UnleashConfig;
@@ -116,25 +116,23 @@ class StreamingFeatureFetcherImpl implements FetchWorker {
         }
     }
 
-    synchronized void handleStreamingUpdate(String data) {
-        try {
-            engine.takeState(data);
+    private void reconnect() {
+        stop();
+        start();
+    }
 
-            String currentState = engine.getState();
-            featureBackupHandler.write(currentState);
+    synchronized void handleStreamingUpdate(String data) throws YggdrasilInvalidInputException {
+        engine.takeState(data);
 
-            ClientFeaturesResponse response = ClientFeaturesResponse.updated(data);
-            eventDispatcher.update(response);
+        String currentState = engine.getState();
+        featureBackupHandler.write(currentState);
 
-            if (!ready) {
-                eventDispatcher.ready();
-                ready = true;
-            }
-        } catch (Exception e) {
-            LOGGER.error("Failed to process streaming update", e);
-            UnleashException unleashException =
-                    new UnleashException("Failed to process streaming update", e);
-            eventDispatcher.error(unleashException);
+        ClientFeaturesResponse response = ClientFeaturesResponse.updated(data);
+        eventDispatcher.update(response);
+
+        if (!ready) {
+            eventDispatcher.ready();
+            ready = true;
         }
     }
 
@@ -212,30 +210,24 @@ class StreamingFeatureFetcherImpl implements FetchWorker {
         }
 
         @Override
-        public void onMessage(String event, MessageEvent messageEvent) throws Exception {
-            try {
-                LOGGER.debug(
-                        "Received streaming event: {} with data: {}",
-                        event,
-                        messageEvent.getData());
+        public void onMessage(String event, MessageEvent messageEvent) {
+            LOGGER.debug(
+                    "Received streaming event: {} with data: {}", event, messageEvent.getData());
 
-                switch (event) {
-                    case "unleash-connected":
-                    case "unleash-updated":
+            switch (event) {
+                case "unleash-connected":
+                case "unleash-updated":
+                    try {
                         handleStreamingUpdate(messageEvent.getData());
-                        break;
-                    case "fetch-mode":
-                        handleModeChange(messageEvent.getData());
-                        break;
-                    default:
-                        LOGGER.debug("Ignoring unknown event type: {}", event);
-                }
-
-            } catch (Exception e) {
-                LOGGER.error(
-                        "Error processing streaming event, feature flags will likely not evaluate correctly until application restart or stream re-connect: {}",
-                        event,
-                        e);
+                    } catch (YggdrasilInvalidInputException e) {
+                        reconnect();
+                    }
+                    break;
+                case "fetch-mode":
+                    handleModeChange(messageEvent.getData());
+                    break;
+                default:
+                    LOGGER.debug("Ignoring unknown event type: {}", event);
             }
         }
 
