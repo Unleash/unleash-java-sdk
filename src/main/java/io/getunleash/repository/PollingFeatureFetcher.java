@@ -8,6 +8,8 @@ import io.getunleash.event.GatedEventEmitter;
 import io.getunleash.util.Throttler;
 import io.getunleash.util.UnleashConfig;
 import io.getunleash.util.UnleashScheduledExecutor;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +23,7 @@ class PollingFeatureFetcher implements FetchWorker {
     private final UnleashEngine engine;
     private final BackupHandler featureBackupHandler;
     private final GatedEventEmitter eventEmitter;
+    private volatile AtomicBoolean started = new AtomicBoolean(false);
 
     PollingFeatureFetcher(
             UnleashConfig unleashConfig,
@@ -45,16 +48,20 @@ class PollingFeatureFetcher implements FetchWorker {
 
     @Override
     public void start() {
+        if (started.compareAndSet(true, true)) {
+            return;
+        }
+
         UnleashScheduledExecutor executor = unleashConfig.getScheduledExecutor();
         if (unleashConfig.isSynchronousFetchOnInitialisation()) {
             if (this.unleashConfig.getStartupExceptionHandler() != null) {
                 runInitialFetch(this.unleashConfig.getStartupExceptionHandler()).run();
             } else {
                 runInitialFetch(
-                                // just throw exception handler
-                                e -> {
-                                    throw e;
-                                })
+                        // just throw exception handler
+                        e -> {
+                            throw e;
+                        })
                         .run();
             }
         } else if (!unleashConfig.isDisablePolling()) {
@@ -143,5 +150,6 @@ class PollingFeatureFetcher implements FetchWorker {
     public void stop() {
         LOGGER.warn("Attempting to stop polling but this currently isn't supported.");
         // Currently not supported but right now we don't need it
+        started.set(false);
     }
 }
