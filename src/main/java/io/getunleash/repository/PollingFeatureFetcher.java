@@ -51,6 +51,7 @@ class PollingFeatureFetcher implements FetchWorker {
         if (started.compareAndSet(true, true)) {
             return;
         }
+        LOGGER.info("Starting polling client");
 
         UnleashScheduledExecutor executor = unleashConfig.getScheduledExecutor();
         if (unleashConfig.isSynchronousFetchOnInitialisation()) {

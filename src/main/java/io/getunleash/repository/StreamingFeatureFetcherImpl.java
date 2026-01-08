@@ -10,6 +10,7 @@ import io.getunleash.UnleashException;
 import io.getunleash.engine.UnleashEngine;
 import io.getunleash.event.ClientFeaturesResponse;
 import io.getunleash.event.GatedEventEmitter;
+import io.getunleash.lang.Nullable;
 import io.getunleash.util.UnleashConfig;
 import java.net.URI;
 import java.time.Duration;
@@ -29,10 +30,10 @@ class StreamingFeatureFetcherImpl implements FetchWorker {
     private final UnleashEngine engine;
     private final BackupHandler featureBackupHandler;
     private final FailoverStrategy failoverStrategy;
-    private final ModeController modeController;
+    @Nullable private final ModeController modeController;
     private boolean ready;
 
-    private volatile BackgroundEventSource eventSource;
+    @Nullable private volatile BackgroundEventSource eventSource;
 
     StreamingFeatureFetcherImpl(
             UnleashConfig config,
@@ -55,7 +56,7 @@ class StreamingFeatureFetcherImpl implements FetchWorker {
             UnleashEngine engine,
             BackupHandler featureBackupHandler,
             FailoverStrategy failoverStrategy,
-            ModeController modeController) {
+            @Nullable ModeController modeController) {
         this.config = config;
         this.eventDispatcher = eventDispatcher;
         this.engine = engine;
@@ -176,20 +177,16 @@ class StreamingFeatureFetcherImpl implements FetchWorker {
 
         // Not an HTTP problem so something has likely gone wrong on the network layer
         String message =
-                (throwable != null && throwable.getMessage() != null)
+                (throwable.getMessage() != null)
                         ? throwable.getMessage()
                         : "Network error occurred in streaming";
         return new FailoverStrategy.NetworkEventError(now, message);
     }
 
     private void handleFailoverDecision(FailoverStrategy.FailEvent failEvent) {
-        boolean shouldFail = failoverStrategy.shouldFailover(failEvent, Instant.now());
-        if (shouldFail) {
-            LOGGER.warn(
-                    "Streaming failover triggered: {}. Client is switching over to polling mode.",
-                    failEvent.getMessage());
-
+        if (failoverStrategy.shouldFailover(failEvent, Instant.now())) {
             if (modeController != null) {
+                LOGGER.warn("Requesting streaming failover after: {}", failEvent.getMessage());
                 modeController.requestFailover();
             } else {
                 LOGGER.warn(
