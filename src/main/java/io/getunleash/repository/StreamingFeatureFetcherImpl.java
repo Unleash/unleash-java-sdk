@@ -6,8 +6,8 @@ import com.launchdarkly.eventsource.MessageEvent;
 import com.launchdarkly.eventsource.StreamHttpErrorException;
 import com.launchdarkly.eventsource.background.BackgroundEventHandler;
 import com.launchdarkly.eventsource.background.BackgroundEventSource;
-import io.getunleash.UnleashException;
 import io.getunleash.engine.UnleashEngine;
+import io.getunleash.engine.YggdrasilInvalidInputException;
 import io.getunleash.event.ClientFeaturesResponse;
 import io.getunleash.event.GatedEventEmitter;
 import io.getunleash.util.UnleashConfig;
@@ -64,7 +64,8 @@ class StreamingFeatureFetcherImpl implements FetchWorker {
         this.modeController = modeController;
     }
 
-    public void start() {
+    @Override
+    public synchronized void start() {
         try {
             URI streamingUri = config.getUnleashURLs().getStreamingURL().toURI();
 
@@ -79,22 +80,19 @@ class StreamingFeatureFetcherImpl implements FetchWorker {
             headersBuilder.add(UnleashConfig.UNLEASH_SDK_HEADER, config.getSdkVersion());
             headersBuilder.add("Unleash-Client-Spec", config.getClientSpecificationVersion());
 
-            OkHttpClient httpClient =
-                    new OkHttpClient.Builder()
-                            .readTimeout(Duration.ofSeconds(60)) // Heartbeat detection
-                            .connectTimeout(Duration.ofSeconds(10))
-                            .build();
+            OkHttpClient httpClient = new OkHttpClient.Builder()
+                    .readTimeout(Duration.ofSeconds(60)) // Heartbeat detection
+                    .connectTimeout(Duration.ofSeconds(10))
+                    .build();
 
-            ConnectStrategy connectStrategy =
-                    ConnectStrategy.http(streamingUri)
-                            .headers(headersBuilder.build())
-                            .httpClient(httpClient);
+            ConnectStrategy connectStrategy = ConnectStrategy.http(streamingUri)
+                    .headers(headersBuilder.build())
+                    .httpClient(httpClient);
 
             EventSource.Builder eventSourceBuilder = new EventSource.Builder(connectStrategy);
 
-            BackgroundEventSource.Builder builder =
-                    new BackgroundEventSource.Builder(
-                            new UnleashEventHandler(), eventSourceBuilder);
+            BackgroundEventSource.Builder builder = new BackgroundEventSource.Builder(
+                    new UnleashEventHandler(), eventSourceBuilder);
 
             BackgroundEventSource newEventSource = builder.build();
             newEventSource.start();
@@ -104,7 +102,8 @@ class StreamingFeatureFetcherImpl implements FetchWorker {
         }
     }
 
-    public void stop() {
+    @Override
+    public synchronized void stop() {
         try {
             BackgroundEventSource currentEventSource = eventSource;
             if (currentEventSource != null) {
@@ -116,25 +115,24 @@ class StreamingFeatureFetcherImpl implements FetchWorker {
         }
     }
 
-    synchronized void handleStreamingUpdate(String data) {
-        try {
-            engine.takeState(data);
+    void reconnect() {
+        LOGGER.warn("Recovering from a broken SSE streaming connection by reconnecting...");
+        stop();
+        start();
+    }
 
-            String currentState = engine.getState();
-            featureBackupHandler.write(currentState);
+    synchronized void handleStreamingUpdate(String data) throws YggdrasilInvalidInputException {
+        engine.takeState(data);
 
-            ClientFeaturesResponse response = ClientFeaturesResponse.updated(data);
-            eventDispatcher.update(response);
+        String currentState = engine.getState();
+        featureBackupHandler.write(currentState);
 
-            if (!ready) {
-                eventDispatcher.ready();
-                ready = true;
-            }
-        } catch (Exception e) {
-            LOGGER.error("Failed to process streaming update", e);
-            UnleashException unleashException =
-                    new UnleashException("Failed to process streaming update", e);
-            eventDispatcher.error(unleashException);
+        ClientFeaturesResponse response = ClientFeaturesResponse.updated(data);
+        eventDispatcher.update(response);
+
+        if (!ready) {
+            eventDispatcher.ready();
+            ready = true;
         }
     }
 
@@ -144,11 +142,10 @@ class StreamingFeatureFetcherImpl implements FetchWorker {
 
     void handleModeChange(String eventData) {
         if (eventData.equals("polling")) {
-            FailoverStrategy.ServerEvent failEvent =
-                    new FailoverStrategy.ServerEvent(
-                            Instant.now(),
-                            "Server has explicitly requested switching to polling mode",
-                            eventData);
+            FailoverStrategy.ServerEvent failEvent = new FailoverStrategy.ServerEvent(
+                    Instant.now(),
+                    "Server has explicitly requested switching to polling mode",
+                    eventData);
             handleFailoverDecision(failEvent);
         } else {
             LOGGER.debug("Ignoring an unrecognized fetch mode change to {}", eventData);
@@ -156,9 +153,8 @@ class StreamingFeatureFetcherImpl implements FetchWorker {
     }
 
     void handleServerDisconnect() {
-        FailoverStrategy.NetworkEventError failEvent =
-                new FailoverStrategy.NetworkEventError(
-                        Instant.now(), "Server closed the streaming connection");
+        FailoverStrategy.NetworkEventError failEvent = new FailoverStrategy.NetworkEventError(
+                Instant.now(), "Server closed the streaming connection");
         handleFailoverDecision(failEvent);
     }
 
@@ -166,19 +162,17 @@ class StreamingFeatureFetcherImpl implements FetchWorker {
         Instant now = Instant.now();
         if (throwable instanceof StreamHttpErrorException) {
             int statusCode = ((StreamHttpErrorException) throwable).getCode();
-            String message =
-                    throwable.getMessage() != null
-                            ? throwable.getMessage()
-                            : String.format(
-                                    "Streaming failed with http status code %d", statusCode);
+            String message = throwable.getMessage() != null
+                    ? throwable.getMessage()
+                    : String.format(
+                            "Streaming failed with http status code %d", statusCode);
             return new FailoverStrategy.HttpStatusError(now, message, statusCode);
         }
 
         // Not an HTTP problem so something has likely gone wrong on the network layer
-        String message =
-                (throwable != null && throwable.getMessage() != null)
-                        ? throwable.getMessage()
-                        : "Network error occurred in streaming";
+        String message = (throwable != null && throwable.getMessage() != null)
+                ? throwable.getMessage()
+                : "Network error occurred in streaming";
         return new FailoverStrategy.NetworkEventError(now, message);
     }
 
@@ -212,17 +206,19 @@ class StreamingFeatureFetcherImpl implements FetchWorker {
         }
 
         @Override
-        public void onMessage(String event, MessageEvent messageEvent) throws Exception {
+        public void onMessage(String event, MessageEvent messageEvent) {
             try {
                 LOGGER.debug(
-                        "Received streaming event: {} with data: {}",
-                        event,
-                        messageEvent.getData());
+                        "Received streaming event: {} with data: {}", event, messageEvent.getData());
 
                 switch (event) {
                     case "unleash-connected":
                     case "unleash-updated":
-                        handleStreamingUpdate(messageEvent.getData());
+                        try {
+                            handleStreamingUpdate(messageEvent.getData());
+                        } catch (YggdrasilInvalidInputException e) {
+                            reconnect();
+                        }
                         break;
                     case "fetch-mode":
                         handleModeChange(messageEvent.getData());
@@ -230,12 +226,8 @@ class StreamingFeatureFetcherImpl implements FetchWorker {
                     default:
                         LOGGER.debug("Ignoring unknown event type: {}", event);
                 }
-
             } catch (Exception e) {
-                LOGGER.error(
-                        "Error processing streaming event, feature flags will likely not evaluate correctly until application restart or stream re-connect: {}",
-                        event,
-                        e);
+                LOGGER.error("An unexpected error occurred handling streaming event", e);
             }
         }
 
