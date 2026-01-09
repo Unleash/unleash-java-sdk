@@ -3,14 +3,17 @@ package io.getunleash.repository;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
+import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import io.getunleash.DefaultUnleash;
 import io.getunleash.SynchronousTestExecutor;
 import io.getunleash.Unleash;
 import io.getunleash.engine.UnleashEngine;
+import io.getunleash.engine.YggdrasilInvalidInputException;
 import io.getunleash.event.ClientFeaturesResponse;
 import io.getunleash.event.EventDispatcher;
 import io.getunleash.event.GatedEventEmitter;
@@ -22,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -176,6 +180,69 @@ public class StreamingFeatureFetchingTest {
         assertThat(savedBackupContent).contains("\"query\":");
 
         assertThat(savedBackupContent).doesNotContain("\"events\""); // store state
+    }
+
+    @Test
+    void should_reconnect_without_last_event_id_header() throws Exception {
+        String hydration =
+                "{\"events\":[{\"type\":\"hydration\",\"eventId\":1,\"features\":[{\"name\":\"deltaFeature\",\"enabled\":true,\"strategies\":[],\"variants\":[]}],\"segments\":[]}]}";
+
+        String badUpdate = "{not-json";
+
+        stubFor(
+                get(urlEqualTo("/api/client/streaming"))
+                        .willReturn(
+                                aResponse()
+                                        .withStatus(200)
+                                        .withHeader("Content-Type", "text/event-stream")
+                                        .withBody(
+                                                "event: unleash-connected\n"
+                                                        + "data: "
+                                                        + hydration
+                                                        + "\n\n"
+                                                        + "event: unleash-updated\n"
+                                                        + "data: "
+                                                        + badUpdate
+                                                        + "\n\n")));
+
+        FeatureBackupHandlerFile backupHandler = mock(FeatureBackupHandlerFile.class);
+        UnleashEngine mockEngine = mock(UnleashEngine.class);
+
+        doThrow(new YggdrasilInvalidInputException("Invalid input"))
+                .when(mockEngine)
+                .takeState(badUpdate);
+
+        StreamingFeatureFetcherImpl streamingFetcher =
+                new StreamingFeatureFetcherImpl(
+                        config,
+                        new GatedEventEmitter(new EventDispatcher(config)),
+                        mockEngine,
+                        backupHandler,
+                        null);
+        streamingFetcher.start();
+
+        // Wait for reconnect to happen by polling WireMock's request log
+        long deadline = System.currentTimeMillis() + 5_000;
+        while (System.currentTimeMillis() < deadline) {
+            int count = serverMock.getAllServeEvents().size();
+            if (count >= 2) break;
+            Thread.sleep(50);
+        }
+
+        var serveEvents = serverMock.getAllServeEvents();
+        assertThat(serveEvents.size()).isGreaterThanOrEqualTo(2);
+
+        List<LoggedRequest> requests =
+                serveEvents.stream()
+                        .map(se -> se.getRequest())
+                        .filter(req -> req.getMethod().getName().equals("GET"))
+                        .filter(req -> req.getUrl().equals("/api/client/streaming"))
+                        .collect(Collectors.toList());
+
+        LoggedRequest reconnectionRequest = requests.get(1);
+        // The important part - a reconnection should never include the last-event-id header so that
+        // we get a fresh hydration
+        assertThat(reconnectionRequest.getHeader("Last-Event-ID")).isNull();
     }
 
     private static class TestSubscriber implements UnleashSubscriber {

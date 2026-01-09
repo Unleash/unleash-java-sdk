@@ -64,7 +64,7 @@ class StreamingFeatureFetcherImpl implements FetchWorker {
         this.modeController = modeController;
     }
 
-    public void start() {
+    public synchronized void start() {
         try {
             URI streamingUri = config.getUnleashURLs().getStreamingURL().toURI();
 
@@ -104,7 +104,7 @@ class StreamingFeatureFetcherImpl implements FetchWorker {
         }
     }
 
-    public void stop() {
+    public synchronized void stop() {
         try {
             BackgroundEventSource currentEventSource = eventSource;
             if (currentEventSource != null) {
@@ -116,7 +116,7 @@ class StreamingFeatureFetcherImpl implements FetchWorker {
         }
     }
 
-    private void reconnect() {
+    void reconnect() {
         stop();
         start();
     }
