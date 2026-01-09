@@ -116,6 +116,7 @@ class StreamingFeatureFetcherImpl implements FetchWorker {
     }
 
     void reconnect() {
+        LOGGER.warn("Recovering from a broken SSE streaming connection by reconnecting...");
         stop();
         start();
     }
