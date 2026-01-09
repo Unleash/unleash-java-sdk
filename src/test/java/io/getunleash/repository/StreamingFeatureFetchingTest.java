@@ -239,6 +239,7 @@ public class StreamingFeatureFetchingTest {
                         .filter(req -> req.getUrl().equals("/api/client/streaming"))
                         .collect(Collectors.toList());
 
+        assertThat(requests.size()).isGreaterThanOrEqualTo(2);
         LoggedRequest reconnectionRequest = requests.get(1);
         // The important part - a reconnection should never include the last-event-id header so that
         // we get a fresh hydration
