@@ -243,6 +243,7 @@ public class StreamingFeatureFetchingTest {
         // The important part - a reconnection should never include the last-event-id header so that
         // we get a fresh hydration
         assertThat(reconnectionRequest.getHeader("Last-Event-ID")).isNull();
+        streamingFetcher.stop();
     }
 
     private static class TestSubscriber implements UnleashSubscriber {
