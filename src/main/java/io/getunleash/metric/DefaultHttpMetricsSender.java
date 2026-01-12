@@ -40,9 +40,7 @@ public class DefaultHttpMetricsSender implements MetricSender {
                         .registerTypeAdapter(Instant.class, new InstantSerializer())
                         .registerTypeAdapter(AtomicLong.class, new AtomicLongSerializer());
 
-        HistogramBucketSerializer.Register(gsonBuilder);
-
-        this.gson = gsonBuilder.create();
+        this.gson = HistogramBucketSerializer.Register(gsonBuilder).create();
     }
 
     public int registerClient(ClientRegistration registration) {

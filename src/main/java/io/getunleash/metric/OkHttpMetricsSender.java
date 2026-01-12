@@ -60,9 +60,7 @@ public class OkHttpMetricsSender implements MetricSender {
                         .registerTypeAdapter(LocalDateTime.class, new DateTimeSerializer())
                         .registerTypeAdapter(AtomicLong.class, new AtomicLongSerializer());
 
-        HistogramBucketSerializer.Register(gsonBuilder);
-
-        this.gson = gsonBuilder.create();
+        this.gson = HistogramBucketSerializer.Register(gsonBuilder).create();
     }
 
     @Override
