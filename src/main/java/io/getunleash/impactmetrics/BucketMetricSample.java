@@ -4,13 +4,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public class BucketMetricSample implements MetricSample {
+class BucketMetricSample implements MetricSample {
     private final Map<String, String> labels;
     private final long count;
     private final double sum;
     private final List<HistogramBucket> buckets;
 
-    public BucketMetricSample(
+    BucketMetricSample(
             Map<String, String> labels, long count, double sum, List<HistogramBucket> buckets) {
         this.labels = labels;
         this.count = count;
@@ -23,15 +23,15 @@ public class BucketMetricSample implements MetricSample {
         return labels;
     }
 
-    public long getCount() {
+    long getCount() {
         return count;
     }
 
-    public double getSum() {
+    double getSum() {
         return sum;
     }
 
-    public List<HistogramBucket> getBuckets() {
+    List<HistogramBucket> getBuckets() {
         return buckets;
     }
 

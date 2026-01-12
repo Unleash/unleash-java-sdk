@@ -11,13 +11,14 @@ import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static io.getunleash.util.UnleashConfig.UNLEASH_CONNECTION_ID_HEADER;
 import static io.getunleash.util.UnleashConfig.UNLEASH_INTERVAL;
+import static org.mockito.Mockito.mock;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.getunleash.engine.MetricsBucket;
-import io.getunleash.impactmetrics.BucketMetricOptions;
-import io.getunleash.impactmetrics.CollectedMetric;
-import io.getunleash.impactmetrics.Histogram;
 import io.getunleash.impactmetrics.InMemoryMetricRegistry;
+import io.getunleash.impactmetrics.MetricsAPI;
+import io.getunleash.impactmetrics.StaticContext;
+import io.getunleash.impactmetrics.VariantResolver;
 import io.getunleash.util.UnleashConfig;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -126,19 +127,19 @@ public class DefaultHttpMetricsSenderTest {
         UnleashConfig config = UnleashConfig.builder().appName("test-app").unleashAPI(uri).build();
 
         InMemoryMetricRegistry registry = new InMemoryMetricRegistry();
-        Histogram histogram =
-                registry.histogram(
-                        new BucketMetricOptions(
-                                "test_histogram", "testing histogram", List.of(1.0, 5.0)));
+        MetricsAPI metricsAPI =
+                new MetricsAPI(
+                        registry,
+                        mock(VariantResolver.class),
+                        new StaticContext("appName", "environment"));
 
-        histogram.observe(0.5);
-        histogram.observe(10.0);
-
-        List<CollectedMetric> impactMetrics = registry.collect();
+        metricsAPI.defineHistogram("test_histogram", "testing histogram", List.of(1.0, 5.0));
+        metricsAPI.observeHistogram("test_histogram", 0.5);
+        metricsAPI.observeHistogram("test_histogram", 10.0);
 
         DefaultHttpMetricsSender sender = new DefaultHttpMetricsSender(config);
         MetricsBucket bucket = new MetricsBucket(Instant.now(), Instant.now(), null);
-        ClientMetrics metrics = new ClientMetrics(config, bucket, impactMetrics);
+        ClientMetrics metrics = new ClientMetrics(config, bucket, registry.collect());
         sender.sendMetrics(metrics);
 
         verify(
