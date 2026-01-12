@@ -2,7 +2,7 @@ package io.getunleash.impactmetrics;
 
 import java.util.Map;
 
-public interface Counter {
+interface Counter {
     void inc();
 
     void inc(long value);

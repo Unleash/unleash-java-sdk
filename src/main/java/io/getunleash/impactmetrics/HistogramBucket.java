@@ -6,16 +6,16 @@ public class HistogramBucket {
     private final double le;
     private final long count;
 
-    public HistogramBucket(double le, long count) {
+    HistogramBucket(double le, long count) {
         this.le = le;
         this.count = count;
     }
 
-    public double getLe() {
+    double getLe() {
         return le;
     }
 
-    public long getCount() {
+    long getCount() {
         return count;
     }
 

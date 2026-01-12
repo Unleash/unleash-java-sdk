@@ -2,7 +2,7 @@ package io.getunleash.impactmetrics;
 
 import java.util.Map;
 
-public interface Gauge {
+interface Gauge {
     void set(long value);
 
     void set(long value, Map<String, String> labels);

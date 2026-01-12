@@ -3,20 +3,20 @@ package io.getunleash.impactmetrics;
 import io.getunleash.UnleashContext;
 import java.util.List;
 
-public class MetricFlagContext {
+class MetricFlagContext {
     private final List<String> flagNames;
     private final UnleashContext context;
 
-    public MetricFlagContext(List<String> flagNames, UnleashContext context) {
+    MetricFlagContext(List<String> flagNames, UnleashContext context) {
         this.flagNames = flagNames;
         this.context = context;
     }
 
-    public List<String> getFlagNames() {
+    List<String> getFlagNames() {
         return flagNames;
     }
 
-    public UnleashContext getContext() {
+    UnleashContext getContext() {
         return context;
     }
 }
