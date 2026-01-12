@@ -159,7 +159,7 @@ public class StreamingFeatureFetchingTest {
                         new GatedEventEmitter(new EventDispatcher(streamingConfig)),
                         new UnleashEngine(),
                         backupHandler,
-                        null);
+                        mock(ModeController.class));
 
         String streamingData =
                 "{\"events\":[{\"type\":\"hydration\",\"eventId\":1,\"features\":[{\"name\":\"testFeature\",\"enabled\":true,\"strategies\":[],\"variants\":[]}],\"segments\":[]}]}";
@@ -218,7 +218,7 @@ public class StreamingFeatureFetchingTest {
                         new GatedEventEmitter(new EventDispatcher(config)),
                         mockEngine,
                         backupHandler,
-                        null);
+                        mock(ModeController.class));
         streamingFetcher.start();
 
         // Wait for reconnect to happen by polling WireMock's request log

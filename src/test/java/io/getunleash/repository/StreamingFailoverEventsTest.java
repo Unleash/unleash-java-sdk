@@ -104,6 +104,6 @@ class StreamingFailoverEventsTest {
 
     private StreamingFeatureFetcherImpl newFetcher(FailoverStrategy strategy) {
         return new StreamingFeatureFetcherImpl(
-                config, dispatcher, engine, backupHandler, strategy, null);
+                config, dispatcher, engine, backupHandler, strategy, mock(ModeController.class));
     }
 }
