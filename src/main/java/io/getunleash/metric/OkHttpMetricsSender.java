@@ -6,7 +6,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import io.getunleash.UnleashException;
 import io.getunleash.event.EventDispatcher;
-import io.getunleash.impactmetrics.HistogramBucket;
 import io.getunleash.impactmetrics.HistogramBucketSerializer;
 import io.getunleash.util.AtomicLongSerializer;
 import io.getunleash.util.DateTimeSerializer;
@@ -56,12 +55,14 @@ public class OkHttpMetricsSender implements MetricSender {
                         .readTimeout(config.getSendMetricsReadTimeout());
         this.client = OkHttpClientConfigurer.configureInterceptor(config, builder.build());
 
-        this.gson =
+        GsonBuilder gsonBuilder =
                 new GsonBuilder()
                         .registerTypeAdapter(LocalDateTime.class, new DateTimeSerializer())
-                        .registerTypeAdapter(AtomicLong.class, new AtomicLongSerializer())
-                        .registerTypeAdapter(HistogramBucket.class, new HistogramBucketSerializer())
-                        .create();
+                        .registerTypeAdapter(AtomicLong.class, new AtomicLongSerializer());
+
+        HistogramBucketSerializer.Register(gsonBuilder);
+
+        this.gson = gsonBuilder.create();
     }
 
     @Override

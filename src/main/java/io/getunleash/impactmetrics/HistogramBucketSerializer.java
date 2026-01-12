@@ -1,5 +1,6 @@
 package io.getunleash.impactmetrics;
 
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
@@ -19,5 +20,10 @@ public class HistogramBucketSerializer implements JsonSerializer<HistogramBucket
         }
         jsonObject.addProperty("count", src.getCount());
         return jsonObject;
+    }
+
+    public static GsonBuilder Register(GsonBuilder gsonBuilder) {
+        gsonBuilder.registerTypeAdapter(HistogramBucket.class, new HistogramBucketSerializer());
+        return gsonBuilder;
     }
 }

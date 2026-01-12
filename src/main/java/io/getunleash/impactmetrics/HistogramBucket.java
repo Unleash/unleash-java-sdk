@@ -2,7 +2,7 @@ package io.getunleash.impactmetrics;
 
 import java.util.Objects;
 
-public class HistogramBucket {
+class HistogramBucket {
     private final double le;
     private final long count;
 

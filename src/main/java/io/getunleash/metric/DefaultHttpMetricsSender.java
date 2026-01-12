@@ -5,7 +5,6 @@ import static io.getunleash.util.UnleashConfig.UNLEASH_INTERVAL;
 import com.google.gson.*;
 import io.getunleash.UnleashException;
 import io.getunleash.event.EventDispatcher;
-import io.getunleash.impactmetrics.HistogramBucket;
 import io.getunleash.impactmetrics.HistogramBucketSerializer;
 import io.getunleash.util.AtomicLongSerializer;
 import io.getunleash.util.DateTimeSerializer;
@@ -35,13 +34,15 @@ public class DefaultHttpMetricsSender implements MetricSender {
         this.clientMetricsURL = urls.getClientMetricsURL();
         this.clientRegistrationURL = urls.getClientRegisterURL();
 
-        this.gson =
+        GsonBuilder gsonBuilder =
                 new GsonBuilder()
                         .registerTypeAdapter(LocalDateTime.class, new DateTimeSerializer())
                         .registerTypeAdapter(Instant.class, new InstantSerializer())
-                        .registerTypeAdapter(AtomicLong.class, new AtomicLongSerializer())
-                        .registerTypeAdapter(HistogramBucket.class, new HistogramBucketSerializer())
-                        .create();
+                        .registerTypeAdapter(AtomicLong.class, new AtomicLongSerializer());
+
+        HistogramBucketSerializer.Register(gsonBuilder);
+
+        this.gson = gsonBuilder.create();
     }
 
     public int registerClient(ClientRegistration registration) {
