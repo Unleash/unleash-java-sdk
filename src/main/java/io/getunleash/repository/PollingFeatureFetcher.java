@@ -8,7 +8,6 @@ import io.getunleash.event.GatedEventEmitter;
 import io.getunleash.util.Throttler;
 import io.getunleash.util.UnleashConfig;
 import io.getunleash.util.UnleashScheduledExecutor;
-
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
@@ -59,10 +58,10 @@ class PollingFeatureFetcher implements FetchWorker {
                 runInitialFetch(this.unleashConfig.getStartupExceptionHandler()).run();
             } else {
                 runInitialFetch(
-                        // just throw exception handler
-                        e -> {
-                            throw e;
-                        })
+                                // just throw exception handler
+                                e -> {
+                                    throw e;
+                                })
                         .run();
             }
         } else if (!unleashConfig.isDisablePolling()) {
