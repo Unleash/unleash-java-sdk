@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.getunleash.UnleashContext;
+import io.getunleash.util.UnleashConfig;
 import io.getunleash.variant.Payload;
 import io.getunleash.variant.Variant;
 import java.util.List;
@@ -37,9 +38,10 @@ public class MetricsAPITest {
     public void should_not_register_a_counter_with_empty_name_or_help() {
         ImpactMetricRegistry fakeRegistry = mock(ImpactMetricRegistry.class);
 
-        StaticContext staticContext = new StaticContext("my-app", "dev");
-        MetricsAPI api =
-                new MetricsAPI(fakeRegistry, fakeVariantResolver("disabled", true), staticContext);
+        ImpactMetricContext impactMetricsContext = mock(ImpactMetricContext.class);
+        MetricsAPIImpl api =
+                new MetricsAPIImpl(
+                        fakeRegistry, fakeVariantResolver("disabled", true), impactMetricsContext);
 
         api.defineCounter("some_name", "");
         verify(fakeRegistry, never()).counter(any(MetricOptions.class));
@@ -52,9 +54,10 @@ public class MetricsAPITest {
     public void should_register_a_counter_with_valid_name_and_help() {
         ImpactMetricRegistry fakeRegistry = mock(ImpactMetricRegistry.class);
 
-        StaticContext staticContext = new StaticContext("my-app", "dev");
-        MetricsAPI api =
-                new MetricsAPI(fakeRegistry, fakeVariantResolver("disabled", true), staticContext);
+        ImpactMetricContext impactMetricsContext = mock(ImpactMetricContext.class);
+        MetricsAPIImpl api =
+                new MetricsAPIImpl(
+                        fakeRegistry, fakeVariantResolver("disabled", true), impactMetricsContext);
 
         api.defineCounter("valid_name", "Valid help text");
         verify(fakeRegistry).counter(any(MetricOptions.class));
@@ -64,9 +67,11 @@ public class MetricsAPITest {
     public void should_not_register_a_gauge_with_empty_name_or_help() {
         ImpactMetricRegistry fakeRegistry = mock(ImpactMetricRegistry.class);
 
-        StaticContext staticContext = new StaticContext("my-app", "dev");
-        MetricsAPI api =
-                new MetricsAPI(fakeRegistry, fakeVariantResolver("disabled", true), staticContext);
+        ImpactMetricContext impactMetricsContext =
+                new ImpactMetricContext(mock(UnleashConfig.class));
+        MetricsAPIImpl api =
+                new MetricsAPIImpl(
+                        fakeRegistry, fakeVariantResolver("disabled", true), impactMetricsContext);
 
         api.defineGauge("some_name", "");
         verify(fakeRegistry, never()).gauge(any(MetricOptions.class));
@@ -79,9 +84,10 @@ public class MetricsAPITest {
     public void should_register_a_gauge_with_valid_name_and_help() {
         ImpactMetricRegistry fakeRegistry = mock(ImpactMetricRegistry.class);
 
-        StaticContext staticContext = new StaticContext("my-app", "dev");
-        MetricsAPI api =
-                new MetricsAPI(fakeRegistry, fakeVariantResolver("disabled", true), staticContext);
+        ImpactMetricContext impactMetricsContext = mock(ImpactMetricContext.class);
+        MetricsAPIImpl api =
+                new MetricsAPIImpl(
+                        fakeRegistry, fakeVariantResolver("disabled", true), impactMetricsContext);
 
         api.defineGauge("valid_name", "Valid help text");
         verify(fakeRegistry).gauge(any(MetricOptions.class));
@@ -95,9 +101,12 @@ public class MetricsAPITest {
         ImpactMetricRegistry fakeRegistry = mock(ImpactMetricRegistry.class);
         when(fakeRegistry.getCounter("valid_counter")).thenReturn(fakeCounter);
 
-        StaticContext staticContext = new StaticContext("my-app", "dev");
-        MetricsAPI api =
-                new MetricsAPI(fakeRegistry, fakeVariantResolver("disabled", true), staticContext);
+        ImpactMetricContext impactMetricsContext = mock(ImpactMetricContext.class);
+        when(impactMetricsContext.getAppName()).thenReturn("my-app");
+        when(impactMetricsContext.getEnvironment()).thenReturn("dev");
+        MetricsAPIImpl api =
+                new MetricsAPIImpl(
+                        fakeRegistry, fakeVariantResolver("disabled", true), impactMetricsContext);
 
         UnleashContext context = UnleashContext.builder().build();
         MetricFlagContext flagContext = new MetricFlagContext(List.of("featureX"), context);
@@ -119,9 +128,12 @@ public class MetricsAPITest {
         ImpactMetricRegistry fakeRegistry = mock(ImpactMetricRegistry.class);
         when(fakeRegistry.getGauge("valid_gauge")).thenReturn(fakeGauge);
 
-        StaticContext staticContext = new StaticContext("my-app", "dev");
-        MetricsAPI api =
-                new MetricsAPI(fakeRegistry, fakeVariantResolver("variantY", true), staticContext);
+        ImpactMetricContext impactMetricsContext = mock(ImpactMetricContext.class);
+        when(impactMetricsContext.getAppName()).thenReturn("my-app");
+        when(impactMetricsContext.getEnvironment()).thenReturn("dev");
+        MetricsAPIImpl api =
+                new MetricsAPIImpl(
+                        fakeRegistry, fakeVariantResolver("variantY", true), impactMetricsContext);
 
         UnleashContext context = UnleashContext.builder().build();
         MetricFlagContext flagContext = new MetricFlagContext(List.of("featureY"), context);
@@ -139,9 +151,10 @@ public class MetricsAPITest {
     public void defining_a_counter_automatically_sets_label_names() {
         ImpactMetricRegistry fakeRegistry = mock(ImpactMetricRegistry.class);
 
-        StaticContext staticContext = new StaticContext("my-app", "dev");
-        MetricsAPI api =
-                new MetricsAPI(fakeRegistry, fakeVariantResolver("disabled", true), staticContext);
+        ImpactMetricContext impactMetricsContext = mock(ImpactMetricContext.class);
+        MetricsAPIImpl api =
+                new MetricsAPIImpl(
+                        fakeRegistry, fakeVariantResolver("disabled", true), impactMetricsContext);
 
         api.defineCounter("test_counter", "Test help text");
         verify(fakeRegistry)
@@ -160,9 +173,10 @@ public class MetricsAPITest {
     public void defining_a_gauge_automatically_sets_label_names() {
         ImpactMetricRegistry fakeRegistry = mock(ImpactMetricRegistry.class);
 
-        StaticContext staticContext = new StaticContext("my-app", "dev");
-        MetricsAPI api =
-                new MetricsAPI(fakeRegistry, fakeVariantResolver("variantX", true), staticContext);
+        ImpactMetricContext impactMetricsContext = mock(ImpactMetricContext.class);
+        MetricsAPIImpl api =
+                new MetricsAPIImpl(
+                        fakeRegistry, fakeVariantResolver("variantX", true), impactMetricsContext);
 
         api.defineGauge("test_gauge", "Test help text");
         verify(fakeRegistry)
@@ -181,9 +195,10 @@ public class MetricsAPITest {
     public void should_not_register_a_histogram_with_empty_name_or_help() {
         ImpactMetricRegistry fakeRegistry = mock(ImpactMetricRegistry.class);
 
-        StaticContext staticContext = new StaticContext("my-app", "dev");
-        MetricsAPI api =
-                new MetricsAPI(fakeRegistry, fakeVariantResolver("disabled", true), staticContext);
+        ImpactMetricContext impactMetricsContext = mock(ImpactMetricContext.class);
+        MetricsAPIImpl api =
+                new MetricsAPIImpl(
+                        fakeRegistry, fakeVariantResolver("disabled", true), impactMetricsContext);
 
         api.defineHistogram("some_name", "", null);
         verify(fakeRegistry, never()).histogram(any(BucketMetricOptions.class));
@@ -196,9 +211,10 @@ public class MetricsAPITest {
     public void should_register_a_histogram_with_valid_name_and_help() {
         ImpactMetricRegistry fakeRegistry = mock(ImpactMetricRegistry.class);
 
-        StaticContext staticContext = new StaticContext("my-app", "dev");
-        MetricsAPI api =
-                new MetricsAPI(fakeRegistry, fakeVariantResolver("disabled", true), staticContext);
+        ImpactMetricContext impactMetricsContext = mock(ImpactMetricContext.class);
+        MetricsAPIImpl api =
+                new MetricsAPIImpl(
+                        fakeRegistry, fakeVariantResolver("disabled", true), impactMetricsContext);
 
         api.defineHistogram("valid_name", "Valid help text", null);
         verify(fakeRegistry).histogram(any(BucketMetricOptions.class));
@@ -212,9 +228,12 @@ public class MetricsAPITest {
         ImpactMetricRegistry fakeRegistry = mock(ImpactMetricRegistry.class);
         when(fakeRegistry.getHistogram("valid_histogram")).thenReturn(fakeHistogram);
 
-        StaticContext staticContext = new StaticContext("my-app", "dev");
-        MetricsAPI api =
-                new MetricsAPI(fakeRegistry, fakeVariantResolver("disabled", true), staticContext);
+        ImpactMetricContext impactMetricsContext = mock(ImpactMetricContext.class);
+        when(impactMetricsContext.getAppName()).thenReturn("my-app");
+        when(impactMetricsContext.getEnvironment()).thenReturn("dev");
+        MetricsAPIImpl api =
+                new MetricsAPIImpl(
+                        fakeRegistry, fakeVariantResolver("disabled", true), impactMetricsContext);
 
         UnleashContext context = UnleashContext.builder().build();
         MetricFlagContext flagContext = new MetricFlagContext(List.of("featureX"), context);
@@ -232,9 +251,10 @@ public class MetricsAPITest {
     public void defining_a_histogram_automatically_sets_label_names() {
         ImpactMetricRegistry fakeRegistry = mock(ImpactMetricRegistry.class);
 
-        StaticContext staticContext = new StaticContext("my-app", "dev");
-        MetricsAPI api =
-                new MetricsAPI(fakeRegistry, fakeVariantResolver("disabled", true), staticContext);
+        ImpactMetricContext impactMetricsContext = mock(ImpactMetricContext.class);
+        MetricsAPIImpl api =
+                new MetricsAPIImpl(
+                        fakeRegistry, fakeVariantResolver("disabled", true), impactMetricsContext);
 
         api.defineHistogram("test_histogram", "Test help text", null);
         verify(fakeRegistry)

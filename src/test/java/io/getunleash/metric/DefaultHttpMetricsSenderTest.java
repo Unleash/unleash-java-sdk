@@ -15,9 +15,10 @@ import static org.mockito.Mockito.mock;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.getunleash.engine.MetricsBucket;
+import io.getunleash.impactmetrics.ImpactMetricContext;
 import io.getunleash.impactmetrics.InMemoryMetricRegistry;
 import io.getunleash.impactmetrics.MetricsAPI;
-import io.getunleash.impactmetrics.StaticContext;
+import io.getunleash.impactmetrics.MetricsAPIImpl;
 import io.getunleash.impactmetrics.VariantResolver;
 import io.getunleash.util.UnleashConfig;
 import java.net.URI;
@@ -128,10 +129,8 @@ public class DefaultHttpMetricsSenderTest {
 
         InMemoryMetricRegistry registry = new InMemoryMetricRegistry();
         MetricsAPI metricsAPI =
-                new MetricsAPI(
-                        registry,
-                        mock(VariantResolver.class),
-                        new StaticContext("appName", "environment"));
+                new MetricsAPIImpl(
+                        registry, mock(VariantResolver.class), mock(ImpactMetricContext.class));
 
         metricsAPI.defineHistogram("test_histogram", "testing histogram", List.of(1.0, 5.0));
         metricsAPI.observeHistogram("test_histogram", 0.5);
