@@ -34,7 +34,7 @@ public class FeatureBackupHandlerFile implements BackupHandler {
             return Optional.of(clientFeatures);
         } catch (FileNotFoundException e) {
             LOG.info(
-                    " Unleash could not find the backup-file '"
+                    "Unleash could not find the backup-file '"
                             + backupFile
                             + "'. \n"
                             + "This is expected behavior the first time unleash runs in a new environment.");
