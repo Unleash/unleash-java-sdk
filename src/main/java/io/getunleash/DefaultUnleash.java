@@ -35,7 +35,7 @@ public class DefaultUnleash implements Unleash {
     private final UnleashContextProvider contextProvider;
     private final EventDispatcher eventDispatcher;
     private final UnleashConfig config;
-    private final MetricsAPIImpl impactMetrics;
+    private final MetricsAPI impactMetrics;
 
     private static EngineProxy defaultToggleRepository(
             UnleashConfig unleashConfig, Strategy... strategies) {
