@@ -517,6 +517,12 @@ public class UnleashConfig {
             return this;
         }
 
+        /**
+         * @deprecated Environment is a first class citizen in Unleash 4.0.0 and later. From v13.0.0
+         *     of the Java SDK, this will be computed from the API key provided instead of being
+         *     manually set.
+         */
+        @Deprecated(since = "12.0.0", forRemoval = true)
         public Builder environment(String environment) {
             this.environment = environment;
             return this;
