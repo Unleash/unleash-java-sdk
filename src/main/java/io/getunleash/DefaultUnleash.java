@@ -8,9 +8,10 @@ import io.getunleash.event.EventDispatcher;
 import io.getunleash.event.IsEnabledImpressionEvent;
 import io.getunleash.event.ToggleEvaluated;
 import io.getunleash.event.VariantImpressionEvent;
+import io.getunleash.impactmetrics.ImpactMetricContext;
 import io.getunleash.impactmetrics.ImpactMetricRegistryAndDataSource;
 import io.getunleash.impactmetrics.MetricsAPI;
-import io.getunleash.impactmetrics.StaticContext;
+import io.getunleash.impactmetrics.MetricsAPIImpl;
 import io.getunleash.impactmetrics.VariantResolver;
 import io.getunleash.repository.FeatureRepository;
 import io.getunleash.repository.YggdrasilAdapters;
@@ -77,9 +78,8 @@ public class DefaultUnleash implements Unleash {
 
         ImpactMetricRegistryAndDataSource registry = unleashConfig.getImpactMetricsRegistry();
         VariantResolver variantResolver = this::getVariantForImpactMetrics;
-        StaticContext staticContext =
-                new StaticContext(unleashConfig.getAppName(), unleashConfig.getEnvironment());
-        this.impactMetrics = new MetricsAPI(registry, variantResolver, staticContext);
+        ImpactMetricContext impactMetricsContext = new ImpactMetricContext(unleashConfig);
+        this.impactMetrics = new MetricsAPIImpl(registry, variantResolver, impactMetricsContext);
 
         initCounts.compute(
                 config.getClientIdentifier(),

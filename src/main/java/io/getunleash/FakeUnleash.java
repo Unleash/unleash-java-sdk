@@ -1,10 +1,7 @@
 package io.getunleash;
 
-import io.getunleash.impactmetrics.ImpactMetricRegistry;
-import io.getunleash.impactmetrics.InMemoryMetricRegistry;
+import io.getunleash.impactmetrics.MetricFlagContext;
 import io.getunleash.impactmetrics.MetricsAPI;
-import io.getunleash.impactmetrics.StaticContext;
-import io.getunleash.impactmetrics.VariantResolver;
 import io.getunleash.lang.Nullable;
 import io.getunleash.variant.Variant;
 import java.util.*;
@@ -32,10 +29,46 @@ public class FakeUnleash implements Unleash {
     private final MetricsAPI impactMetrics;
 
     public FakeUnleash() {
-        ImpactMetricRegistry registry = new InMemoryMetricRegistry();
-        VariantResolver variantResolver = (flagName, context) -> Variant.DISABLED_VARIANT;
-        StaticContext staticContext = new StaticContext("fake-app", "test");
-        this.impactMetrics = new MetricsAPI(registry, variantResolver, staticContext);
+        this.impactMetrics =
+                new MetricsAPI() {
+                    @Override
+                    public void defineCounter(String name, String help) {}
+
+                    @Override
+                    public void defineGauge(String name, String help) {}
+
+                    @Override
+                    public void defineHistogram(String name, String help) {}
+
+                    @Override
+                    public void defineHistogram(String name, String help, List<Double> buckets) {}
+
+                    @Override
+                    public void incrementCounter(String name) {}
+
+                    @Override
+                    public void incrementCounter(String name, long value) {}
+
+                    @Override
+                    public void incrementCounter(String name, Long value, MetricFlagContext ctx) {}
+
+                    @Override
+                    public void updateGauge(String name, long value) {}
+
+                    @Override
+                    public void updateGauge(String name, long value, MetricFlagContext ctx) {}
+
+                    @Override
+                    public void observeHistogram(String name, double value) {}
+
+                    @Override
+                    public void observeHistogram(
+                            String name, double value, MetricFlagContext ctx) {}
+                };
+    }
+
+    public FakeUnleash(MetricsAPI metricsAPI) {
+        this.impactMetrics = metricsAPI;
     }
 
     @Override
@@ -175,7 +208,8 @@ public class FakeUnleash implements Unleash {
      */
     public void conditionallyEnable(Predicate<UnleashContext> contextMatcher, String... features) {
         for (String name : features) {
-            // calling conditionallyEnable() should override having called enable() or disable()
+            // calling conditionallyEnable() should override having called enable() or
+            // disable()
             this.features.remove(name);
             this.conditionalFeatures
                     .computeIfAbsent(name, ignored -> new LinkedBlockingQueue<>())
