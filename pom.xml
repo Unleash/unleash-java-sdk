@@ -78,7 +78,6 @@
             <groupId>com.launchdarkly</groupId>
             <artifactId>okhttp-eventsource</artifactId>
             <version>4.1.1</version>
-            <optional>true</optional>
         </dependency>
 
         <dependency>
