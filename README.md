@@ -351,30 +351,24 @@ unleash.getImpactMetrics().incrementCounter("request_count");
 
 ### Gauges
 
-Use gauges for values that can go up and down, such as current memory usage or active thread count.
+Use gauges for point-in-time values that can go up or down.
 
 ```java
 unleash.getImpactMetrics()
-        .defineGauge("heap_memory_total", "Current heap memory usage in bytes");
+        .defineGauge("total_users", "Total number of registered users");
 
-long currentHeap = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
-
-unleash.getImpactMetrics().updateGauge("heap_memory_total", currentHeap);
+unleash.getImpactMetrics().updateGauge("total_users", userCount);
 ```
 
 ### Histograms
 
-Use histograms to measure the distribution of values, such as request duration or response size. Unleash automatically calculates percentiles (p50, p95, p99).
+Histograms measure value distribution (request duration, response size).
 
 ```java
 unleash.getImpactMetrics()
-        .defineHistogram("request_time_ms", "Time taken to process a request in milliseconds");
+        .defineHistogram("request_time_ms", "Time taken to process a request in milliseconds", List.of(50.0, 100.0, 200.0, 500.0, 1000.0));
 
-long start = System.currentTimeMillis();
-// handleRequest();
-long duration = System.currentTimeMillis() - start;
-
-unleash.getImpactMetrics().observeHistogram("request_time_ms", duration);
+unleash.getImpactMetrics().observeHistogram("request_time_ms", 125);
 ```
 
 Impact metrics are batched and sent on the same interval as regular SDK metrics. They are ingested via the regular metrics endpoint.
