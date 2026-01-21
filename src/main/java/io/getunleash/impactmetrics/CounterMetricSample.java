@@ -3,11 +3,11 @@ package io.getunleash.impactmetrics;
 import java.util.Map;
 import java.util.Objects;
 
-public class GaugeMetricSample implements MetricSample {
+public class CounterMetricSample implements MetricSample {
     private final Map<String, String> labels;
-    private final double value;
+    private final long value;
 
-    public GaugeMetricSample(Map<String, String> labels, double value) {
+    public CounterMetricSample(Map<String, String> labels, long value) {
         this.labels = labels;
         this.value = value;
     }
@@ -16,7 +16,7 @@ public class GaugeMetricSample implements MetricSample {
         return labels;
     }
 
-    public double getValue() {
+    public long getValue() {
         return value;
     }
 
@@ -24,8 +24,8 @@ public class GaugeMetricSample implements MetricSample {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        GaugeMetricSample that = (GaugeMetricSample) o;
-        return Double.compare(that.value, value) == 0 && Objects.equals(labels, that.labels);
+        CounterMetricSample that = (CounterMetricSample) o;
+        return value == that.value && Objects.equals(labels, that.labels);
     }
 
     @Override
@@ -35,6 +35,6 @@ public class GaugeMetricSample implements MetricSample {
 
     @Override
     public String toString() {
-        return "GaugeMetricSample{" + "labels=" + labels + ", value=" + value + '}';
+        return "CounterMetricSample{" + "labels=" + labels + ", value=" + value + '}';
     }
 }

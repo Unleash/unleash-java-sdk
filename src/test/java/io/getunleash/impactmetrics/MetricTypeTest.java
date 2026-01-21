@@ -20,7 +20,7 @@ public class MetricTypeTest {
 
         CollectedMetric expected =
                 new CollectedMetric(
-                        "test_counter", "testing", MetricType.COUNTER, List.of(sample(1.0)));
+                        "test_counter", "testing", MetricType.COUNTER, List.of(counterSample(1L)));
 
         assertThat(metrics).containsExactly(expected);
     }
@@ -40,7 +40,7 @@ public class MetricTypeTest {
                         "labeled_counter",
                         "with labels",
                         MetricType.COUNTER,
-                        List.of(sample(Map.of("foo", "bar"), 5.0)));
+                        List.of(counterSample(Map.of("foo", "bar"), 5L)));
 
         assertThat(metrics).containsExactly(expected);
     }
@@ -61,7 +61,7 @@ public class MetricTypeTest {
                         "test_gauge",
                         "gauge test",
                         MetricType.GAUGE,
-                        List.of(sample(Map.of("env", "prod"), 10.0)));
+                        List.of(gaugeSample(Map.of("env", "prod"), 10.0)));
 
         assertThat(metrics).containsExactly(expected);
     }
@@ -81,7 +81,9 @@ public class MetricTypeTest {
         assertThat(result.getName()).isEqualTo("multi_label");
         assertThat(result.getSamples())
                 .containsExactlyInAnyOrder(
-                        sample(Map.of("a", "x"), 1.0), sample(Map.of("b", "y"), 2.0), sample(3.0));
+                        counterSample(Map.of("a", "x"), 1L),
+                        counterSample(Map.of("b", "y"), 2L),
+                        counterSample(3L));
     }
 
     @Test
@@ -99,9 +101,9 @@ public class MetricTypeTest {
         assertThat(result.getName()).isEqualTo("multi_env_gauge");
         assertThat(result.getSamples())
                 .containsExactlyInAnyOrder(
-                        sample(Map.of("env", "prod"), 5.0),
-                        sample(Map.of("env", "dev"), -2.0),
-                        sample(Map.of("env", "test"), 10.0));
+                        gaugeSample(Map.of("env", "prod"), 5.0),
+                        gaugeSample(Map.of("env", "dev"), -2.0),
+                        gaugeSample(Map.of("env", "test"), 10.0));
     }
 
     @Test
@@ -114,7 +116,7 @@ public class MetricTypeTest {
 
         CollectedMetric expected =
                 new CollectedMetric(
-                        "noop_counter", "noop", MetricType.COUNTER, List.of(sample(0.0)));
+                        "noop_counter", "noop", MetricType.COUNTER, List.of(counterSample(0L)));
 
         assertThat(metrics).containsExactly(expected);
     }
@@ -129,13 +131,13 @@ public class MetricTypeTest {
 
         CollectedMetric expectedBatch1 =
                 new CollectedMetric(
-                        "flush_test", "flush", MetricType.COUNTER, List.of(sample(1.0)));
+                        "flush_test", "flush", MetricType.COUNTER, List.of(counterSample(1L)));
         assertThat(firstBatch).containsExactly(expectedBatch1);
 
         List<CollectedMetric> secondBatch = registry.collect();
         CollectedMetric expectedBatch2 =
                 new CollectedMetric(
-                        "flush_test", "flush", MetricType.COUNTER, List.of(sample(0.0)));
+                        "flush_test", "flush", MetricType.COUNTER, List.of(counterSample(0L)));
         assertThat(secondBatch).containsExactly(expectedBatch2);
     }
 
@@ -150,14 +152,15 @@ public class MetricTypeTest {
         List<CollectedMetric> flushed = registry.collect();
 
         List<CollectedMetric> afterFlush = registry.collect();
-        assertThat(afterFlush.get(0).getSamples()).containsExactly(sample(0.0));
+        assertThat(afterFlush.get(0).getSamples()).containsExactly(counterSample(0L));
 
         registry.restore(flushed);
 
         List<CollectedMetric> restored = registry.collect();
         assertThat(restored.get(0).getSamples())
                 .containsExactlyInAnyOrder(
-                        sample(Map.of("tag", "a"), 5.0), sample(Map.of("tag", "b"), 2.0));
+                        counterSample(Map.of("tag", "a"), 5L),
+                        counterSample(Map.of("tag", "b"), 2L));
     }
 
     @Test
@@ -295,11 +298,19 @@ public class MetricTypeTest {
         return new HistogramBucket(le, count);
     }
 
-    private NumericMetricSample sample(double value) {
-        return sample(Collections.emptyMap(), value);
+    private CounterMetricSample counterSample(long value) {
+        return counterSample(Collections.emptyMap(), value);
     }
 
-    private NumericMetricSample sample(Map<String, String> labels, double value) {
-        return new NumericMetricSample(labels, value);
+    private CounterMetricSample counterSample(Map<String, String> labels, long value) {
+        return new CounterMetricSample(labels, value);
+    }
+
+    private GaugeMetricSample gaugeSample(double value) {
+        return gaugeSample(Collections.emptyMap(), value);
+    }
+
+    private GaugeMetricSample gaugeSample(Map<String, String> labels, double value) {
+        return new GaugeMetricSample(labels, value);
     }
 }

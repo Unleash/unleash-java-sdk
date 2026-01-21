@@ -62,7 +62,7 @@ class GaugeImpl implements Gauge {
         for (String key : values.keySet()) {
             Double value = values.remove(key);
             if (value != null) {
-                samples.add(new NumericMetricSample(CounterImpl.parseLabelKey(key), value));
+                samples.add(new GaugeMetricSample(CounterImpl.parseLabelKey(key), value));
             }
         }
 

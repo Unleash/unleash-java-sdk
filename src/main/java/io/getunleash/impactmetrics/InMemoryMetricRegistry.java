@@ -64,17 +64,17 @@ public class InMemoryMetricRegistry implements ImpactMetricRegistryAndDataSource
             if (metric.getType() == MetricType.COUNTER) {
                 Counter counter = counter(new MetricOptions(metric.getName(), metric.getHelp()));
                 for (MetricSample sample : metric.getSamples()) {
-                    if (sample instanceof NumericMetricSample) {
-                        NumericMetricSample numericSample = (NumericMetricSample) sample;
-                        counter.inc((long) numericSample.getValue(), numericSample.getLabels());
+                    if (sample instanceof CounterMetricSample) {
+                        CounterMetricSample counterSample = (CounterMetricSample) sample;
+                        counter.inc(counterSample.getValue(), counterSample.getLabels());
                     }
                 }
             } else if (metric.getType() == MetricType.GAUGE) {
                 Gauge gauge = gauge(new MetricOptions(metric.getName(), metric.getHelp()));
                 for (MetricSample sample : metric.getSamples()) {
-                    if (sample instanceof NumericMetricSample) {
-                        NumericMetricSample numericSample = (NumericMetricSample) sample;
-                        gauge.set(numericSample.getValue(), numericSample.getLabels());
+                    if (sample instanceof GaugeMetricSample) {
+                        GaugeMetricSample gaugeSample = (GaugeMetricSample) sample;
+                        gauge.set(gaugeSample.getValue(), gaugeSample.getLabels());
                     }
                 }
             } else if (metric.getType() == MetricType.HISTOGRAM) {
