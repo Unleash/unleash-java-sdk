@@ -108,12 +108,12 @@ public class MetricsAPIImpl implements MetricsAPI {
     }
 
     @Override
-    public void updateGauge(String name, long value) {
+    public void updateGauge(String name, double value) {
         updateGauge(name, value, null);
     }
 
     @Override
-    public void updateGauge(String name, long value, @Nullable MetricFlagContext flagContext) {
+    public void updateGauge(String name, double value, @Nullable MetricFlagContext flagContext) {
         Gauge gauge = metricRegistry.getGauge(name);
         if (gauge == null) {
             LOGGER.warn("Gauge {} not defined, this gauge will not be updated.", name);

@@ -137,9 +137,9 @@ public class MetricsAPITest {
 
         UnleashContext context = UnleashContext.builder().build();
         MetricFlagContext flagContext = new MetricFlagContext(List.of("featureY"), context);
-        api.updateGauge("valid_gauge", 10L, flagContext);
+        api.updateGauge("valid_gauge", 10.0, flagContext);
 
-        verify(fakeGauge).set(eq(10L), labelsCaptor.capture());
+        verify(fakeGauge).set(eq(10.0), labelsCaptor.capture());
         Map<String, String> capturedLabels = labelsCaptor.getValue();
         assertThat(capturedLabels)
                 .containsEntry("appName", "my-app")

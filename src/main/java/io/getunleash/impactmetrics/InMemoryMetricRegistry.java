@@ -66,7 +66,7 @@ public class InMemoryMetricRegistry implements ImpactMetricRegistryAndDataSource
                 for (MetricSample sample : metric.getSamples()) {
                     if (sample instanceof NumericMetricSample) {
                         NumericMetricSample numericSample = (NumericMetricSample) sample;
-                        counter.inc(numericSample.getValue(), numericSample.getLabels());
+                        counter.inc((long) numericSample.getValue(), numericSample.getLabels());
                     }
                 }
             } else if (metric.getType() == MetricType.GAUGE) {

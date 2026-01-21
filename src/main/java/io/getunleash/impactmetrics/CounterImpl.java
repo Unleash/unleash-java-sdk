@@ -38,12 +38,12 @@ class CounterImpl implements Counter {
         for (String key : values.keySet()) {
             Long value = values.remove(key);
             if (value != null) {
-                samples.add(new NumericMetricSample(parseLabelKey(key), value));
+                samples.add(new NumericMetricSample(parseLabelKey(key), value.doubleValue()));
             }
         }
 
         if (samples.isEmpty()) {
-            samples.add(new NumericMetricSample(Collections.emptyMap(), 0L));
+            samples.add(new NumericMetricSample(Collections.emptyMap(), 0.0));
         }
 
         return new CollectedMetric(

@@ -53,10 +53,10 @@ public class FakeUnleash implements Unleash {
                     public void incrementCounter(String name, Long value, MetricFlagContext ctx) {}
 
                     @Override
-                    public void updateGauge(String name, long value) {}
+                    public void updateGauge(String name, double value) {}
 
                     @Override
-                    public void updateGauge(String name, long value, MetricFlagContext ctx) {}
+                    public void updateGauge(String name, double value, MetricFlagContext ctx) {}
 
                     @Override
                     public void observeHistogram(String name, double value) {}

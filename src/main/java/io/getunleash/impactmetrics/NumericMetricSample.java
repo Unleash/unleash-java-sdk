@@ -5,9 +5,9 @@ import java.util.Objects;
 
 public class NumericMetricSample implements MetricSample {
     private final Map<String, String> labels;
-    private final long value;
+    private final double value;
 
-    public NumericMetricSample(Map<String, String> labels, long value) {
+    public NumericMetricSample(Map<String, String> labels, double value) {
         this.labels = labels;
         this.value = value;
     }
@@ -16,7 +16,7 @@ public class NumericMetricSample implements MetricSample {
         return labels;
     }
 
-    public long getValue() {
+    public double getValue() {
         return value;
     }
 

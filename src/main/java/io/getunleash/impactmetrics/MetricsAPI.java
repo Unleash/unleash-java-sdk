@@ -20,9 +20,9 @@ public interface MetricsAPI {
     public void incrementCounter(
             String name, @Nullable Long value, @Nullable MetricFlagContext flagContext);
 
-    public void updateGauge(String name, long value);
+    public void updateGauge(String name, double value);
 
-    public void updateGauge(String name, long value, @Nullable MetricFlagContext flagContext);
+    public void updateGauge(String name, double value, @Nullable MetricFlagContext flagContext);
 
     public void observeHistogram(String name, double value);
 
