@@ -108,12 +108,12 @@ public class MetricsAPIImpl implements MetricsAPI {
     }
 
     @Override
-    public void updateGauge(String name, long value) {
+    public void updateGauge(String name, double value) {
         updateGauge(name, value, null);
     }
 
     @Override
-    public void updateGauge(String name, long value, @Nullable MetricFlagContext flagContext) {
+    public void updateGauge(String name, double value, @Nullable MetricFlagContext flagContext) {
         Gauge gauge = metricRegistry.getGauge(name);
         if (gauge == null) {
             LOGGER.warn("Gauge {} not defined, this gauge will not be updated.", name);
@@ -126,6 +126,18 @@ public class MetricsAPIImpl implements MetricsAPI {
         labels.put("environment", context.getEnvironment());
 
         gauge.set(value, labels);
+    }
+
+    @Deprecated(since = "12.1.0", forRemoval = true)
+    @Override
+    public void updateGauge(String name, long value) {
+        updateGauge(name, (double) value);
+    }
+
+    @Deprecated(since = "12.1.0", forRemoval = true)
+    @Override
+    public void updateGauge(String name, long value, @Nullable MetricFlagContext flagContext) {
+        updateGauge(name, (double) value, flagContext);
     }
 
     @Override

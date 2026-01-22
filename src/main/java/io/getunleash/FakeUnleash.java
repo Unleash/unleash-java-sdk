@@ -53,9 +53,17 @@ public class FakeUnleash implements Unleash {
                     public void incrementCounter(String name, Long value, MetricFlagContext ctx) {}
 
                     @Override
+                    public void updateGauge(String name, double value) {}
+
+                    @Override
+                    public void updateGauge(String name, double value, MetricFlagContext ctx) {}
+
+                    @Override
+                    @Deprecated(since = "12.1.0", forRemoval = true)
                     public void updateGauge(String name, long value) {}
 
                     @Override
+                    @Deprecated(since = "12.1.0", forRemoval = true)
                     public void updateGauge(String name, long value, MetricFlagContext ctx) {}
 
                     @Override

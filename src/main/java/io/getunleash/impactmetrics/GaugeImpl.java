@@ -7,60 +7,60 @@ import java.util.concurrent.ConcurrentHashMap;
 
 class GaugeImpl implements Gauge {
     private final MetricOptions options;
-    private final ConcurrentHashMap<String, Long> values = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Double> values = new ConcurrentHashMap<>();
 
     GaugeImpl(MetricOptions options) {
         this.options = options;
     }
 
     @Override
-    public void set(long value) {
+    public void set(double value) {
         set(value, null);
     }
 
     @Override
-    public void set(long value, Map<String, String> labels) {
+    public void set(double value, Map<String, String> labels) {
         String key = CounterImpl.getLabelKey(labels);
         values.put(key, value);
     }
 
     @Override
     public void inc() {
-        inc(1, null);
+        inc(1.0, null);
     }
 
     @Override
-    public void inc(long value) {
+    public void inc(double value) {
         inc(value, null);
     }
 
     @Override
-    public void inc(long value, Map<String, String> labels) {
+    public void inc(double value, Map<String, String> labels) {
         String key = CounterImpl.getLabelKey(labels);
-        values.compute(key, (k, current) -> (current == null ? 0L : current) + value);
+        values.compute(key, (k, current) -> (current == null ? 0.0 : current) + value);
     }
 
     @Override
     public void dec() {
-        dec(1, null);
+        dec(1.0, null);
     }
 
     @Override
-    public void dec(long value) {
+    public void dec(double value) {
         dec(value, null);
     }
 
     @Override
-    public void dec(long value, Map<String, String> labels) {
+    public void dec(double value, Map<String, String> labels) {
         String key = CounterImpl.getLabelKey(labels);
-        values.compute(key, (k, current) -> (current == null ? 0L : current) - value);
+        values.compute(key, (k, current) -> (current == null ? 0.0 : current) - value);
     }
 
     CollectedMetric collect() {
         List<MetricSample> samples = new ArrayList<>();
 
         for (String key : values.keySet()) {
-            Long value = values.remove(key);
+            Double value = values.remove(key);
             if (value != null) {
                 samples.add(new NumericMetricSample(CounterImpl.parseLabelKey(key), value));
             }
