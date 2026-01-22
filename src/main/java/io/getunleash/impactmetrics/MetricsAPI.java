@@ -24,6 +24,12 @@ public interface MetricsAPI {
 
     public void updateGauge(String name, double value, @Nullable MetricFlagContext flagContext);
 
+    @Deprecated(since = "12.0.2", forRemoval = true)
+    public void updateGauge(String name, long value);
+
+    @Deprecated(since = "12.0.2", forRemoval = true)
+    public void updateGauge(String name, long value, @Nullable MetricFlagContext flagContext);
+
     public void observeHistogram(String name, double value);
 
     public void observeHistogram(

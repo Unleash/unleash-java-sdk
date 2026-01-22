@@ -128,6 +128,18 @@ public class MetricsAPIImpl implements MetricsAPI {
         gauge.set(value, labels);
     }
 
+    @Deprecated(since = "12.0.2", forRemoval = true)
+    @Override
+    public void updateGauge(String name, long value) {
+        updateGauge(name, (double) value);
+    }
+
+    @Deprecated(since = "12.0.2", forRemoval = true)
+    @Override
+    public void updateGauge(String name, long value, @Nullable MetricFlagContext flagContext) {
+        updateGauge(name, (double) value, flagContext);
+    }
+
     @Override
     public void observeHistogram(String name, double value) {
         observeHistogram(name, value, null);
