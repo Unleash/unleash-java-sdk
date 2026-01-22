@@ -128,13 +128,13 @@ public class MetricsAPIImpl implements MetricsAPI {
         gauge.set(value, labels);
     }
 
-    @Deprecated(since = "12.0.2", forRemoval = true)
+    @Deprecated(since = "12.1.0", forRemoval = true)
     @Override
     public void updateGauge(String name, long value) {
         updateGauge(name, (double) value);
     }
 
-    @Deprecated(since = "12.0.2", forRemoval = true)
+    @Deprecated(since = "12.1.0", forRemoval = true)
     @Override
     public void updateGauge(String name, long value, @Nullable MetricFlagContext flagContext) {
         updateGauge(name, (double) value, flagContext);
