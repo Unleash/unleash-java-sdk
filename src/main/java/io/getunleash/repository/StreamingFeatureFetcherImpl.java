@@ -131,7 +131,7 @@ class StreamingFeatureFetcherImpl implements FetchWorker {
         String currentState = engine.getState();
         featureBackupHandler.write(currentState);
 
-        ClientFeaturesResponse response = ClientFeaturesResponse.updated(data);
+        ClientFeaturesResponse response = ClientFeaturesResponse.updated(currentState);
         eventDispatcher.update(response);
 
         if (!ready) {
