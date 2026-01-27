@@ -9,7 +9,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <version.unleash.specification>5.2.2</version.unleash.specification>
         <arguments />
-        <version.assertj>3.27.6</version.assertj>
+        <version.assertj>3.27.7</version.assertj>
         <version.gson>2.13.2</version.gson>
         <version.jackson>2.20.1</version.jackson>
         <version.junit5>5.14.0</version.junit5>
