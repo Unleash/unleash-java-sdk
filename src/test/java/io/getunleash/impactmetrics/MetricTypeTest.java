@@ -6,6 +6,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 public class MetricTypeTest {
 
@@ -301,5 +303,41 @@ public class MetricTypeTest {
 
     private NumericMetricSample sample(Map<String, String> labels, double value) {
         return new NumericMetricSample(labels, value);
+    }
+
+    @ParameterizedTest
+    @ValueSource(doubles = {Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NaN})
+    public void should_silently_drop_infinity_and_nan_values(double invalidValue) {
+        InMemoryMetricRegistry registry = new InMemoryMetricRegistry();
+        Counter counter = registry.counter(new MetricOptions("c", "h"));
+        Gauge gauge = registry.gauge(new MetricOptions("g", "h"));
+        Histogram histogram = registry.histogram(new BucketMetricOptions("h", "h", List.of(1.0)));
+
+        counter.inc(1);
+        gauge.set(5);
+        gauge.set(invalidValue);
+        gauge.inc(invalidValue);
+        gauge.dec(invalidValue);
+        histogram.observe(0.5);
+        histogram.observe(invalidValue);
+
+        List<CollectedMetric> result = registry.collect();
+
+        assertThat(result)
+                .containsExactlyInAnyOrder(
+                        new CollectedMetric("c", "h", MetricType.COUNTER, List.of(sample(1.0))),
+                        new CollectedMetric("g", "h", MetricType.GAUGE, List.of(sample(5.0))),
+                        new CollectedMetric(
+                                "h",
+                                "h",
+                                MetricType.HISTOGRAM,
+                                List.of(
+                                        new BucketMetricSample(
+                                                Collections.emptyMap(),
+                                                1L,
+                                                0.5,
+                                                List.of(
+                                                        bucket(1.0, 1),
+                                                        bucket(Double.POSITIVE_INFINITY, 1))))));
     }
 }

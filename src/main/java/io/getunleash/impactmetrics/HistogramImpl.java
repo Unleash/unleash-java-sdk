@@ -32,6 +32,10 @@ class HistogramImpl implements Histogram {
         this.buckets = Collections.unmodifiableList(sorted);
     }
 
+    private static boolean isInvalidValue(double value) {
+        return !Double.isFinite(value);
+    }
+
     @Override
     public void observe(double value) {
         observe(value, null);
@@ -39,6 +43,9 @@ class HistogramImpl implements Histogram {
 
     @Override
     public void observe(double value, Map<String, String> labels) {
+        if (isInvalidValue(value)) {
+            return;
+        }
         String key = CounterImpl.getLabelKey(labels);
         values.compute(
                 key,

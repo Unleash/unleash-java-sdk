@@ -17,11 +17,15 @@ public interface MetricsAPI {
 
     public void incrementCounter(String name, long value);
 
+    /** @deprecated MetricFlagContext will be removed in a future release. */
+    @Deprecated(since = "12.1.1", forRemoval = true)
     public void incrementCounter(
             String name, @Nullable Long value, @Nullable MetricFlagContext flagContext);
 
     public void updateGauge(String name, double value);
 
+    /** @deprecated MetricFlagContext will be removed in a future release. */
+    @Deprecated(since = "12.1.1", forRemoval = true)
     public void updateGauge(String name, double value, @Nullable MetricFlagContext flagContext);
 
     @Deprecated(since = "12.1.0", forRemoval = true)
@@ -32,6 +36,8 @@ public interface MetricsAPI {
 
     public void observeHistogram(String name, double value);
 
+    /** @deprecated MetricFlagContext will be removed in a future release. */
+    @Deprecated(since = "12.1.1", forRemoval = true)
     public void observeHistogram(
             String name, double value, @Nullable MetricFlagContext flagContext);
 }

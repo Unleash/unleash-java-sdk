@@ -49,12 +49,14 @@ public class FakeUnleash implements Unleash {
                     @Override
                     public void incrementCounter(String name, long value) {}
 
+                    @Deprecated(since = "12.1.1", forRemoval = true)
                     @Override
                     public void incrementCounter(String name, Long value, MetricFlagContext ctx) {}
 
                     @Override
                     public void updateGauge(String name, double value) {}
 
+                    @Deprecated(since = "12.1.1", forRemoval = true)
                     @Override
                     public void updateGauge(String name, double value, MetricFlagContext ctx) {}
 
@@ -69,6 +71,7 @@ public class FakeUnleash implements Unleash {
                     @Override
                     public void observeHistogram(String name, double value) {}
 
+                    @Deprecated(since = "12.1.1", forRemoval = true)
                     @Override
                     public void observeHistogram(
                             String name, double value, MetricFlagContext ctx) {}

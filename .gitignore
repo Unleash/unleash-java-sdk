@@ -47,3 +47,5 @@ target
 .vim/
 *.versionsBackup
 mise.toml
+
+CLAUDE.md
