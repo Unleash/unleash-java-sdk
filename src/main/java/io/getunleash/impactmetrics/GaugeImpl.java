@@ -13,6 +13,10 @@ class GaugeImpl implements Gauge {
         this.options = options;
     }
 
+    private static boolean isInvalidValue(double value) {
+        return !Double.isFinite(value);
+    }
+
     @Override
     public void set(double value) {
         set(value, null);
@@ -20,6 +24,9 @@ class GaugeImpl implements Gauge {
 
     @Override
     public void set(double value, Map<String, String> labels) {
+        if (isInvalidValue(value)) {
+            return;
+        }
         String key = CounterImpl.getLabelKey(labels);
         values.put(key, value);
     }
@@ -36,6 +43,9 @@ class GaugeImpl implements Gauge {
 
     @Override
     public void inc(double value, Map<String, String> labels) {
+        if (isInvalidValue(value)) {
+            return;
+        }
         String key = CounterImpl.getLabelKey(labels);
         values.compute(key, (k, current) -> (current == null ? 0.0 : current) + value);
     }
@@ -52,6 +62,9 @@ class GaugeImpl implements Gauge {
 
     @Override
     public void dec(double value, Map<String, String> labels) {
+        if (isInvalidValue(value)) {
+            return;
+        }
         String key = CounterImpl.getLabelKey(labels);
         values.compute(key, (k, current) -> (current == null ? 0.0 : current) - value);
     }

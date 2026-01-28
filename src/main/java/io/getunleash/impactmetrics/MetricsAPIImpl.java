@@ -90,6 +90,7 @@ public class MetricsAPIImpl implements MetricsAPI {
         incrementCounter(name, value, null);
     }
 
+    @Deprecated(since = "12.1.1", forRemoval = true)
     @Override
     public void incrementCounter(
             String name, @Nullable Long value, @Nullable MetricFlagContext flagContext) {
@@ -112,6 +113,7 @@ public class MetricsAPIImpl implements MetricsAPI {
         updateGauge(name, value, null);
     }
 
+    @Deprecated(since = "12.1.1", forRemoval = true)
     @Override
     public void updateGauge(String name, double value, @Nullable MetricFlagContext flagContext) {
         Gauge gauge = metricRegistry.getGauge(name);
@@ -145,6 +147,7 @@ public class MetricsAPIImpl implements MetricsAPI {
         observeHistogram(name, value, null);
     }
 
+    @Deprecated(since = "12.1.1", forRemoval = true)
     @Override
     public void observeHistogram(
             String name, double value, @Nullable MetricFlagContext flagContext) {
