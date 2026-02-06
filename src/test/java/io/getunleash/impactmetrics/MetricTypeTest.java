@@ -33,6 +33,7 @@ public class MetricTypeTest {
         Counter counter = registry.counter(new MetricOptions("labeled_counter", "with labels"));
 
         counter.inc(3, Map.of("foo", "bar"));
+        counter.inc(-1, Map.of("foo", "bar"));
         counter.inc(2, Map.of("foo", "bar"));
 
         List<CollectedMetric> metrics = registry.collect();

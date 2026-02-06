@@ -28,7 +28,7 @@ class CounterImpl implements Counter {
 
     @Override
     public void inc(long value, Map<String, String> labels) {
-        if (value == 0) {
+        if (value <= 0) {
             return;
         }
         String key = getLabelKey(labels);
