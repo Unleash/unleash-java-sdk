@@ -8,9 +8,13 @@ Unleash is a private, secure, and scalable [feature management platform](http
 
 You can use this client with [Unleash Enterprise](https://www.getunleash.io/pricing?utm_source=readme&utm_medium=java) or [Unleash Open Source](https://github.com/Unleash/unleash).
 
->  **Migrating to v10**
+>  **Migration guides**
 >
-> If you're using `MoreOperations`, custom or fallback strategies, subscribers or bootstrapping, please see the full [migration guide](v10_MIGRATION_GUIDE.md) for details. If you use GraalVM or Quarkus, please hold off on upgrading to v10, support is planned but not implemented.
+> - [Migrating to v10](v10_MIGRATION_GUIDE.md)
+> - [Migrating to v11](v11_MIGRATION_GUIDE.md)
+> - [Migrating to v12](v12_MIGRATION_GUIDE.md)
+>
+> For ongoing updates, prefer v12. The latest patch releases of v10, v11, and v12 are currently aligned on the same optimized implementation path.
 
 ## Java Version Compatibility
 

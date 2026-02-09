@@ -2,6 +2,17 @@
 
 This guide highlights the key changes you need to be aware of when upgrading to v10.0.0 of the Unleash client.
 
+## Version guidance
+
+For ongoing updates, prefer v12.
+
+The latest patch releases in v10, v11, and v12 are currently aligned on the same optimized
+implementation path.
+
+Early v11 introduced a WASM-engine direction that we later reverted in v11 patch releases.
+
+If you need to stay on a specific major version, make sure you run the latest patch in that major.
+
 ## Custom bootstrapping
 
 The Bootstrapping interface now requires an `Optional<String>` to be returned rather than a `String`. If the bootstrapper fails to load the feature set, return an `Optional` of empty.
