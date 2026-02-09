@@ -85,13 +85,10 @@ class PollingFeatureFetcher implements FetchWorker {
         return () -> {
             try {
                 ClientFeaturesResponse response = featureFetcher.fetchFeatures();
+                eventEmitter.update(response);
                 if (response.getStatus() == ClientFeaturesResponse.Status.CHANGED) {
-                    String currentState = applyClientFeatures(response);
-                    eventEmitter.update(ClientFeaturesResponse.updated(currentState));
-                } else {
-                    eventEmitter.update(response);
-                }
-                if (response.getStatus() == ClientFeaturesResponse.Status.UNAVAILABLE) {
+                    updateFeatures(response);
+                } else if (response.getStatus() == ClientFeaturesResponse.Status.UNAVAILABLE) {
                     if (unleashConfig.isSynchronousFetchOnInitialisation()) {
                         throw new UnleashException(
                                 String.format(
@@ -114,15 +111,12 @@ class PollingFeatureFetcher implements FetchWorker {
             if (throttler.performAction()) {
                 try {
                     ClientFeaturesResponse response = featureFetcher.fetchFeatures();
+                    eventEmitter.update(response);
                     if (response.getStatus() == ClientFeaturesResponse.Status.CHANGED) {
-                        String currentState = applyClientFeatures(response);
-                        eventEmitter.update(ClientFeaturesResponse.updated(currentState));
+                        updateFeatures(response);
                     } else if (response.getStatus() == ClientFeaturesResponse.Status.UNAVAILABLE) {
-                        eventEmitter.update(response);
                         throttler.handleHttpErrorCodes(response.getHttpStatusCode());
                         return;
-                    } else {
-                        eventEmitter.update(response);
                     }
                     throttler.decrementFailureCountAndResetSkips();
                 } catch (UnleashException e) {
@@ -136,14 +130,12 @@ class PollingFeatureFetcher implements FetchWorker {
         };
     }
 
-    private String applyClientFeatures(ClientFeaturesResponse response)
+    private void updateFeatures(ClientFeaturesResponse response)
             throws YggdrasilInvalidInputException {
         String clientFeatures = response.getClientFeatures().get();
         this.engine.takeState(clientFeatures);
-        String currentState = this.engine.getState();
-        this.featureBackupHandler.write(currentState);
+        this.featureBackupHandler.write(clientFeatures);
         eventEmitter.ready();
-        return currentState;
     }
 
     public Integer getFailures() {
