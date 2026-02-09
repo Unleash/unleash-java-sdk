@@ -2,6 +2,17 @@
 
 This guide highlights the key changes you need to be aware of when upgrading to v10.0.0 of the Unleash client.
 
+## Version guidance
+
+For ongoing updates, prefer v12.
+
+The latest patch releases in v10, v11, and v12 are currently aligned on the same optimized
+implementation path.
+
+Early v11 introduced a WASM-engine direction that we later reverted in v11 patch releases.
+
+If you need to stay on a specific major version, make sure you run the latest patch in that major.
+
 ## Custom bootstrapping
 
 The Bootstrapping interface now requires an `Optional<String>` to be returned rather than a `String`. If the bootstrapper fails to load the feature set, return an `Optional` of empty.
@@ -15,6 +26,12 @@ The Bootstrapping interface now requires an `Optional<String>` to be returned ra
 ## Strategies
 
 The strategy interface has changed to only include the two methods `getName` and `isEnabled`. `isEnabled` now requires both a parameter map and an `UnleashContext`. This only affects users who are implementing custom or fallback strategies.
+
+Built-in strategy classes from `io.getunleash.strategy` (for example
+`GradualRolloutRandomStrategy`, `GradualRolloutUserWithIdStrategy`, and
+`GradualRolloutSessionIdStrategy`) are no longer part of the Java SDK public API in v10.
+
+These strategies are evaluated internally by Yggdrasil. There is no class-for-class replacement to import for built-ins; use the built-ins via Unleash configuration, and implement `Strategy` only for custom or fallback behavior.
 
 ## Events
 
