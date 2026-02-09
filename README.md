@@ -110,21 +110,17 @@ You can also **provide an [Unleash context](https://docs.getunleash.io/reference
 
 ### Activation strategies
 
-The Java client comes with implementations for the built-in activation strategies provided by Unleash:
+The Java client supports Unleash built-in activation strategies (such as `default`, `userWithId`, `gradualRolloutRandom`, `gradualRolloutUserId`, `gradualRolloutSessionId`, `remoteAddress`, and `applicationHostname`).
 
-- DefaultStrategy
-- UserWithIdStrategy
-- GradualRolloutRandomStrategy
-- GradualRolloutUserWithIdStrategy
-- GradualRolloutSessionIdStrategy
-- RemoteAddressStrategy
-- ApplicationHostnameStrategy
+As of v10, these built-ins are evaluated by the embedded Yggdrasil engine and are not exposed as public Java strategy classes in this SDK.
 
 Read more about the strategies in the [activation strategies reference documentation](https://docs.getunleash.io/reference/activation-strategies).
 
 #### Custom strategies
-You may also specify and implement your own strategy. The specification must be registered in the Unleash UI and
-you must register the strategy implementation when you set up Unleash.
+You may also specify and implement your own strategy. The specification must be registered in the Unleash UI and you must register the strategy implementation when you set up Unleash.
+
+You can also provide a `fallbackStrategy` via `UnleashConfig` if the client receives a strategy
+name it does not recognize.
 
 ```java
 Strategy s1 = new MyAwesomeStrategy();

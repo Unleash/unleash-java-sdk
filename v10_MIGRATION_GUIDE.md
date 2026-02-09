@@ -16,6 +16,12 @@ The Bootstrapping interface now requires an `Optional<String>` to be returned ra
 
 The strategy interface has changed to only include the two methods `getName` and `isEnabled`. `isEnabled` now requires both a parameter map and an `UnleashContext`. This only affects users who are implementing custom or fallback strategies.
 
+Built-in strategy classes from `io.getunleash.strategy` (for example
+`GradualRolloutRandomStrategy`, `GradualRolloutUserWithIdStrategy`, and
+`GradualRolloutSessionIdStrategy`) are no longer part of the Java SDK public API in v10.
+
+These strategies are evaluated internally by Yggdrasil. There is no class-for-class replacement to import for built-ins; use the built-ins via Unleash configuration, and implement `Strategy` only for custom or fallback behavior.
+
 ## Events
 
 The following subscriber functions are no longer available: `togglesBackedUp`, `toggleBackupRestored`, and `togglesBootstrapped`. Subscribing to `featuresBackedUp`, `featuresBackupRestored`, and `featuresBootstrapped` respectively serves the same purpose. These subscribers no longer yield events that contain the full feature flag definition, instead, they expose a `getFeatures` method which returns a list of lightweight Java objects containing the feature name, the type of flag, and the project it's bound to.
