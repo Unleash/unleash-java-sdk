@@ -1,0 +1,24 @@
+{
+    "version": 2,
+    "features": [
+        {
+            "name": "repeated.custom",
+            "enabled": true,
+            "strategies": [
+                {
+                    "name": "repeated",
+                    "parameters": {
+                        "myFancy": "one"
+                    }
+
+                },
+                {
+                    "name": "repeated",
+                    "parameters": {
+                        "myFancy": "two"
+                    }
+                }
+            ]
+        }
+    ]
+}
