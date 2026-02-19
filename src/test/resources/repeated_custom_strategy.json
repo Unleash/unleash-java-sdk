@@ -1,0 +1,40 @@
+{
+    "version": 2,
+    "segments": [
+        {
+            "id": 1,
+            "name": "some-name",
+            "description": null,
+            "constraints": [
+                {
+                    "contextName": "some-name",
+                    "operator": "IN",
+                    "value": "name",
+                    "inverted": false,
+                    "caseInsensitive": true
+                }
+            ]
+        }
+    ],
+    "features": [
+        {
+            "name": "repeated.custom",
+            "enabled": true,
+            "strategies": [
+                {
+                    "name": "repeated",
+                    "parameters": {
+                        "myFancy": "one"
+                    }
+
+                },
+                {
+                    "name": "repeated",
+                    "parameters": {
+                        "myFancy": "two"
+                    }
+                }
+            ]
+        }
+    ]
+}
