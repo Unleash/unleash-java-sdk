@@ -7,7 +7,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <version.unleash.specification>5.2.2</version.unleash.specification>
+        <version.unleash.specification>6.1.0</version.unleash.specification>
         <arguments />
         <version.assertj>3.27.7</version.assertj>
         <version.gson>2.13.2</version.gson>
@@ -61,7 +61,7 @@
         <dependency>
             <groupId>io.getunleash</groupId>
             <artifactId>yggdrasil-engine</artifactId>
-            <version>0.5.1</version>
+            <version>1.0.1</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
