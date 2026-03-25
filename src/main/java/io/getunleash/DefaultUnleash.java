@@ -228,7 +228,8 @@ public class DefaultUnleash implements Unleash {
                                 UnleashContext enhancedContext = context.applyStaticFields(config);
                                 FlatResponse<VariantDef> response =
                                         featureRepository.getVariant(toggleName, enhancedContext);
-                                Optional<VariantDef> variantDef = Optional.of(response.value);
+                                Optional<VariantDef> variantDef =
+                                        Optional.ofNullable(response).map(r -> r.value);
                                 Variant variant =
                                         YggdrasilAdapters.adapt(variantDef, DISABLED_VARIANT);
                                 return new EvaluatedToggle(

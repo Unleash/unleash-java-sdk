@@ -7,7 +7,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <version.unleash.specification>5.2.2</version.unleash.specification>
+        <version.unleash.specification>6.1.0</version.unleash.specification>
         <arguments />
         <version.assertj>3.27.7</version.assertj>
         <version.gson>2.13.2</version.gson>
@@ -15,9 +15,9 @@
         <version.junit5>5.14.0</version.junit5>
         <version.logback>1.5.25</version.logback>
         <version.mockito>5.20.0</version.mockito>
-        <version.okhttp>4.12.0</version.okhttp>
+        <version.okhttp>5.3.2</version.okhttp>
         <version.slf4j>2.0.17</version.slf4j>
-        <version.wiremock>3.9.2</version.wiremock>
+        <version.wiremock>3.13.2</version.wiremock>
     </properties>
 
     <name>io.getunleash:unleash-client-java</name>
@@ -61,7 +61,7 @@
         <dependency>
             <groupId>io.getunleash</groupId>
             <artifactId>yggdrasil-engine</artifactId>
-            <version>0.5.1</version>
+            <version>1.0.1</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
@@ -70,14 +70,14 @@
         </dependency>
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>
-            <artifactId>okhttp</artifactId>
+            <artifactId>okhttp-jvm</artifactId>
             <version>${version.okhttp}</version>
             <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>com.launchdarkly</groupId>
             <artifactId>okhttp-eventsource</artifactId>
-            <version>4.1.1</version>
+            <version>4.2.0</version>
         </dependency>
 
         <dependency>

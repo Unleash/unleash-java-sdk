@@ -60,7 +60,7 @@ public class FeatureRepositoryImpl implements FeatureRepository {
 
     private void initCollections(UnleashScheduledExecutor executor) {
         Optional<String> features = this.featureBackupHandler.read();
-        if (!features.isPresent() && this.bootstrapper != null) {
+        if (features.isEmpty() && this.bootstrapper != null) {
             features = this.bootstrapper.read();
         }
         if (features.isPresent()) {
