@@ -96,6 +96,40 @@ UnleashConfig config = UnleashConfig.builder()
 Unleash unleash = new DefaultUnleash(config);
 ```
 
+### Streaming beta
+
+Streaming support is available as a beta feature for non-production customer environments. It is documented so you can test and validate the behavior early, but it is not recommended for production customer traffic yet.
+
+Streaming only works when the SDK connects to Unleash Enterprise Edge. It is not supported against Unleash Open Source, the regular Unleash API, or non-Enterprise Edge endpoints. Point `unleashAPI` at the Enterprise Edge API root and use a valid Edge client token.
+
+Use the Enterprise Edge `/api/` URL as the SDK base URL:
+
+```text
+https://mycompany.example/edge/api/
+```
+
+The Java SDK accepts the Enterprise Edge API root with or without a trailing slash (e.g. `https://mycompany.example/edge/api` and `https://mycompany.example/edge/api/`). The trailing slash form is recommended because it makes the API root explicit.
+
+Enable streaming with `experimentalStreamingMode()`:
+
+```java
+UnleashConfig config = UnleashConfig.builder()
+        .appName("my.java-app")
+        .instanceId("your-instance-1")
+        .unleashAPI("https://mycompany.example/edge/api/")
+        .apiKey(System.getenv("UNLEASH_API_TOKEN"))
+        .experimentalStreamingMode()
+        .build();
+
+Unleash unleash = new DefaultUnleash(config);
+```
+
+When streaming is enabled, the SDK starts by connecting to Enterprise Edge over Server-Sent Events. If Enterprise Edge sends a `fetch-mode` event with `polling`, the SDK switches to polling automatically. The SDK also falls back to polling after hard streaming HTTP failures such as `401`, `403`, `404`, `429`, or `501`, and after repeated network or transient server failures such as `408`, `500`, `502`, `503`, or `504`.
+
+If a streaming update cannot be processed, the SDK reconnects without a `Last-Event-ID` header so Enterprise Edge can send a fresh hydration event. During reconnects or polling fallback, flag evaluation continues from the SDK's latest known state, including any restored local backup. If the SDK has not synchronized any data yet, normal default evaluation behavior applies.
+
+You can observe streaming updates with the [Subscriber API](#subscriber-api). `onReady` fires after the first successful streaming update, and `togglesFetched` fires when streaming sends connected or updated feature data. Streaming connection, reconnect, and failover activity is also logged through SLF4J. A runnable example is available in [examples/streaming-example](examples/streaming-example).
+
 ## Step 3: Use the feature toggle
 
 With the SDK initialized, you can use the `isEnabled` method to check the state of your feature toggles. The method returns a boolean indicating whether a feature is enabled for the current request.
@@ -526,6 +560,7 @@ The `UnleashConfig$Builder` class (created via `UnleashConfig.builder()`) expose
 | `disableMetrics`                           | A boolean indicating whether the client should disable sending usage metrics to the Unleash server.                                                                                                                                              | No       | `false`                                                                                                              |
 | `enableProxyAuthenticationByJvmProperties` | Enable support for [using JVM properties for HTTP proxy authentication](#http-proxy-with-authentication).                                                                                                                                        | No       | `false`                                                                                                              |
 | `environment`                              | The value to set for the Unleash context's `environment` property. **Not** the same as [Unleash's environments](https://docs.getunleash.io/reference/environments).| No       | `null`                                                                                                               |
+| `experimentalStreamingMode`                | Enable [streaming beta](#streaming-beta). Streaming requires Unleash Enterprise Edge and is intended for non-production customer environments while in beta.                                                                                      | No       | Polling mode                                                                                                         |
 | `fallbackStrategy`                         | A strategy implementation that the client can use if it doesn't recognize the strategy type returned from the server.                                                                                                                            | No       | `null`                                                                                                               |
 | `fetchTogglesInterval`                     | How often (in seconds) the client should check for toggle updates. Set to `0` if you want to only check once.                                                                                                                                    | No       | `15`                                                                                                                 |
 | `instanceId`                               | A unique(-ish) identifier for your instance. Typically a hostname, pod id or something similar. Unleash uses this to separate metrics from the client SDKs with the same `appName`.                                                              | Yes      | `null`                                                                                                               |

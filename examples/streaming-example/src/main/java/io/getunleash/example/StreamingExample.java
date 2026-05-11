@@ -34,11 +34,11 @@ public class StreamingExample {
                 UnleashConfig.builder()
                         .appName("streaming-example")
                         .instanceId("streaming-example-instance")
-                        .unleashAPI(getOrElse("UNLEASH_API_URL", "https://app.unleash-hosted.com/demo/api"))
-                        .customHttpHeader(
-                                "Authorization",
-                                getOrElse("UNLEASH_API_TOKEN",
-                                        "*:development.25a06b75248528f8ca93ce179dcdd141aedfb632231e0d21fd8ff349"))
+                        .unleashAPI(
+                                getOrElse(
+                                        "UNLEASH_API_URL",
+                                        "https://mycompany.example/edge/api/"))
+                        .apiKey(getOrElse("UNLEASH_API_TOKEN", "<edge-client-token>"))
                         .experimentalStreamingMode()
                         .subscriber(subscriber)
                         .build();
