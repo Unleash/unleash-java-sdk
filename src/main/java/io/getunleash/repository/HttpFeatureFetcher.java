@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class HttpFeatureFetcher implements FeatureFetcher {
+
     private static final Logger LOG = LoggerFactory.getLogger(HttpFeatureFetcher.class);
     private Optional<String> etag = Optional.empty();
 
@@ -74,9 +75,7 @@ public class HttpFeatureFetcher implements FeatureFetcher {
                 try (BufferedReader reader =
                         new BufferedReader(
                                 new InputStreamReader(
-                                        (InputStream) request.getContent(),
-                                        StandardCharsets.UTF_8))) {
-
+                                        request.getInputStream(), StandardCharsets.UTF_8))) {
                     String clientFeatures = reader.lines().collect(Collectors.joining("\n"));
 
                     return ClientFeaturesResponse.updated(clientFeatures);
