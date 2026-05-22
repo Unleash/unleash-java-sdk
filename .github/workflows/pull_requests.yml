@@ -29,6 +29,28 @@ jobs:
           flag-name: run-jvm-${{ join(matrix.*, '-') }}
           parallel: true
           base-path: src/main/java
+
+  graalvm-native-image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup GraalVM
+        uses: graalvm/setup-graalvm@v1
+        with:
+          distribution: graalvm
+          java-version: "21"
+          cache: maven
+      - name: Compile smoke test
+        run: ./mvnw -B -DskipTests test-compile dependency:build-classpath -Dmdep.outputFile=target/test-classpath.txt
+      - name: Build native image
+        run: |
+          native-image --no-fallback --enable-url-protocols=http \
+            -cp "target/classes:target/test-classes:$(cat target/test-classpath.txt)" \
+            io.getunleash.repository.GraalVmHttpFeatureFetcherSmoke \
+            target/graalvm-http-feature-fetcher-smoke
+      - name: Run native image smoke test
+        run: ./target/graalvm-http-feature-fetcher-smoke
   finish:
     needs: build
     if: ${{ always() }}
