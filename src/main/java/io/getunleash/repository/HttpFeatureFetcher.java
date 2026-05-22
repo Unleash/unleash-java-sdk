@@ -75,7 +75,8 @@ public class HttpFeatureFetcher implements FeatureFetcher {
                 try (BufferedReader reader =
                         new BufferedReader(
                                 new InputStreamReader(
-                                        request.getInputStream(), StandardCharsets.UTF_8))) {
+                                        (InputStream) request.getContent(),
+                                        StandardCharsets.UTF_8))) {
                     String clientFeatures = reader.lines().collect(Collectors.joining("\n"));
 
                     return ClientFeaturesResponse.updated(clientFeatures);
