@@ -9,6 +9,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.FutureTask;
 
 public class GraalVmHttpFeatureFetcherSmoke {
     private static final String FEATURE_NAME = "graalvm-smoke-test";
@@ -19,8 +20,13 @@ public class GraalVmHttpFeatureFetcherSmoke {
 
     public static void main(String[] args) throws Exception {
         try (ServerSocket serverSocket = new ServerSocket(0)) {
-            Thread server = new Thread(() -> serveOneRequest(serverSocket));
-            server.start();
+            FutureTask<Void> server =
+                    new FutureTask<>(
+                            () -> {
+                                serveOneRequest(serverSocket);
+                                return null;
+                            });
+            new Thread(server, "graalvm-smoke-http").start();
 
             UnleashConfig config =
                     UnleashConfig.builder()
@@ -40,11 +46,11 @@ public class GraalVmHttpFeatureFetcherSmoke {
                 throw new IllegalStateException("Native image smoke test did not fetch features");
             }
 
-            server.join();
+            server.get();
         }
     }
 
-    private static void serveOneRequest(ServerSocket serverSocket) {
+    private static void serveOneRequest(ServerSocket serverSocket) throws Exception {
         try (Socket socket = serverSocket.accept();
                 BufferedReader reader =
                         new BufferedReader(
@@ -52,7 +58,9 @@ public class GraalVmHttpFeatureFetcherSmoke {
                                         socket.getInputStream(), StandardCharsets.US_ASCII));
                 OutputStream output = socket.getOutputStream()) {
             String line;
-            while ((line = reader.readLine()) != null && !line.isEmpty()) {}
+            while ((line = reader.readLine()) != null && !line.isEmpty()) {
+                // Drain request headers before writing the response.
+            }
 
             byte[] body = RESPONSE_BODY.getBytes(StandardCharsets.UTF_8);
             output.write(
@@ -65,8 +73,6 @@ public class GraalVmHttpFeatureFetcherSmoke {
                             .getBytes(StandardCharsets.US_ASCII));
             output.write(body);
             output.flush();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
     }
 }

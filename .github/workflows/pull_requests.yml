@@ -40,6 +40,7 @@ jobs:
         with:
           distribution: graalvm
           java-version: "21"
+          components: native-image
           cache: maven
       - name: Compile smoke test
         run: ./mvnw -B -DskipTests test-compile dependency:build-classpath -Dmdep.outputFile=target/test-classpath.txt
@@ -52,7 +53,7 @@ jobs:
       - name: Run native image smoke test
         run: ./target/graalvm-http-feature-fetcher-smoke
   finish:
-    needs: build
+    needs: [build, graalvm-native-image]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     steps:
