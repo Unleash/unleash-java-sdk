@@ -57,10 +57,8 @@
 
     <scm>
         <url>https://github.com/Unleash/unleash-java-sdk</url>
-        <connection
-        >scm:git:https://github.com/Unleash/unleash-java-sdk.git</connection>
-        <developerConnection
-        >scm:git:https://github.com/Unleash/unleash-java-sdk.git</developerConnection>
+        <connection>scm:git:https://github.com/Unleash/unleash-java-sdk.git</connection>
+        <developerConnection>scm:git:https://github.com/Unleash/unleash-java-sdk.git</developerConnection>
     </scm>
 
     <dependencies>
@@ -299,8 +297,7 @@
                                 <directory>
                                     ${project.build.directory}/client-specification/v${version.unleash.specification}.zip
                                 </directory>
-                                <outputDirectory
-                                >${project.build.directory}/client-specification/</outputDirectory>
+                                <outputDirectory>${project.build.directory}/client-specification/</outputDirectory>
                             </fileset>
                         </configuration>
                     </execution>
@@ -365,10 +362,8 @@
                      <mavenCentral>
                        <sonatype>
                          <active>ALWAYS</active>
-                         <url
-                                        >https://central.sonatype.com/api/v1/publisher</url>
-                         <stagingRepositories
-                                        >target/staging-deploy</stagingRepositories>
+                         <url>https://central.sonatype.com/api/v1/publisher</url>
+                         <stagingRepositories>target/staging-deploy</stagingRepositories>
                            <retryDelay>60</retryDelay>
                            <maxRetries>40</maxRetries>
                       </sonatype>
@@ -444,8 +439,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.5.2</version>
                 <configuration>
-                    <argLine
-                    >@{argLine} -javaagent:${org.mockito:mockito-core:jar}</argLine>
+                    <argLine>@{argLine} -javaagent:${org.mockito:mockito-core:jar}</argLine>
                 </configuration>
             </plugin>
         </plugins>
@@ -457,15 +451,13 @@
                 <activeByDefault>false</activeByDefault>
             </activation>
             <properties>
-                <sonatypeOssDistMgmtSnapshotsUrl
-                >https://s01.oss.sonatype.org/content/repositories/snapshots</sonatypeOssDistMgmtSnapshotsUrl>
+                <sonatypeOssDistMgmtSnapshotsUrl>https://s01.oss.sonatype.org/content/repositories/snapshots</sonatypeOssDistMgmtSnapshotsUrl>
             </properties>
             <repositories>
                 <repository>
                     <id>sonatype-nexus-snapshots</id>
                     <name>Sonatype Nexus Snapshots</name>
-                    <url
-                    >https://oss.sonatype.org/content/repositories/snapshots</url>
+                    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
                     <releases>
                         <enabled>false</enabled>
                     </releases>
@@ -483,8 +475,7 @@
                 <repository>
                     <id>sonatype-nexus-staging</id>
                     <name>Nexus Release Repository</name>
-                    <url
-                    >https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+                    <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
                 </repository>
             </distributionManagement>
             <build>
@@ -535,17 +526,17 @@
                             </gpgArguments>
                           </configuration>
                     </plugin>
-                                <plugin>
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>nexus-staging-maven-plugin</artifactId>
-                <version>1.7.0</version>
-                <extensions>true</extensions>
-                <configuration>
-                    <serverId>ossrh</serverId>
-                    <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
-                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
-                </configuration>
-            </plugin>
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nexus-staging-maven-plugin</artifactId>
+                        <version>1.7.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <serverId>ossrh</serverId>
+                            <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
+                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                        </configuration>
+                    </plugin>
                 </plugins>
 
             </build>
@@ -553,8 +544,7 @@
         <profile>
             <id>publication</id>
             <properties>
-                <altDeploymentRepository
-                >local::file:./target/staging-deploy</altDeploymentRepository>
+                <altDeploymentRepository>local::file:./target/staging-deploy</altDeploymentRepository>
             </properties>
             <build>
                 <defaultGoal>deploy</defaultGoal>
@@ -600,8 +590,7 @@
                 <repository>
                     <id>sonatype-nexus-staging</id>
                     <name>Nexus Release Repository</name>
-                    <url
-                    >https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+                    <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
                 </repository>
             </distributionManagement>
         </profile>
