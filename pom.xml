@@ -219,8 +219,7 @@
                 <version>3.5.2</version>
                 <configuration>
                     <forkCount>1</forkCount>
-                    <argLine
-                    >@{argLine} -javaagent:${org.mockito:mockito-core:jar}</argLine>
+                    <argLine>@{argLine} -javaagent:${org.mockito:mockito-core:jar}</argLine>
                 </configuration>
             </plugin>
             <plugin>
