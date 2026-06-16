@@ -266,11 +266,8 @@
                         </goals>
                         <configuration>
                             <url>https://github.com</url>
-                            <fromFile
-                            >Unleash/client-specification/archive/v${version.unleash.specification}.zip
-                            </fromFile>
-                            <toDir
-                            >${project.build.directory}/client-specification</toDir>
+                            <fromFile>Unleash/client-specification/archive/v${version.unleash.specification}.zip</fromFile>
+                            <toDir>${project.build.directory}/client-specification</toDir>
                         </configuration>
                     </execution>
                 </executions>
@@ -314,8 +311,7 @@
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory
-                            >${project.build.testOutputDirectory}/client-specification</outputDirectory>
+                            <outputDirectory>${project.build.testOutputDirectory}/client-specification</outputDirectory>
                             <resources>
                                 <resource>
                                     <directory>
