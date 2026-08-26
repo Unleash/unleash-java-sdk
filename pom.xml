@@ -1,5 +1,9 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version="1.0" encoding="UTF-8" ?>
+<project
+    xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+>
     <modelVersion>4.0.0</modelVersion>
     <groupId>io.getunleash</groupId>
     <artifactId>unleash-client-java</artifactId>
@@ -157,6 +161,33 @@
         </resources>
         <plugins>
             <plugin>
+            <groupId>org.cyclonedx</groupId>
+            <artifactId>cyclonedx-maven-plugin</artifactId>
+            <version>2.7.9</version>
+            <executions>
+                <execution>
+                <phase>package</phase>
+                <goals>
+                    <goal>makeAggregateBom</goal>
+                </goals>
+                </execution>
+            </executions>
+            <configuration>
+                <projectType>application</projectType>
+                <schemaVersion>1.7</schemaVersion>
+                <includeBomSerialNumber>true</includeBomSerialNumber>
+                <includeCompileScope>true</includeCompileScope>
+                <includeProvidedScope>true</includeProvidedScope>
+                <includeRuntimeScope>true</includeRuntimeScope>
+                <includeSystemScope>true</includeSystemScope>
+                <includeTestScope>false</includeTestScope>
+                <includeLicenseText>true</includeLicenseText>
+                <outputReactorProjects>true</outputReactorProjects>
+                <outputFormat>all</outputFormat>
+                <outputName>unleash-client-java-sbom</outputName>
+            </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
                 <version>3.8.1</version>
@@ -235,8 +266,7 @@
                         </goals>
                         <configuration>
                             <url>https://github.com</url>
-                            <fromFile>Unleash/client-specification/archive/v${version.unleash.specification}.zip
-                            </fromFile>
+                            <fromFile>Unleash/client-specification/archive/v${version.unleash.specification}.zip</fromFile>
                             <toDir>${project.build.directory}/client-specification</toDir>
                         </configuration>
                     </execution>
@@ -489,17 +519,17 @@
                             </gpgArguments>
                           </configuration>
                     </plugin>
-                                <plugin>
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>nexus-staging-maven-plugin</artifactId>
-                <version>1.7.0</version>
-                <extensions>true</extensions>
-                <configuration>
-                    <serverId>ossrh</serverId>
-                    <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
-                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
-                </configuration>
-            </plugin>
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nexus-staging-maven-plugin</artifactId>
+                        <version>1.7.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <serverId>ossrh</serverId>
+                            <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
+                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                        </configuration>
+                    </plugin>
                 </plugins>
 
             </build>
