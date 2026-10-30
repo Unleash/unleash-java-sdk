@@ -277,8 +277,8 @@ If you want to use OkHttp instead of HttpURLConnection you'll need a dependency 
 ```xml
 <dependency>
     <groupId>com.squareup.okhttp3</groupId>
-    <artifactId>okhttp</artifactId>
-    <version>4.10+</version>
+    <artifactId>okhttp-jvm</artifactId>
+    <version>5.5.0+</version>
 </dependency>
 ```
 
@@ -303,8 +303,8 @@ If you want to use OkHttp instead of HttpURLConnection you'll need a dependency 
 ```xml
 <dependency>
     <groupId>com.squareup.okhttp3</groupId>
-    <artifactId>okhttp</artifactId>
-    <version>4.10+</version>
+    <artifactId>okhttp-jvm</artifactId>
+    <version>5.5.0+</version>
 </dependency>
 ```
 

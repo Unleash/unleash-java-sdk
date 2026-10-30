@@ -15,7 +15,7 @@
         <version.junit5>5.14.0</version.junit5>
         <version.logback>1.5.35</version.logback>
         <version.mockito>5.20.0</version.mockito>
-        <version.okhttp>4.12.0</version.okhttp>
+        <version.okhttp>5.5.0</version.okhttp>
         <version.slf4j>2.0.17</version.slf4j>
         <version.wiremock>3.9.2</version.wiremock>
     </properties>
@@ -70,7 +70,7 @@
         </dependency>
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>
-            <artifactId>okhttp</artifactId>
+            <artifactId>okhttp-jvm</artifactId>
             <version>${version.okhttp}</version>
             <optional>true</optional>
         </dependency>
@@ -78,6 +78,12 @@
             <groupId>com.launchdarkly</groupId>
             <artifactId>okhttp-eventsource</artifactId>
             <version>4.3.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.squareup.okhttp3</groupId>
+                    <artifactId>okhttp</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
